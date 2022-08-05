@@ -6,33 +6,15 @@ import (
 )
 
 type N[T point.P] struct {
-	data   int
-	left   int
-	right  int
+	data   T
+	left   *N[T]
+	right  *N[T]
 	bounds hyperrectangle.R
 }
 
 func (n *N[T]) B() hyperrectangle.R { return n.bounds }
-func (n *N[T]) Leaf() bool          { return n.left < 0 && n.right < 0 }
+func (n *N[T]) Leaf() bool          { return n.left == nil && n.right == nil }
 
-func L[T point.P](n *N[T], nodes []*N[T]) *N[T] {
-	if n.left < 0 {
-		return nil
-	}
-	return nodes[n.left]
-}
-
-func R[T point.P](n *N[T], nodes []*N[T]) *N[T] {
-	if n.right < 0 {
-		return nil
-	}
-	return nodes[n.right]
-}
-
-func Data[T point.P](n *N[T], data []T) T {
-	if n.Leaf() {
-		var blank T
-		return blank
-	}
-	return data[n.data]
-}
+func (n *N[T]) Data() T  { return n.data }
+func (n *N[T]) L() *N[T] { return n.left }
+func (n *N[T]) R() *N[T] { return n.right }

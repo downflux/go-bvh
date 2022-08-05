@@ -7,8 +7,7 @@ import (
 )
 
 type BVH[T point.P] struct {
-	nodes []*node.N[T]
-	data  []T
+	root *node.N[T]
 }
 
 func New[T point.P](data []T) *BVH[T] {
