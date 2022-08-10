@@ -5,6 +5,6 @@ import (
 )
 
 type P interface {
-	B() hyperrectangle.R
+	Bound() hyperrectangle.R
 	Heuristic() float64
 }
