@@ -12,10 +12,10 @@ type N struct {
 	parent *N
 	left   *N
 	right  *N
-	bounds hyperrectangle.R
+	bound hyperrectangle.R
 }
 
-func (n *N) B() hyperrectangle.R { return n.bounds }
+func (n *N) Bound() hyperrectangle.R { return n.bound }
 func (n *N) Leaf() bool          { return n.left == nil && n.right == nil }
 
 func (n *N) ID() point.ID { return n.id }
