@@ -9,7 +9,9 @@ import (
 )
 
 type BVH[T point.P] struct {
-	root *node.N[T]
+	root *node.N
+
+	data map[point.ID]T
 }
 
 func New[T point.P](data []T) *BVH[T] {
