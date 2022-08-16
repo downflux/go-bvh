@@ -84,12 +84,3 @@ func Union(r hyperrectangle.R, s hyperrectangle.R) hyperrectangle.R {
 
 	return *hyperrectangle.New(min, max)
 }
-
-func Heuristic(r hyperrectangle.R) float64 {
-	h := 1.0
-	d := r.D()
-	for i := vector.D(0); i < d.Dimension(); i++ {
-		h *= d.X(i)
-	}
-	return h
-}

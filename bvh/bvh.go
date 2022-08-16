@@ -1,6 +1,8 @@
 package bvh
 
 import (
+	"fmt"
+
 	"github.com/downflux/go-bvh/filter"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/point"
@@ -18,16 +20,22 @@ func New[T point.P](data []T) *BVH[T] {
 	panic("unimpemented")
 }
 
-func (bvh *BVH[T]) Insert(p T) {
+func (bvh *BVH[T]) Insert(p T) bool {
+	// Cannot re-insert a point which already exists in the BVH.
+	if _, ok := bvh.data[p.ID()]; ok {
+		panic(fmt.Sprintf("cannot insert a point which already exists in the BVH: %v", p.ID()))
+	}
+
 	if bvh.root == nil {
 		bvh.root = node.New(node.O{
-			LeafSize: 1,
-			IDs:      []point.ID{p.ID()},
-			Bound:    p.Bound(),
+			ID:    p.ID(),
+			Bound: p.Bound(),
 		})
 	}
 
 	panic("unimplemented")
+
+	return true
 }
 
 func (bvh *BVH[T]) Move(id point.ID, offset vector.V) bool {

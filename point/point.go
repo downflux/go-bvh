@@ -8,6 +8,5 @@ type ID string
 
 type P interface {
 	Bound() hyperrectangle.R
-	Heuristic() float64
 	ID() ID
 }
