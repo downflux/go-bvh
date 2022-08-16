@@ -11,7 +11,8 @@ type N struct {
 	Parent *N
 	Left   *N
 	Right  *N
-	Bound  hyperrectangle.R
+
+	Bound hyperrectangle.R
 }
 
 func (n *N) Leaf() bool { return n.Left == nil && n.Right == nil }

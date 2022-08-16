@@ -1,82 +1,63 @@
 package insert
 
 import (
-	"math"
-
 	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-pq/pq"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
-func Insert(n *node.N, id point.ID, bound hyperrectangle.R) {
-	// A new leaf node will necessitate creating a new parent p, which will
-	// replace the current node's parent, as well as the cost of the new
-	// node b itself.
-	//
-	//     p
-	//    / \
-	//   b   n
-	create := 2 * heuristic.Heuristic(bhr.Union(bound, n.Bound))
+func Insert(root *node.N, id point.ID, bound hyperrectangle.R) {
+	// Find best new sibling for the new leaf.
+	q := pq.New[*node.N](0)
+	q.Push(root, -float64(heuristic.Heuristic(bhr.Union(root.Bound, bound))))
 
-	if n.Leaf() || create < h(n, bound) {
-		m := &node.N{
-			Parent: n.Parent,
-			Left: &node.N{
-				ID:    id,
-				Bound: bound,
-			},
-			Right: n,
-			Bound: bhr.Union(bound, n.Bound),
+	candidate := root
+
+	for n := q.Pop(); n != nil || !q.Empty(); n = q.Pop() {
+		direct := heuristic.Heuristic(bhr.Union(bound, n.Bound))
+
+		inherited := heuristic.H(0.0)
+		for m := n.Parent; m.Parent != nil; m = m.Parent {
+			inherited += heuristic.Heuristic(bhr.Union(bound, m.Bound)) - heuristic.Heuristic(bound)
 		}
 
-		// Update the original parent to point to the newly created
-		// internal node.
-		if n.Parent != nil {
-			if n.Parent.Left == n {
-				n.Parent.Left = m
-			} else {
-				n.Parent.Right = m
-			}
+		if float64(direct+inherited) < -q.Priority() {
+			candidate = n
 		}
 
-		// Update the current nodes.
-		n.Parent = m
-		m.Left.Parent = m
-	} else {
-		if h(n.Left, bound) < h(n.Right, bound) {
-			Insert(n.Left, id, bound)
+		h := heuristic.Heuristic(bound) + (heuristic.Heuristic(bhr.Union(bound, n.Bound)) - heuristic.Heuristic(n.Bound))
+		if float64(h) < -q.Priority() {
+			q.Push(n.Left, -float64(h))
+			q.Push(n.Right, -float64(h))
+		}
+	}
+
+	// Create new parent.
+	parent := &node.N{
+		Parent: candidate.Parent,
+		Left: &node.N{
+			ID:    id,
+			Bound: bound,
+		},
+		Right: candidate,
+		Bound: bhr.Union(bound, candidate.Bound),
+	}
+	if candidate.Parent != nil {
+		if candidate.Parent.Left == candidate {
+			candidate.Parent.Left = parent
 		} else {
-			Insert(n.Right, id, bound)
+			candidate.Parent.Right = parent
 		}
 	}
-}
-func h(n *node.N, bound hyperrectangle.R) heuristic.H {
-	if n.Leaf() {
-		// A new leaf node will necessitate creating a new parent p,
-		// which will replace the current node's parent, as well as the
-		// cost of the new node b itself.
-		//
-		//     p
-		//    / \
-		//   b   n
-		return 2 * heuristic.Heuristic(bhr.Union(bound, n.Bound))
+	candidate.Parent = parent
+	parent.Left.Parent = parent
+
+	// Refit AABBs.
+	for m := parent.Parent; m.Parent != nil; m = m.Parent {
+		m.Bound = bhr.Union(bound, m.Bound)
 	}
-
-	delta := func(n *node.N) heuristic.H {
-		return heuristic.Heuristic(bhr.Union(bound, n.Bound)) - heuristic.Heuristic(n.Bound)
-	}
-
-	// deferred is the additional heuristic penalty caused by potentially
-	// expanding the current node's bounds.
-	deferred := 2 * delta(n)
-
-	return heuristic.H(
-		math.Min(
-			float64(delta(n.Left)+deferred),
-			float64(delta(n.Right)+deferred),
-		),
-	)
 }
