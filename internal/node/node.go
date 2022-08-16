@@ -1,7 +1,6 @@
 package node
 
 import (
-	"github.com/downflux/go-bvh/filter"
 	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -24,9 +23,6 @@ func (n *N[T]) L() *N[T]      { return n.left }
 func (n *N[T]) R() *N[T]      { return n.right }
 func (n *N[T]) Parent() *N[T] { return n.parent }
 
-func (n *N[T]) Move(q hyperrectangle.R, f filter.F[T], dp vector.V) {}
-func (n *N[T]) Remove(q hyperrectangle.R, f filter.F[T]) (T, bool) {
-	var blank T
-	return blank, false
-}
-func (n *N[T]) Insert(p T) {}
+func (n *N[T]) Move(id point.ID, offset vector.V) bool { return false }
+func (n *N[T]) Remove(id point.ID) bool                { return false }
+func (n *N[T]) Insert(p T)                             {}
