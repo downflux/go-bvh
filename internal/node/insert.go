@@ -1,8 +1,7 @@
-package insert
+package node
 
 import (
 	"github.com/downflux/go-bvh/internal/heuristic"
-	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-pq/pq"
@@ -10,9 +9,9 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
-func Insert(root *node.N, id point.ID, bound hyperrectangle.R) {
+func Insert(root *N, id point.ID, bound hyperrectangle.R) {
 	// Find best new sibling for the new leaf.
-	q := pq.New[*node.N](0)
+	q := pq.New[*N](0)
 	q.Push(root, -float64(heuristic.Heuristic(bhr.Union(root.Bound, bound))))
 
 	candidate := root
@@ -37,9 +36,9 @@ func Insert(root *node.N, id point.ID, bound hyperrectangle.R) {
 	}
 
 	// Create new parent.
-	parent := &node.N{
+	parent := &N{
 		Parent: candidate.Parent,
-		Left: &node.N{
+		Left: &N{
 			ID:    id,
 			Bound: bound,
 		},
