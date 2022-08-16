@@ -19,6 +19,14 @@ func New[T point.P](data []T) *BVH[T] {
 }
 
 func (bvh *BVH[T]) Insert(p T) {
+	if bvh.root == nil {
+		bvh.root = node.New(node.O{
+			LeafSize: 1,
+			IDs:      []point.ID{p.ID()},
+			Bound:    p.Bound(),
+		})
+	}
+
 	panic("unimplemented")
 }
 

@@ -6,22 +6,33 @@ import (
 	"github.com/downflux/go-geometry/nd/vector"
 )
 
-type N struct {
-	ids []point.ID
+type O struct {
+	LeafSize int
 
-	parent *N
-	left   *N
-	right  *N
-	bound  hyperrectangle.R
+	IDs    []point.ID
+	Parent *N
+	Left   *N
+	Right  *N
+	Bound  hyperrectangle.R
 }
 
-func (n *N) Bound() hyperrectangle.R { return n.bound }
-func (n *N) Leaf() bool              { return n.left == nil && n.right == nil }
+type N struct {
+	o O
+}
 
-func (n *N) IDs() []point.ID { return n.ids }
-func (n *N) L() *N           { return n.left }
-func (n *N) R() *N           { return n.right }
-func (n *N) Parent() *N      { return n.parent }
+func New(o O) *N {
+	return &N{
+		o: o,
+	}
+}
+
+func (n *N) Bound() hyperrectangle.R { return n.o.Bound }
+func (n *N) Leaf() bool              { return n.Left() == nil && n.Right() == nil }
+
+func (n *N) IDs() []point.ID { return n.o.IDs }
+func (n *N) Left() *N        { return n.o.Left }
+func (n *N) Right() *N       { return n.o.Right }
+func (n *N) Parent() *N      { return n.o.Parent }
 
 func (n *N) Move(id point.ID, offset vector.V) bool { return false }
 func (n *N) Remove(id point.ID) bool                { return false }
