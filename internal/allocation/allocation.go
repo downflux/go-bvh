@@ -9,13 +9,7 @@ type ID int
 
 type C[T comparable] map[ID]T
 
-func New[T comparable](data []T) C[T] {
-	c := C[T](map[ID]T{})
-	for _, p := range data {
-		c.Insert(c.Allocate(), p)
-	}
-	return c
-}
+func New[T comparable]() C[T] { return C[T](map[ID]T{}) }
 
 func (c C[T]) Allocate() ID {
 	var i ID

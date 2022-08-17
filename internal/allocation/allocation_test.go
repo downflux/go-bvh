@@ -10,7 +10,7 @@ func TestAllocate(t *testing.T) {
 	const n = 10000
 	ids := map[ID]bool{}
 
-	c := New[*m](nil)
+	c := New[*m]()
 	for i := 0; i < n; i++ {
 		id := c.Allocate()
 		if ids[id] {
@@ -33,7 +33,7 @@ func TestInsert(t *testing.T) {
 
 	configs := []config{
 		func() config {
-			c := New[*m](nil)
+			c := New[*m]()
 			return config{
 				name: "Trivial",
 				c:    c,
@@ -43,7 +43,7 @@ func TestInsert(t *testing.T) {
 			}
 		}(),
 		func() config {
-			c := New[*m](nil)
+			c := New[*m]()
 			id := c.Allocate()
 			c.Insert(id, &m{})
 
@@ -57,7 +57,7 @@ func TestInsert(t *testing.T) {
 		}(),
 		{
 			name: "Unallocated",
-			c:    New[*m](nil),
+			c:    New[*m](),
 			id:   0,
 			data: &m{},
 			succ: false,

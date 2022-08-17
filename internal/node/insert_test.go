@@ -31,7 +31,7 @@ func TestInsert(t *testing.T) {
 	configs := []config{
 		{
 			name:  "Trival",
-			nodes: allocation.New[*node.N](nil),
+			nodes: allocation.New[*node.N](),
 			root:  nil,
 			id:    "foo",
 			bound: *hyperrectangle.New(
