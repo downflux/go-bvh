@@ -9,7 +9,26 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
-func Insert(root *N, id point.ID, bound hyperrectangle.R) {
+// Insert adds the given point into the tree. If a new node is created, it will
+// be created with a new index.
+//
+// Insert will return the new root.
+func Insert(root *N, id point.ID, bound hyperrectangle.R) *N {
+	if root == nil {
+		ns := Nodes(make(map[Index]*N))
+		nid := ns.Allocate()
+		n := New(O{
+			ID: id,
+
+			Nodes: ns,
+			Index: nid,
+
+			Bound: bound,
+		})
+		n.nodes.Insert(nid, n)
+		return n
+	}
+
 	// Find best new sibling for the new leaf.
 	q := pq.New[*N](0)
 	q.Push(root, -float64(heuristic.Heuristic(bhr.Union(root.Bound(), bound))))
@@ -36,27 +55,43 @@ func Insert(root *N, id point.ID, bound hyperrectangle.R) {
 	}
 
 	// Create new parent.
-	parent := New(O{
-		Parent: candidate.Parent(),
-		Left: New(O{
-			ID:    id,
-			Bound: bound,
-		}),
-		Right: candidate,
+	pid := root.nodes.Allocate()
+	nid := root.nodes.Allocate()
+	n := New(O{
+		ID: id,
+
+		Nodes:  root.nodes,
+		Index:  nid,
+		Parent: pid,
+
+		Bound: bound,
+	})
+	p := New(O{
+		Nodes:  root.nodes,
+		Index:  pid,
+		Parent: candidate.Parent().Index(),
+		Left:   nid,
+		Right:  candidate.Index(),
+
 		Bound: bhr.Union(bound, candidate.Bound()),
 	})
+	root.nodes.Insert(nid, n)
+	root.nodes.Insert(pid, p)
 	if candidate.Parent() != nil {
 		if candidate.Parent().Left() == candidate {
-			candidate.Parent().left = parent
+			candidate.Parent().left = pid
 		} else {
-			candidate.Parent().right = parent
+			candidate.Parent().right = pid
 		}
 	}
-	candidate.parent = parent
-	parent.Left().parent = parent
+	candidate.parent = pid
+	p.Left().parent = pid
 
 	// Refit AABBs.
-	for m := parent.Parent(); m.Parent() != nil; m = m.Parent() {
+	var m *N
+	for m = p.Parent(); m.Parent() != nil; m = m.Parent() {
 		m.bound = bhr.Union(bound, m.Bound())
 	}
+
+	return m
 }
