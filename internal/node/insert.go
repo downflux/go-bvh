@@ -36,7 +36,7 @@ func Insert(nodes allocation.C[*N], root *N, id point.ID, bound hyperrectangle.R
 
 	candidate := root
 
-	for n := q.Pop(); n != nil || !q.Empty(); n = q.Pop() {
+	for n := q.Pop(); !q.Empty(); n = q.Pop() {
 		direct := heuristic.Heuristic(bhr.Union(bound, n.Bound()))
 
 		inherited := heuristic.H(0.0)
@@ -66,9 +66,13 @@ func Insert(nodes allocation.C[*N], root *N, id point.ID, bound hyperrectangle.R
 
 		Bound: bound,
 	})
+	var aid allocation.ID
+	if Parent(nodes, candidate) != nil {
+		aid = Parent(nodes, candidate).Index()
+	}
 	p := New(O{
 		Index:  pid,
-		Parent: Parent(nodes, candidate).Index(),
+		Parent: aid,
 		Left:   nid,
 		Right:  candidate.Index(),
 
@@ -86,10 +90,12 @@ func Insert(nodes allocation.C[*N], root *N, id point.ID, bound hyperrectangle.R
 	candidate.parent = pid
 	Left(nodes, p).parent = pid
 
-	// Refit AABBs.
+	// Walk back up the tree refitting AABBs and applying rotations.
 	var m *N
-	for m = Parent(nodes, p); Parent(nodes, m) != nil; m = Parent(nodes, m) {
+	for m = p; Parent(nodes, m) != nil; m = Parent(nodes, m) {
 		m.bound = bhr.Union(bound, m.Bound())
+
+		// TODO(minkezhang): Apply rotation.
 	}
 
 	return m

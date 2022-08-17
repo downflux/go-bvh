@@ -52,6 +52,62 @@ func TestInsert(t *testing.T) {
 				root: 1,
 			},
 		},
+		func() config {
+			c := allocation.New[*node.N]()
+			nid := c.Allocate()
+			n := node.New(node.O{
+				ID:    "foo",
+				Index: nid,
+				Bound: *hyperrectangle.New(
+					*vector.New(0, 0),
+					*vector.New(10, 10),
+				),
+			})
+			c.Insert(nid, n)
+
+			return config{
+				name:  "SingleNode",
+				nodes: c,
+				root:  n,
+				id:    "bar",
+				bound: *hyperrectangle.New(
+					*vector.New(20, 20),
+					*vector.New(50, 50),
+				),
+				want: result{
+					allocation: allocation.C[*node.N]{
+						1: node.New(node.O{
+							Index: 1,
+							Left:  2,
+							Right: 3,
+							Bound: *hyperrectangle.New(
+								*vector.New(0, 0),
+								*vector.New(50, 50),
+							),
+						}),
+						2: node.New(node.O{
+							ID:     "bar",
+							Index:  2,
+							Parent: 1,
+							Bound: *hyperrectangle.New(
+								*vector.New(20, 20),
+								*vector.New(50, 50),
+							),
+						}),
+						3: node.New(node.O{
+							ID:     "foo",
+							Index:  3,
+							Parent: 1,
+							Bound: *hyperrectangle.New(
+								*vector.New(0, 0),
+								*vector.New(10, 10),
+							),
+						}),
+					},
+					root: 1,
+				},
+			}
+		}(),
 	}
 
 	for _, c := range configs {
