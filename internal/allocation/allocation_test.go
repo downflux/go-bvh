@@ -34,7 +34,7 @@ func TestInsert(t *testing.T) {
 	configs := []config{
 		func() config {
 			c := New[*m](nil)
-			return config {
+			return config{
 				name: "Trivial",
 				c:    c,
 				id:   c.Allocate(),
@@ -47,7 +47,7 @@ func TestInsert(t *testing.T) {
 			id := c.Allocate()
 			c.Insert(id, &m{})
 
-			return config {
+			return config{
 				name: "Duplicate",
 				c:    c,
 				id:   id,
@@ -56,11 +56,11 @@ func TestInsert(t *testing.T) {
 			}
 		}(),
 		{
-				name: "Unallocated",
-				c:    New[*m](nil),
-				id:   0,
-				data: &m{},
-				succ: false,
+			name: "Unallocated",
+			c:    New[*m](nil),
+			id:   0,
+			data: &m{},
+			succ: false,
 		},
 	}
 

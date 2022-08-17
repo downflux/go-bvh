@@ -1,6 +1,9 @@
 package node
 
 import (
+	"fmt"
+
+	"github.com/downflux/go-bvh/internal/allocation"
 	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
@@ -13,19 +16,17 @@ import (
 // be created with a new index.
 //
 // Insert will return the new root.
-func Insert(root *N, id point.ID, bound hyperrectangle.R) *N {
+func Insert(nodes allocation.C[*N], root *N, id point.ID, bound hyperrectangle.R) *N {
 	if root == nil {
-		ns := Nodes(make(map[Index]*N))
-		nid := ns.Allocate()
+		nid := nodes.Allocate()
 		n := New(O{
-			ID: id,
-
-			Nodes: ns,
+			ID:    id,
 			Index: nid,
-
 			Bound: bound,
 		})
-		n.nodes.Insert(nid, n)
+		if err := nodes.Insert(nid, n); err != nil {
+			panic(fmt.Sprintf("cannot insert node: %s", err))
+		}
 		return n
 	}
 
@@ -39,7 +40,7 @@ func Insert(root *N, id point.ID, bound hyperrectangle.R) *N {
 		direct := heuristic.Heuristic(bhr.Union(bound, n.Bound()))
 
 		inherited := heuristic.H(0.0)
-		for m := n.Parent(); m.Parent() != nil; m = m.Parent() {
+		for m := Parent(nodes, n); Parent(nodes, m) != nil; m = Parent(nodes, m) {
 			inherited += heuristic.Heuristic(bhr.Union(bound, m.Bound())) - heuristic.Heuristic(bound)
 		}
 
@@ -49,47 +50,45 @@ func Insert(root *N, id point.ID, bound hyperrectangle.R) *N {
 
 		h := heuristic.Heuristic(bound) + (heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(n.Bound()))
 		if float64(h) < -q.Priority() {
-			q.Push(n.Left(), -float64(h))
-			q.Push(n.Right(), -float64(h))
+			q.Push(Left(nodes, n), -float64(h))
+			q.Push(Right(nodes, n), -float64(h))
 		}
 	}
 
 	// Create new parent.
-	pid := root.nodes.Allocate()
-	nid := root.nodes.Allocate()
+	pid := nodes.Allocate()
+	nid := nodes.Allocate()
 	n := New(O{
 		ID: id,
 
-		Nodes:  root.nodes,
 		Index:  nid,
 		Parent: pid,
 
 		Bound: bound,
 	})
 	p := New(O{
-		Nodes:  root.nodes,
 		Index:  pid,
-		Parent: candidate.Parent().Index(),
+		Parent: Parent(nodes, candidate).Index(),
 		Left:   nid,
 		Right:  candidate.Index(),
 
 		Bound: bhr.Union(bound, candidate.Bound()),
 	})
-	root.nodes.Insert(nid, n)
-	root.nodes.Insert(pid, p)
-	if candidate.Parent() != nil {
-		if candidate.Parent().Left() == candidate {
-			candidate.Parent().left = pid
+	nodes.Insert(nid, n)
+	nodes.Insert(pid, p)
+	if Parent(nodes, candidate) != nil {
+		if Left(nodes, Parent(nodes, candidate)) == candidate {
+			Parent(nodes, candidate).left = pid
 		} else {
-			candidate.Parent().right = pid
+			Parent(nodes, candidate).right = pid
 		}
 	}
 	candidate.parent = pid
-	p.Left().parent = pid
+	Left(nodes, p).parent = pid
 
 	// Refit AABBs.
 	var m *N
-	for m = p.Parent(); m.Parent() != nil; m = m.Parent() {
+	for m = Parent(nodes, p); Parent(nodes, m) != nil; m = Parent(nodes, m) {
 		m.bound = bhr.Union(bound, m.Bound())
 	}
 
