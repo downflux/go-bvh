@@ -49,6 +49,51 @@ func candidate(nodes allocation.C[*node.N], root *node.N, bound hyperrectangle.R
 	return c
 }
 
+// parent creates a new parent node for a candidate r. This parent will have
+// have the old node and a newly-created node with the given bounds.
+//
+// This function will modify the allocation table as a side-effect.
+func parent(nodes allocation.C[*node.N], r *node.N, id point.ID, bound hyperrectangle.R) *node.N {
+	pid := nodes.Allocate()
+	lid := nodes.Allocate()
+
+	l := node.New(node.O{
+		ID: id,
+
+		Index:  lid,
+		Parent: pid,
+
+		Bound: bound,
+	})
+
+	var aid allocation.ID
+	if node.Parent(nodes, r) != nil {
+		aid = node.Parent(nodes, r).Index()
+	}
+
+	p := node.New(node.O{
+		Index:  pid,
+		Parent: aid,
+		Left:   lid,
+		Right:  r.Index(),
+
+		Bound: bhr.Union(bound, r.Bound()),
+	})
+	nodes.Insert(lid, l)
+	nodes.Insert(pid, p)
+	if node.Parent(nodes, r) != nil {
+		if node.Left(nodes, node.Parent(nodes, r)) == r {
+			node.Parent(nodes, r).SetLeft(pid)
+		} else {
+			node.Parent(nodes, r).SetRight(pid)
+		}
+	}
+	r.SetParent(pid)
+	node.Left(nodes, p).SetParent(pid)
+
+	return p
+}
+
 // Insert adds the given point into the tree. If a new node is created, it will
 // be created with a new index.
 //
@@ -71,41 +116,10 @@ func Insert(nodes allocation.C[*node.N], root *node.N, id point.ID, bound hyperr
 	c := candidate(nodes, root, bound)
 
 	// Create new parent.
-	pid := nodes.Allocate()
-	nid := nodes.Allocate()
-	n := node.New(node.O{
-		ID: id,
+	p := parent(nodes, c, id, bound)
 
-		Index:  nid,
-		Parent: pid,
-
-		Bound: bound,
-	})
-	var aid allocation.ID
-	if node.Parent(nodes, c) != nil {
-		aid = node.Parent(nodes, c).Index()
-	}
-	p := node.New(node.O{
-		Index:  pid,
-		Parent: aid,
-		Left:   nid,
-		Right:  c.Index(),
-
-		Bound: bhr.Union(bound, c.Bound()),
-	})
-	nodes.Insert(nid, n)
-	nodes.Insert(pid, p)
-	if node.Parent(nodes, c) != nil {
-		if node.Left(nodes, node.Parent(nodes, c)) == c {
-			node.Parent(nodes, c).SetLeft(pid)
-		} else {
-			node.Parent(nodes, c).SetRight(pid)
-		}
-	}
-	c.SetParent(pid)
-	node.Left(nodes, p).SetParent(pid)
-
-	// Walk back up the tree refitting AABBs and applying rotations.
+	// Walk back up the tree refitting AABBs and applying rotations, and
+	// find the new root.
 	var m *node.N
 	for m = p; node.Parent(nodes, m) != nil; m = node.Parent(nodes, m) {
 		m.SetBound(bhr.Union(bound, m.Bound()))
