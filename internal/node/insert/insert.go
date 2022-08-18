@@ -17,25 +17,30 @@ import (
 // inserted. This is based on the branch-and-bound algorithm (Catto 2019).
 func candidate(nodes allocation.C[*node.N], root *node.N, bound hyperrectangle.R) *node.N {
 	q := pq.New[*node.N](0)
-	q.Push(root, -float64(heuristic.Heuristic(bhr.Union(root.Bound(), bound))))
 
+	// Note that the priority queue is a max-heap, so we will need to flip
+	// the heuristic signs.
+	q.Push(root, -float64(heuristic.Direct(root, bound)))
 	c := root
 
 	for q.Len() > 0 {
 		n := q.Pop()
 
-		direct := heuristic.Heuristic(bhr.Union(bound, n.Bound()))
+		inherited := heuristic.Inherited(nodes, n, bound)
 
-		inherited := heuristic.H(0.0)
-		for m := node.Parent(nodes, n); m != nil && node.Parent(nodes, m) != nil; m = node.Parent(nodes, m) {
-			inherited += heuristic.Heuristic(bhr.Union(bound, m.Bound())) - heuristic.Heuristic(bound)
-		}
-
-		if float64(direct+inherited) < -q.Priority() {
+		// Check if the current node is a better insertion candidate.
+		if float64(heuristic.Direct(n, bound)+inherited) < -q.Priority() {
 			c = n
 		}
 
-		h := heuristic.Heuristic(bound) + (heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(n.Bound()))
+		// Append queue children to the queue if the lower bound for
+		// inserting into the child is less than the current minimum
+		// (i.e. there's room for optimization).
+		//
+		// Note that the inherited heuristic is the same between the
+		// left and right children.
+		inherited += heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(bound)
+		h := heuristic.Heuristic(bound) + inherited
 		if float64(h) < -q.Priority() {
 			q.Push(node.Left(nodes, n), -float64(h))
 			q.Push(node.Right(nodes, n), -float64(h))
