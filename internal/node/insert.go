@@ -12,6 +12,37 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
+// candidate finds the node to which an object with the given bound will be
+// inserted. This is based on the branch-and-bound algorithm (Catto 2019).
+func candidate(nodes allocation.C[*N], root *N, bound hyperrectangle.R) *N {
+	q := pq.New[*N](0)
+	q.Push(root, -float64(heuristic.Heuristic(bhr.Union(root.Bound(), bound))))
+
+	c := root
+
+	for q.Len() > 0 {
+		n := q.Pop()
+
+		direct := heuristic.Heuristic(bhr.Union(bound, n.Bound()))
+
+		inherited := heuristic.H(0.0)
+		for m := Parent(nodes, n); m != nil && Parent(nodes, m) != nil; m = Parent(nodes, m) {
+			inherited += heuristic.Heuristic(bhr.Union(bound, m.Bound())) - heuristic.Heuristic(bound)
+		}
+
+		if float64(direct+inherited) < -q.Priority() {
+			c = n
+		}
+
+		h := heuristic.Heuristic(bound) + (heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(n.Bound()))
+		if float64(h) < -q.Priority() {
+			q.Push(Left(nodes, n), -float64(h))
+			q.Push(Right(nodes, n), -float64(h))
+		}
+	}
+	return c
+}
+
 // Insert adds the given point into the tree. If a new node is created, it will
 // be created with a new index.
 //
@@ -31,29 +62,7 @@ func Insert(nodes allocation.C[*N], root *N, id point.ID, bound hyperrectangle.R
 	}
 
 	// Find best new sibling for the new leaf.
-	q := pq.New[*N](0)
-	q.Push(root, -float64(heuristic.Heuristic(bhr.Union(root.Bound(), bound))))
-
-	candidate := root
-
-	for n := q.Pop(); !q.Empty(); n = q.Pop() {
-		direct := heuristic.Heuristic(bhr.Union(bound, n.Bound()))
-
-		inherited := heuristic.H(0.0)
-		for m := Parent(nodes, n); Parent(nodes, m) != nil; m = Parent(nodes, m) {
-			inherited += heuristic.Heuristic(bhr.Union(bound, m.Bound())) - heuristic.Heuristic(bound)
-		}
-
-		if float64(direct+inherited) < -q.Priority() {
-			candidate = n
-		}
-
-		h := heuristic.Heuristic(bound) + (heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(n.Bound()))
-		if float64(h) < -q.Priority() {
-			q.Push(Left(nodes, n), -float64(h))
-			q.Push(Right(nodes, n), -float64(h))
-		}
-	}
+	c := candidate(nodes, root, bound)
 
 	// Create new parent.
 	pid := nodes.Allocate()
@@ -67,27 +76,27 @@ func Insert(nodes allocation.C[*N], root *N, id point.ID, bound hyperrectangle.R
 		Bound: bound,
 	})
 	var aid allocation.ID
-	if Parent(nodes, candidate) != nil {
-		aid = Parent(nodes, candidate).Index()
+	if Parent(nodes, c) != nil {
+		aid = Parent(nodes, c).Index()
 	}
 	p := New(O{
 		Index:  pid,
 		Parent: aid,
 		Left:   nid,
-		Right:  candidate.Index(),
+		Right:  c.Index(),
 
-		Bound: bhr.Union(bound, candidate.Bound()),
+		Bound: bhr.Union(bound, c.Bound()),
 	})
 	nodes.Insert(nid, n)
 	nodes.Insert(pid, p)
-	if Parent(nodes, candidate) != nil {
-		if Left(nodes, Parent(nodes, candidate)) == candidate {
-			Parent(nodes, candidate).left = pid
+	if Parent(nodes, c) != nil {
+		if Left(nodes, Parent(nodes, c)) == c {
+			Parent(nodes, c).left = pid
 		} else {
-			Parent(nodes, candidate).right = pid
+			Parent(nodes, c).right = pid
 		}
 	}
-	candidate.parent = pid
+	c.parent = pid
 	Left(nodes, p).parent = pid
 
 	// Walk back up the tree refitting AABBs and applying rotations.
