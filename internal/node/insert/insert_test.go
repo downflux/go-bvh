@@ -1,4 +1,4 @@
-package node_test
+package insert
 
 import (
 	"testing"
@@ -112,7 +112,7 @@ func TestInsert(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			q := node.Insert(c.nodes, c.root, c.id, c.bound)
+			q := Insert(c.nodes, c.root, c.id, c.bound)
 			got := result{
 				allocation: c.nodes,
 				root:       q.Index(),

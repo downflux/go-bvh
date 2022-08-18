@@ -4,7 +4,6 @@ import (
 	"github.com/downflux/go-bvh/internal/allocation"
 	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
-	"github.com/downflux/go-geometry/nd/vector"
 )
 
 type O struct {
@@ -47,8 +46,10 @@ func (n *N) Bound() hyperrectangle.R { return n.bound }
 func (n *N) Index() allocation.ID { return n.index }
 func (n *N) ID() point.ID         { return n.id }
 
-func (n *N) Move(id point.ID, offset vector.V) bool { return false }
-func (n *N) Remove(id point.ID) bool                { return false }
+func (n *N) SetParent(id allocation.ID)      { n.parent = id }
+func (n *N) SetLeft(id allocation.ID)        { n.left = id }
+func (n *N) SetRight(id allocation.ID)       { n.right = id }
+func (n *N) SetBound(bound hyperrectangle.R) { n.bound = bound }
 
 func Leaf(c allocation.C[*N], n *N) bool { return Left(c, n) == nil && Right(c, n) == nil }
 func Left(c allocation.C[*N], n *N) *N   { return c[n.left] }
