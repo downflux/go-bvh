@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestCandidate(t *testing.T) {
+func TestFindCandidate(t *testing.T) {
 	type config struct {
 		name string
 
@@ -47,15 +47,15 @@ func TestCandidate(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := candidate(c.nodes, c.rid, c.bound)
+			got := findCandidate(Inserter{a: c.nodes}, c.rid, c.bound)
 			if diff := cmp.Diff(c.want, got, cmp.AllowUnexported(node.N{}, hyperrectangle.R{})); diff != "" {
-				t.Errorf("candidate() mismatch (-want +got):\n%v", diff)
+				t.Errorf("findCandidate() mismatch (-want +got):\n%v", diff)
 			}
 		})
 	}
 }
 
-func TestInsert(t *testing.T) {
+func TestExecute(t *testing.T) {
 	type result struct {
 		allocation allocation.C[*node.N]
 		root       allocation.ID
@@ -155,7 +155,7 @@ func TestInsert(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			qid := Insert(c.nodes, c.rid, c.id, c.bound)
+			qid := Inserter{a: c.nodes}.Execute(c.rid, c.id, c.bound)
 			got := result{
 				allocation: c.nodes,
 				root:       qid,
@@ -174,7 +174,7 @@ func TestInsert(t *testing.T) {
 					},
 				),
 			); diff != "" {
-				t.Errorf("Insert() mismatch (-want +got):\n%v", diff)
+				t.Errorf("Execute() mismatch (-want +got):\n%v", diff)
 			}
 		})
 	}
