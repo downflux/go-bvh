@@ -17,10 +17,10 @@ func TestCandidate(t *testing.T) {
 		name string
 
 		nodes allocation.C[*node.N]
-		root  *node.N
+		rid   allocation.ID
 		bound hyperrectangle.R
 
-		want *node.N
+		want allocation.ID
 	}
 
 	configs := []config{
@@ -36,32 +36,18 @@ func TestCandidate(t *testing.T) {
 					),
 				}),
 			},
-			root: node.New(node.O{
-				ID:    "foo",
-				Index: 1,
-				Bound: *hyperrectangle.New(
-					*vector.New(0, 0),
-					*vector.New(10, 10),
-				),
-			}),
+			rid: 1,
 			bound: *hyperrectangle.New(
 				*vector.New(100, 100),
 				*vector.New(1000, 1000),
 			),
-			want: node.New(node.O{
-				ID:    "foo",
-				Index: 1,
-				Bound: *hyperrectangle.New(
-					*vector.New(0, 0),
-					*vector.New(10, 10),
-				),
-			}),
+			want: 1,
 		},
 	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := candidate(c.nodes, c.root, c.bound)
+			got := candidate(c.nodes, c.rid, c.bound)
 			if diff := cmp.Diff(c.want, got, cmp.AllowUnexported(node.N{}, hyperrectangle.R{})); diff != "" {
 				t.Errorf("candidate() mismatch (-want +got):\n%v", diff)
 			}
@@ -79,7 +65,7 @@ func TestInsert(t *testing.T) {
 		name string
 
 		nodes allocation.C[*node.N]
-		root  *node.N
+		rid   allocation.ID
 		id    point.ID
 		bound hyperrectangle.R
 		want  result
@@ -89,7 +75,7 @@ func TestInsert(t *testing.T) {
 		{
 			name:  "Trival",
 			nodes: allocation.New[*node.N](),
-			root:  nil,
+			rid:   404,
 			id:    "foo",
 			bound: *hyperrectangle.New(
 				*vector.New(0, 0),
@@ -125,7 +111,7 @@ func TestInsert(t *testing.T) {
 			return config{
 				name:  "SingleNode",
 				nodes: c,
-				root:  n,
+				rid:   n.Index(),
 				id:    "bar",
 				bound: *hyperrectangle.New(
 					*vector.New(20, 20),
@@ -169,10 +155,10 @@ func TestInsert(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			q := Insert(c.nodes, c.root, c.id, c.bound)
+			qid := Insert(c.nodes, c.rid, c.id, c.bound)
 			got := result{
 				allocation: c.nodes,
-				root:       q.Index(),
+				root:       qid,
 			}
 
 			if diff := cmp.Diff(

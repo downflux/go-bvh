@@ -15,8 +15,9 @@ import (
 
 // candidate finds the node to which an object with the given bound will be
 // inserted. This is based on the branch-and-bound algorithm (Catto 2019).
-func candidate(nodes allocation.C[*node.N], root *node.N, bound hyperrectangle.R) *node.N {
-	if root == nil {
+func candidate(nodes allocation.C[*node.N], rid allocation.ID, bound hyperrectangle.R) allocation.ID {
+	root, ok := nodes[rid]
+	if !ok {
 		panic("cannot find candidate for an empty root node")
 	}
 
@@ -56,14 +57,16 @@ func candidate(nodes allocation.C[*node.N], root *node.N, bound hyperrectangle.R
 			q.Push(node.Right(nodes, n), -float64(h))
 		}
 	}
-	return c
+	return c.Index()
 }
 
 // parent creates a new parent node for a candidate r. This parent will have
 // have the old node and a newly-created node with the given bounds.
 //
 // This function will modify the allocation table as a side-effect.
-func parent(nodes allocation.C[*node.N], r *node.N, id point.ID, bound hyperrectangle.R) *node.N {
+func parent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
+	r := nodes[rid]
+
 	pid := nodes.Allocate()
 	lid := nodes.Allocate()
 
@@ -85,7 +88,7 @@ func parent(nodes allocation.C[*node.N], r *node.N, id point.ID, bound hyperrect
 		Index:  pid,
 		Parent: aid,
 		Left:   lid,
-		Right:  r.Index(),
+		Right:  rid,
 
 		Bound: bhr.Union(bound, r.Bound()),
 	})
@@ -101,15 +104,15 @@ func parent(nodes allocation.C[*node.N], r *node.N, id point.ID, bound hyperrect
 	r.SetParent(pid)
 	node.Left(nodes, p).SetParent(pid)
 
-	return p
+	return pid
 }
 
 // Insert adds the given point into the tree. If a new node is created, it will
 // be created with a new index.
 //
 // Insert will return the new root.
-func Insert(nodes allocation.C[*node.N], root *node.N, id point.ID, bound hyperrectangle.R) *node.N {
-	if root == nil {
+func Insert(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
+	if _, ok := nodes[root]; !ok {
 		nid := nodes.Allocate()
 		n := node.New(node.O{
 			ID:    id,
@@ -119,23 +122,23 @@ func Insert(nodes allocation.C[*node.N], root *node.N, id point.ID, bound hyperr
 		if err := nodes.Insert(nid, n); err != nil {
 			panic(fmt.Sprintf("cannot insert node: %s", err))
 		}
-		return n
+		return n.Index()
 	}
 
 	// Find best new sibling for the new leaf.
-	c := candidate(nodes, root, bound)
+	cid := candidate(nodes, root, bound)
 
 	// Create new parent.
-	p := parent(nodes, c, id, bound)
+	pid := parent(nodes, cid, id, bound)
 
 	// Walk back up the tree refitting AABBs and applying rotations, and
 	// find the new root.
 	var m *node.N
-	for m = p; node.Parent(nodes, m) != nil; m = node.Parent(nodes, m) {
+	for m = nodes[pid]; node.Parent(nodes, m) != nil; m = node.Parent(nodes, m) {
 		m.SetBound(bhr.Union(bound, m.Bound()))
 
 		// TODO(minkezhang): Apply rotation.
 	}
 
-	return m
+	return m.Index()
 }
