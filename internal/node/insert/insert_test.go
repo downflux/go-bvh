@@ -12,12 +12,69 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-type result struct {
-	allocation allocation.C[*node.N]
-	root       allocation.ID
+func TestCandidate(t *testing.T) {
+	type config struct {
+		name string
+
+		nodes allocation.C[*node.N]
+		root  *node.N
+		bound hyperrectangle.R
+
+		want *node.N
+	}
+
+	configs := []config{
+		{
+			name: "SimpleRoot",
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					ID:    "foo",
+					Index: 1,
+					Bound: *hyperrectangle.New(
+						*vector.New(0, 0),
+						*vector.New(10, 10),
+					),
+				}),
+			},
+			root: node.New(node.O{
+				ID:    "foo",
+				Index: 1,
+				Bound: *hyperrectangle.New(
+					*vector.New(0, 0),
+					*vector.New(10, 10),
+				),
+			}),
+			bound: *hyperrectangle.New(
+				*vector.New(100, 100),
+				*vector.New(1000, 1000),
+			),
+			want: node.New(node.O{
+				ID:    "foo",
+				Index: 1,
+				Bound: *hyperrectangle.New(
+					*vector.New(0, 0),
+					*vector.New(10, 10),
+				),
+			}),
+		},
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			got := candidate(c.nodes, c.root, c.bound)
+			if diff := cmp.Diff(c.want, got, cmp.AllowUnexported(node.N{}, hyperrectangle.R{})); diff != "" {
+				t.Errorf("candidate() mismatch (-want +got):\n%v", diff)
+			}
+		})
+	}
 }
 
 func TestInsert(t *testing.T) {
+	type result struct {
+		allocation allocation.C[*node.N]
+		root       allocation.ID
+	}
+
 	type config struct {
 		name string
 

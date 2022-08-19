@@ -16,6 +16,10 @@ import (
 // candidate finds the node to which an object with the given bound will be
 // inserted. This is based on the branch-and-bound algorithm (Catto 2019).
 func candidate(nodes allocation.C[*node.N], root *node.N, bound hyperrectangle.R) *node.N {
+	if root == nil {
+		panic("cannot find candidate for an empty root node")
+	}
+
 	q := pq.New[*node.N](0)
 
 	// Note that the priority queue is a max-heap, so we will need to flip
@@ -39,8 +43,14 @@ func candidate(nodes allocation.C[*node.N], root *node.N, bound hyperrectangle.R
 		//
 		// Note that the inherited heuristic is the same between the
 		// left and right children.
-		inherited += heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(bound)
-		h := heuristic.Heuristic(bound) + inherited
+		//
+		// N.B.: The full expression for the node expansion heuristic is
+		//
+		//   inherited += heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(bound)
+		//   h := heuristic.Heuristic(bound) + inherited
+		//
+		// Note that the bounding heuristic cancels out.
+		h := inherited + heuristic.Heuristic(bhr.Union(bound, n.Bound()))
 		if float64(h) < -q.Priority() {
 			q.Push(node.Left(nodes, n), -float64(h))
 			q.Push(node.Right(nodes, n), -float64(h))
