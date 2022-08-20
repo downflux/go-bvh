@@ -32,7 +32,7 @@ func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound
 	}
 
 	// Find best new sibling for the new leaf.
-	cid := findCandidate(nodes, root, bound)
+	cid := findSibling(nodes, root, bound)
 
 	// Create new parent.
 	pid := createParent(nodes, cid, id, bound)
@@ -96,9 +96,10 @@ func createParent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, b
 	return pid
 }
 
-// findCandidate finds the node to which an object with the given bound will be
-// inserted. This is based on the branch-and-bound algorithm (Catto 2019).
-func findCandidate(nodes allocation.C[*node.N], rid allocation.ID, bound hyperrectangle.R) allocation.ID {
+// findSibling finds the node to which an object with the given bound will
+// siblings. A new parent node will be created above both the sibling and the
+// input bound. This is based on the branch-and-bound algorithm (Catto 2019).
+func findSibling(nodes allocation.C[*node.N], rid allocation.ID, bound hyperrectangle.R) allocation.ID {
 	root, ok := nodes[rid]
 	if !ok {
 		panic("cannot find candidate for an empty root node")
@@ -109,16 +110,24 @@ func findCandidate(nodes allocation.C[*node.N], rid allocation.ID, bound hyperre
 	// Note that the priority queue is a max-heap, so we will need to flip
 	// the heuristic signs.
 	q.Push(root, -float64(heuristic.Direct(root, bound)))
+
 	c := root
+	d := -q.Priority()
+
+	fmt.Printf("DEBUG: root H == %v\n", d)
 
 	for q.Len() > 0 {
 		n := q.Pop()
 
 		inherited := heuristic.Inherited(nodes, n, bound)
 
+		fmt.Printf("DEBUG: cost of node %v is %v\n", n.Index(), float64(heuristic.Direct(n, bound)+inherited))
+
 		// Check if the current node is a better insertion candidate.
-		if float64(heuristic.Direct(n, bound)+inherited) < -q.Priority() {
+		actual := float64(heuristic.Direct(n, bound) + inherited)
+		if actual < d {
 			c = n
+			d = actual
 		}
 
 		// Append queue children to the queue if the lower bound for
@@ -130,14 +139,19 @@ func findCandidate(nodes allocation.C[*node.N], rid allocation.ID, bound hyperre
 		//
 		// N.B.: The full expression for the node expansion heuristic is
 		//
-		//   inherited += heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(bound)
-		//   h := heuristic.Heuristic(bound) + inherited
+		//   inherited += heuristic.Heuristic(bhr.Union(bound,
+		//   n.Bound())) - heuristic.Heuristic(n.Bound())
+		//   estimated := heuristic.Heuristic(bound) + inherited
 		//
 		// Note that the bounding heuristic cancels out.
-		h := inherited + heuristic.Heuristic(bhr.Union(bound, n.Bound()))
-		if float64(h) < -q.Priority() {
-			q.Push(node.Left(nodes, n), -float64(h))
-			q.Push(node.Right(nodes, n), -float64(h))
+		fmt.Printf("DEBUG: inherited == %v\n", inherited)
+
+		inherited += heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(n.Bound())
+		estimated := heuristic.Heuristic(bound) + inherited
+		fmt.Printf("DEBUG: lower bound of child nodes == %v\n", estimated)
+		if float64(estimated) < d {
+			q.Push(node.Left(nodes, n), -float64(estimated))
+			q.Push(node.Right(nodes, n), -float64(estimated))
 		}
 	}
 	return c.Index()

@@ -31,6 +31,9 @@ func Inherited(nodes allocation.C[*node.N], n *node.N, bound hyperrectangle.R) H
 	}
 
 	h := H(0.0)
+	// This naturally means leaf nodes have no cost, as we are only
+	// considering parent nodes. In the case we have multiple points in a
+	// single leaf node, we may need to revise this.
 	for m := node.Parent(nodes, n); m != nil; m = node.Parent(nodes, m) {
 		h += Heuristic(bhr.Union(bound, m.Bound())) - Heuristic(bound)
 	}

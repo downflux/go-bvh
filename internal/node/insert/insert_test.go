@@ -12,6 +12,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func Interval(min float64, max float64) hyperrectangle.R {
+	return *hyperrectangle.New(*vector.New(min), *vector.New(max))
+}
+
 func TestFindCandidate(t *testing.T) {
 	type config struct {
 		name string
@@ -43,11 +47,59 @@ func TestFindCandidate(t *testing.T) {
 			),
 			want: 1,
 		},
+		{
+			name: "AvoidChildCheck",
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					Index: 1,
+					Left:  2,
+					Right: 3,
+					Bound: Interval(0, 100),
+				}),
+
+				2: node.New(node.O{
+					Index: 2,
+					Left:  4,
+					Right: 5,
+					Bound: Interval(0, 10),
+				}),
+				3: node.New(node.O{
+					Index: 3,
+					Left:  6,
+					Right: 7,
+					Bound: Interval(50, 100),
+				}),
+
+				4: node.New(node.O{
+					ID:    "node-a",
+					Index: 4,
+					Bound: Interval(0, 1),
+				}),
+				5: node.New(node.O{
+					ID:    "node-b",
+					Index: 5,
+					Bound: Interval(9, 10),
+				}),
+				6: node.New(node.O{
+					ID:    "node-c",
+					Index: 6,
+					Bound: Interval(50, 51),
+				}),
+				7: node.New(node.O{
+					ID:    "node-d",
+					Index: 7,
+					Bound: Interval(99, 100),
+				}),
+			},
+			rid:   1,
+			bound: Interval(40, 60),
+			want:  3,
+		},
 	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := findCandidate(c.nodes, c.rid, c.bound)
+			got := findSibling(c.nodes, c.rid, c.bound)
 			if diff := cmp.Diff(c.want, got, cmp.AllowUnexported(node.N{}, hyperrectangle.R{})); diff != "" {
 				t.Errorf("findCandidate() mismatch (-want +got):\n%v", diff)
 			}
