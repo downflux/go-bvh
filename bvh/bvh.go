@@ -33,6 +33,7 @@ func (bvh *BVH[T]) Insert(p T) {
 	}
 
 	bvh.data[p.ID()] = p
+	// TODO(minkezhang): Expand bound by some percentage.
 	bvh.root = insert.Execute(bvh.allocation, bvh.root, p.ID(), p.Bound())
 }
 
