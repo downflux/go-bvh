@@ -13,44 +13,34 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
-type Inserter struct {
-	a allocation.C[*node.N]
-}
-
-func New(a allocation.C[*node.N]) *Inserter {
-	return &Inserter{
-		a: a,
-	}
-}
-
 // Execute adds the given point into the tree. If a new node is created, it will
 // be created with a new index.
 //
 // This function will return the new root.
-func (c Inserter) Execute(root allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
-	if _, ok := c.a[root]; !ok {
-		nid := c.a.Allocate()
+func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
+	if _, ok := nodes[root]; !ok {
+		nid := nodes.Allocate()
 		n := node.New(node.O{
 			ID:    id,
 			Index: nid,
 			Bound: bound,
 		})
-		if err := c.a.Insert(nid, n); err != nil {
+		if err := nodes.Insert(nid, n); err != nil {
 			panic(fmt.Sprintf("cannot insert node: %s", err))
 		}
 		return n.Index()
 	}
 
 	// Find best new sibling for the new leaf.
-	cid := findCandidate(c, root, bound)
+	cid := findCandidate(nodes, root, bound)
 
 	// Create new parent.
-	pid := c.createParent(cid, id, bound)
+	pid := createParent(nodes, cid, id, bound)
 
 	// Walk back up the tree refitting AABBs and applying rotations, and
 	// find the new root.
 	var m *node.N
-	for m = c.a[pid]; node.Parent(c.a, m) != nil; m = node.Parent(c.a, m) {
+	for m = nodes[pid]; node.Parent(nodes, m) != nil; m = node.Parent(nodes, m) {
 		m.SetBound(bhr.Union(bound, m.Bound()))
 
 		// TODO(minkezhang): Apply rotation.
@@ -63,11 +53,11 @@ func (c Inserter) Execute(root allocation.ID, id point.ID, bound hyperrectangle.
 // have have the old node and a newly-created node with the given bounds.
 //
 // This function will modify the allocation table as a side-effect.
-func (c Inserter) createParent(rid allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
-	r := c.a[rid]
+func createParent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
+	r := nodes[rid]
 
-	pid := c.a.Allocate()
-	lid := c.a.Allocate()
+	pid := nodes.Allocate()
+	lid := nodes.Allocate()
 
 	l := node.New(node.O{
 		ID: id,
@@ -79,8 +69,8 @@ func (c Inserter) createParent(rid allocation.ID, id point.ID, bound hyperrectan
 	})
 
 	var aid allocation.ID
-	if node.Parent(c.a, r) != nil {
-		aid = node.Parent(c.a, r).Index()
+	if node.Parent(nodes, r) != nil {
+		aid = node.Parent(nodes, r).Index()
 	}
 
 	p := node.New(node.O{
@@ -91,25 +81,25 @@ func (c Inserter) createParent(rid allocation.ID, id point.ID, bound hyperrectan
 
 		Bound: bhr.Union(bound, r.Bound()),
 	})
-	c.a.Insert(lid, l)
-	c.a.Insert(pid, p)
-	if node.Parent(c.a, r) != nil {
-		if node.Left(c.a, node.Parent(c.a, r)) == r {
-			node.Parent(c.a, r).SetLeft(pid)
+	nodes.Insert(lid, l)
+	nodes.Insert(pid, p)
+	if node.Parent(nodes, r) != nil {
+		if node.Left(nodes, node.Parent(nodes, r)) == r {
+			node.Parent(nodes, r).SetLeft(pid)
 		} else {
-			node.Parent(c.a, r).SetRight(pid)
+			node.Parent(nodes, r).SetRight(pid)
 		}
 	}
 	r.SetParent(pid)
-	node.Left(c.a, p).SetParent(pid)
+	node.Left(nodes, p).SetParent(pid)
 
 	return pid
 }
 
 // findCandidate finds the node to which an object with the given bound will be
 // inserted. This is based on the branch-and-bound algorithm (Catto 2019).
-func findCandidate(inserter Inserter, rid allocation.ID, bound hyperrectangle.R) allocation.ID {
-	root, ok := inserter.a[rid]
+func findCandidate(nodes allocation.C[*node.N], rid allocation.ID, bound hyperrectangle.R) allocation.ID {
+	root, ok := nodes[rid]
 	if !ok {
 		panic("cannot find candidate for an empty root node")
 	}
@@ -124,7 +114,7 @@ func findCandidate(inserter Inserter, rid allocation.ID, bound hyperrectangle.R)
 	for q.Len() > 0 {
 		n := q.Pop()
 
-		inherited := heuristic.Inherited(inserter.a, n, bound)
+		inherited := heuristic.Inherited(nodes, n, bound)
 
 		// Check if the current node is a better insertion candidate.
 		if float64(heuristic.Direct(n, bound)+inherited) < -q.Priority() {
@@ -146,8 +136,8 @@ func findCandidate(inserter Inserter, rid allocation.ID, bound hyperrectangle.R)
 		// Note that the bounding heuristic cancels out.
 		h := inherited + heuristic.Heuristic(bhr.Union(bound, n.Bound()))
 		if float64(h) < -q.Priority() {
-			q.Push(node.Left(inserter.a, n), -float64(h))
-			q.Push(node.Right(inserter.a, n), -float64(h))
+			q.Push(node.Left(nodes, n), -float64(h))
+			q.Push(node.Right(nodes, n), -float64(h))
 		}
 	}
 	return c.Index()

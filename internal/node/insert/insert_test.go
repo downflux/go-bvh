@@ -47,7 +47,7 @@ func TestFindCandidate(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := findCandidate(Inserter{a: c.nodes}, c.rid, c.bound)
+			got := findCandidate(c.nodes, c.rid, c.bound)
 			if diff := cmp.Diff(c.want, got, cmp.AllowUnexported(node.N{}, hyperrectangle.R{})); diff != "" {
 				t.Errorf("findCandidate() mismatch (-want +got):\n%v", diff)
 			}
@@ -155,7 +155,7 @@ func TestExecute(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			qid := Inserter{a: c.nodes}.Execute(c.rid, c.id, c.bound)
+			qid := Execute(c.nodes, c.rid, c.id, c.bound)
 			got := result{
 				allocation: c.nodes,
 				root:       qid,
