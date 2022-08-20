@@ -33,7 +33,7 @@ func (bvh *BVH[T]) Insert(p T) {
 	}
 
 	bvh.data[p.ID()] = p
-	bvh.root = insert.New(bvh.allocation).Execute(bvh.root, p.ID(), p.Bound())
+	bvh.root = insert.Execute(bvh.allocation, bvh.root, p.ID(), p.Bound())
 }
 
 func (bvh *BVH[T]) Move(id point.ID, dp vector.V) bool {
