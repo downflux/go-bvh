@@ -9,7 +9,10 @@ type ID int
 
 type C[T comparable] map[ID]T
 
-func New[T comparable]() C[T] { return C[T](map[ID]T{}) }
+func New[T comparable]() *C[T] {
+	c := C[T](map[ID]T{})
+	return &c
+}
 
 func (c C[T]) Allocate() ID {
 	var i ID

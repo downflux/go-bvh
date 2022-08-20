@@ -17,6 +17,12 @@ type Inserter struct {
 	a allocation.C[*node.N]
 }
 
+func New(a allocation.C[*node.N]) *Inserter {
+	return &Inserter{
+		a: a,
+	}
+}
+
 // Execute adds the given point into the tree. If a new node is created, it will
 // be created with a new index.
 //

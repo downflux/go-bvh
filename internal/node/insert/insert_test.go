@@ -74,7 +74,7 @@ func TestExecute(t *testing.T) {
 	configs := []config{
 		{
 			name:  "Trival",
-			nodes: allocation.New[*node.N](),
+			nodes: *allocation.New[*node.N](),
 			rid:   404,
 			id:    "foo",
 			bound: *hyperrectangle.New(
@@ -96,7 +96,7 @@ func TestExecute(t *testing.T) {
 			},
 		},
 		func() config {
-			c := allocation.New[*node.N]()
+			c := *allocation.New[*node.N]()
 			nid := c.Allocate()
 			n := node.New(node.O{
 				ID:    "foo",
