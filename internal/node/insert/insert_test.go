@@ -265,6 +265,59 @@ func TestCreateParent(t *testing.T) {
 	}
 }
 
+func TestRotate(t *testing.T) {
+	type result struct {
+		allocation allocation.C[*node.N]
+		root       allocation.ID
+	}
+
+	type config struct {
+		name string
+
+		nodes allocation.C[*node.N]
+		aid   allocation.ID
+
+		want result
+	}
+
+	configs := []config{}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			rotate(c.nodes, c.aid)
+			var rid allocation.ID
+			for rid = c.aid; node.Parent(c.nodes, c.nodes[rid]) != nil; rid = node.Parent(c.nodes, c.nodes[rid]).Index() {
+			}
+
+			if diff := cmp.Diff(
+				c.want,
+				result{
+					allocation: c.nodes,
+					root:       rid,
+				},
+				cmp.AllowUnexported(
+					node.N{},
+					hyperrectangle.R{},
+				),
+				cmp.Comparer(
+					func(r result, s result) bool {
+						return util.Equal(r.allocation, r.root, s.allocation, s.root)
+					},
+				),
+			); diff != "" {
+				for i, w := range c.want.allocation {
+					t.Errorf("want: %v: %v\n", i, w)
+				}
+				for i, g := range c.nodes {
+					t.Errorf("got: %v: %v\n", i, g)
+				}
+				t.Errorf("createParent() mismatch (-want +got):\n%v", diff)
+			}
+
+		})
+	}
+}
+
 func TestExecute(t *testing.T) {
 	type result struct {
 		allocation allocation.C[*node.N]

@@ -38,7 +38,7 @@ func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound
 	pid := createParent(nodes, cid, id, bound)
 
 	// Rebalance the tree up to the root.
-	rotate(nodes, nodes[pid])
+	rotate(nodes, pid)
 
 	return pid
 }
@@ -70,9 +70,10 @@ func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound
 //
 // TODO(minkezhang): Investigate relative performance characteristics of
 // choosing between these two balancing modes.
-func rotate(nodes allocation.C[*node.N], a *node.N) {
-	var b, c, d, e, f, g *node.N
+func rotate(nodes allocation.C[*node.N], aid allocation.ID) {
+	var a, b, c, d, e, f, g *node.N
 
+	a = nodes[aid]
 	if a == nil {
 		return
 	}
@@ -146,7 +147,9 @@ func rotate(nodes allocation.C[*node.N], a *node.N) {
 		optimal.f.SetParent(a.Index())
 	}
 
-	rotate(nodes, node.Parent(nodes, a))
+	if p := node.Parent(nodes, a); p != nil {
+		rotate(nodes, p.Index())
+	}
 }
 
 // createParent creates a new parent node for a candidate r. This parent will
