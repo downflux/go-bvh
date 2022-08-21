@@ -76,3 +76,49 @@ func TestInsert(t *testing.T) {
 		})
 	}
 }
+
+func TestDelete(t *testing.T) {
+	type config struct {
+		name string
+
+		c  C[*m]
+		id ID
+
+		succ bool
+	}
+
+	configs := []config{
+		{
+			name: "RemoveExists",
+			c: C[*m]{
+				1: &m{},
+			},
+			id:   1,
+			succ: true,
+		},
+		{
+			name: "RemoveDNE",
+			c: C[*m]{
+				1: &m{},
+			},
+			id:   2,
+			succ: false,
+		},
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			err := c.c.Remove(c.id)
+			if err != nil && c.succ {
+				t.Errorf("Remove() = %v, want = nil", err)
+			}
+			if err == nil && !c.succ {
+				t.Errorf("Remove() = nil, want a non-nil error")
+			}
+
+			if _, ok := c.c[c.id]; ok {
+				t.Errorf("c[i] = _, true, want = false")
+			}
+		})
+	}
+}

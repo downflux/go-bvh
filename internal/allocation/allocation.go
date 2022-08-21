@@ -44,3 +44,14 @@ func (c C[T]) Insert(i ID, n T) error {
 
 	return nil
 }
+
+func (c C[T]) Remove(i ID) error {
+	n := c[i]
+	var blank T
+	if n == blank {
+		return fmt.Errorf("cannot remove non-existent node: %v", i)
+	}
+
+	delete(c, i)
+	return nil
+}
