@@ -114,14 +114,10 @@ func findSibling(nodes allocation.C[*node.N], rid allocation.ID, bound hyperrect
 	c := root
 	d := -q.Priority()
 
-	fmt.Printf("DEBUG: root H == %v\n", d)
-
 	for q.Len() > 0 {
 		n := q.Pop()
 
 		inherited := heuristic.Inherited(nodes, n, bound)
-
-		fmt.Printf("DEBUG: cost of node %v is %v\n", n.Index(), float64(heuristic.Direct(n, bound)+inherited))
 
 		// Check if the current node is a better insertion candidate.
 		actual := float64(heuristic.Direct(n, bound) + inherited)
@@ -130,28 +126,20 @@ func findSibling(nodes allocation.C[*node.N], rid allocation.ID, bound hyperrect
 			d = actual
 		}
 
-		// Append queue children to the queue if the lower bound for
-		// inserting into the child is less than the current minimum
-		// (i.e. there's room for optimization).
-		//
-		// Note that the inherited heuristic is the same between the
-		// left and right children.
-		//
-		// N.B.: The full expression for the node expansion heuristic is
-		//
-		//   inherited += heuristic.Heuristic(bhr.Union(bound,
-		//   n.Bound())) - heuristic.Heuristic(n.Bound())
-		//   estimated := heuristic.Heuristic(bound) + inherited
-		//
-		// Note that the bounding heuristic cancels out.
-		fmt.Printf("DEBUG: inherited == %v\n", inherited)
+		if !node.Leaf(nodes, n) {
+			// Append queue children to the queue if the lower bound for
+			// inserting into the child is less than the current minimum
+			// (i.e. there's room for optimization).
+			//
+			// Note that the inherited heuristic is the same between the
+			// left and right children.
+			inherited += heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(n.Bound())
+			estimated := heuristic.Heuristic(bound) + inherited
 
-		inherited += heuristic.Heuristic(bhr.Union(bound, n.Bound())) - heuristic.Heuristic(n.Bound())
-		estimated := heuristic.Heuristic(bound) + inherited
-		fmt.Printf("DEBUG: lower bound of child nodes == %v\n", estimated)
-		if float64(estimated) < d {
-			q.Push(node.Left(nodes, n), -float64(estimated))
-			q.Push(node.Right(nodes, n), -float64(estimated))
+			if float64(estimated) < d {
+				q.Push(node.Left(nodes, n), -float64(estimated))
+				q.Push(node.Right(nodes, n), -float64(estimated))
+			}
 		}
 	}
 	return c.Index()

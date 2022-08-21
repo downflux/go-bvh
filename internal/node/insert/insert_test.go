@@ -48,7 +48,10 @@ func TestFindCandidate(t *testing.T) {
 			want: 1,
 		},
 		{
-			name: "AvoidChildCheck",
+			// Check that we do not travel further down the tree
+			// than necessary -- we incur a depth penalty via the
+			// inherited cost heuristic.
+			name: "Root",
 			nodes: allocation.C[*node.N]{
 				1: node.New(node.O{
 					Index: 1,
@@ -58,41 +61,43 @@ func TestFindCandidate(t *testing.T) {
 				}),
 
 				2: node.New(node.O{
+					ID:    "foo",
 					Index: 2,
-					Left:  4,
-					Right: 5,
-					Bound: Interval(0, 10),
+					Bound: Interval(0, 100),
 				}),
 				3: node.New(node.O{
+					ID:    "bar",
 					Index: 3,
-					Left:  6,
-					Right: 7,
-					Bound: Interval(50, 100),
-				}),
-
-				4: node.New(node.O{
-					ID:    "node-a",
-					Index: 4,
-					Bound: Interval(0, 1),
-				}),
-				5: node.New(node.O{
-					ID:    "node-b",
-					Index: 5,
-					Bound: Interval(9, 10),
-				}),
-				6: node.New(node.O{
-					ID:    "node-c",
-					Index: 6,
-					Bound: Interval(50, 51),
-				}),
-				7: node.New(node.O{
-					ID:    "node-d",
-					Index: 7,
-					Bound: Interval(99, 100),
+					Bound: Interval(0, 100),
 				}),
 			},
 			rid:   1,
-			bound: Interval(40, 60),
+			bound: Interval(0, 1),
+			want:  1,
+		},
+		{
+			name: "Leaf",
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					Index: 1,
+					Left:  2,
+					Right: 3,
+					Bound: Interval(0, 100),
+				}),
+
+				2: node.New(node.O{
+					ID:    "foo",
+					Index: 2,
+					Bound: Interval(0, 10),
+				}),
+				3: node.New(node.O{
+					ID:    "bar",
+					Index: 3,
+					Bound: Interval(50, 100),
+				}),
+			},
+			rid:   1,
+			bound: Interval(45, 60),
 			want:  3,
 		},
 	}
