@@ -74,7 +74,7 @@ func rotate(nodes allocation.C[*node.N], aid allocation.ID) {
 	var a, b, c, d, e, f, g *node.N
 
 	a = nodes[aid]
-	if a == nil {
+	if node.Leaf(nodes, a) {
 		return
 	}
 
@@ -86,8 +86,8 @@ func rotate(nodes allocation.C[*node.N], aid allocation.ID) {
 		e = node.Right(nodes, b)
 	}
 	if c != nil {
-		f = node.Left(nodes, b)
-		g = node.Right(nodes, b)
+		f = node.Left(nodes, c)
+		g = node.Right(nodes, c)
 	}
 
 	// We are using the BF rotation syntax as explored in the Catto
@@ -145,6 +145,7 @@ func rotate(nodes allocation.C[*node.N], aid allocation.ID) {
 
 		optimal.b.SetParent(optimal.c.Index())
 		optimal.f.SetParent(a.Index())
+		optimal.c.SetBound(bhr.Union(optimal.b.Bound(), optimal.g.Bound()))
 	}
 
 	if p := node.Parent(nodes, a); p != nil {

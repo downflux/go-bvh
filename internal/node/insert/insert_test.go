@@ -253,12 +253,6 @@ func TestCreateParent(t *testing.T) {
 					},
 				),
 			); diff != "" {
-				for i, w := range c.want.allocation {
-					t.Errorf("want: %v: %v\n", i, w)
-				}
-				for i, g := range c.nodes {
-					t.Errorf("got: %v: %v\n", i, g)
-				}
 				t.Errorf("createParent() mismatch (-want +got):\n%v", diff)
 			}
 		})
@@ -280,7 +274,222 @@ func TestRotate(t *testing.T) {
 		want result
 	}
 
-	configs := []config{}
+	configs := []config{
+		{
+			name: "ALeaf",
+			aid:  1,
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					ID:    "foo",
+					Index: 1,
+					Bound: Interval(0, 100),
+				}),
+			},
+			want: result{
+				root: 1,
+				allocation: allocation.C[*node.N]{
+					1: node.New(node.O{
+						ID:    "foo",
+						Index: 1,
+						Bound: Interval(0, 100),
+					}),
+				},
+			},
+		},
+		{
+			name: "Root/Terminate",
+			aid:  1,
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					Index: 1,
+					Left:  2,
+					Right: 3,
+					Bound: Interval(0, 100),
+				}),
+				2: node.New(node.O{
+					Index: 2,
+					Bound: Interval(0, 100),
+				}),
+				3: node.New(node.O{
+					Index: 3,
+					Bound: Interval(0, 100),
+				}),
+			},
+			want: result{
+				root: 1,
+				allocation: allocation.C[*node.N]{
+					1: node.New(node.O{
+						Index: 1,
+						Left:  2,
+						Right: 3,
+						Bound: Interval(0, 100),
+					}),
+					2: node.New(node.O{
+						Index: 2,
+						Bound: Interval(0, 100),
+					}),
+					3: node.New(node.O{
+						Index: 3,
+						Bound: Interval(0, 100),
+					}),
+				},
+			},
+		},
+		{
+			name: "Rotate",
+			aid:  1,
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					Index: 1,
+					Left:  2,
+					Right: 3,
+					Bound: Interval(0, 100),
+				}),
+
+				2: node.New(node.O{
+					ID:     "foo",
+					Index:  2,
+					Parent: 1,
+					Bound:  Interval(1, 2),
+				}),
+				3: node.New(node.O{
+					Index:  3,
+					Parent: 1,
+					Left:   4,
+					Right:  5,
+					Bound:  Interval(0, 100),
+				}),
+
+				4: node.New(node.O{
+					ID:     "bar",
+					Index:  4,
+					Parent: 3,
+					Bound:  Interval(99, 100),
+				}),
+				5: node.New(node.O{
+					ID:     "baz",
+					Index:  5,
+					Parent: 3,
+					Bound:  Interval(0, 1),
+				}),
+			},
+			want: result{
+				root: 1,
+				allocation: allocation.C[*node.N]{
+					1: node.New(node.O{
+						Index: 1,
+						Left:  4,
+						Right: 3,
+						Bound: Interval(0, 100),
+					}),
+
+					2: node.New(node.O{
+						ID:     "foo",
+						Index:  2,
+						Parent: 3,
+						Bound:  Interval(1, 2),
+					}),
+					3: node.New(node.O{
+						Index:  3,
+						Parent: 1,
+						Left:   2,
+						Right:  5,
+						Bound:  Interval(0, 2),
+					}),
+
+					4: node.New(node.O{
+						ID:     "bar",
+						Index:  4,
+						Parent: 1,
+						Bound:  Interval(99, 100),
+					}),
+					5: node.New(node.O{
+						ID:     "baz",
+						Index:  5,
+						Parent: 3,
+						Bound:  Interval(0, 1),
+					}),
+				},
+			},
+		},
+		{
+			name: "NoRotate",
+			aid:  1,
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					Index: 1,
+					Left:  4,
+					Right: 3,
+					Bound: Interval(0, 100),
+				}),
+
+				2: node.New(node.O{
+					ID:     "foo",
+					Index:  2,
+					Parent: 3,
+					Bound:  Interval(1, 2),
+				}),
+				3: node.New(node.O{
+					Index:  3,
+					Parent: 1,
+					Left:   2,
+					Right:  5,
+					Bound:  Interval(0, 2),
+				}),
+
+				4: node.New(node.O{
+					ID:     "bar",
+					Index:  4,
+					Parent: 1,
+					Bound:  Interval(99, 100),
+				}),
+				5: node.New(node.O{
+					ID:     "baz",
+					Index:  5,
+					Parent: 3,
+					Bound:  Interval(0, 1),
+				}),
+			},
+			want: result{
+				root: 1,
+				allocation: allocation.C[*node.N]{
+					1: node.New(node.O{
+						Index: 1,
+						Left:  4,
+						Right: 3,
+						Bound: Interval(0, 100),
+					}),
+
+					2: node.New(node.O{
+						ID:     "foo",
+						Index:  2,
+						Parent: 3,
+						Bound:  Interval(1, 2),
+					}),
+					3: node.New(node.O{
+						Index:  3,
+						Parent: 1,
+						Left:   2,
+						Right:  5,
+						Bound:  Interval(0, 2),
+					}),
+
+					4: node.New(node.O{
+						ID:     "bar",
+						Index:  4,
+						Parent: 1,
+						Bound:  Interval(99, 100),
+					}),
+					5: node.New(node.O{
+						ID:     "baz",
+						Index:  5,
+						Parent: 3,
+						Bound:  Interval(0, 1),
+					}),
+				},
+			},
+		},
+	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
@@ -305,12 +514,6 @@ func TestRotate(t *testing.T) {
 					},
 				),
 			); diff != "" {
-				for i, w := range c.want.allocation {
-					t.Errorf("want: %v: %v\n", i, w)
-				}
-				for i, g := range c.nodes {
-					t.Errorf("got: %v: %v\n", i, g)
-				}
 				t.Errorf("createParent() mismatch (-want +got):\n%v", diff)
 			}
 
