@@ -37,12 +37,17 @@ func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound
 	// Create new parent.
 	pid := createParent(nodes, cid, id, bound)
 
-	var m *node.N
-	for m = nodes[pid]; node.Parent(nodes, m) != nil; m = node.Parent(nodes, m) {
-		// TODO(minkezhang): Apply rotation.
-	}
+	// Rebalance the tree up to the root.
+	return rotate(nodes, pid)
+}
 
-	return m.Index()
+func rotate(nodes allocation.C[*node.N], nid allocation.ID) allocation.ID {
+	root := nid
+	var m *node.N
+	for m = nodes[nid]; m != nil; m = node.Parent(nodes, m) {
+		root = nid
+	}
+	return root
 }
 
 // createParent creates a new parent node for a candidate r. This parent will
@@ -95,10 +100,9 @@ func createParent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, b
 	r.SetParent(pid)
 	node.Left(nodes, p).SetParent(pid)
 
-	// Walk back up the tree refitting AABBs and applying rotations, and
-	// find the new root.
-	for m := nodes[pid]; m != nil; m = node.Parent(nodes, m) {
-		m.SetBound(bhr.Union(bound, m.Bound()))
+	// Walk back up the tree refitting AABBs.
+	for n := nodes[pid]; n != nil; n = node.Parent(nodes, n) {
+		n.SetBound(bhr.Union(bound, n.Bound()))
 	}
 
 	return pid
