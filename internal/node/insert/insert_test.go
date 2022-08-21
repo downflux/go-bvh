@@ -112,6 +112,159 @@ func TestFindCandidate(t *testing.T) {
 	}
 }
 
+func TestCreateParent(t *testing.T) {
+	type result struct {
+		allocation allocation.C[*node.N]
+		root       allocation.ID
+	}
+
+	type config struct {
+		name string
+
+		nodes allocation.C[*node.N]
+		rid   allocation.ID
+		id    point.ID
+		bound hyperrectangle.R
+
+		want result
+	}
+
+	configs := []config{
+		{
+			name: "TrivialRoot",
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					ID:    "foo",
+					Index: 1,
+					Bound: Interval(0, 100),
+				}),
+			},
+			rid:   1,
+			id:    "bar",
+			bound: Interval(99, 101),
+			want: result{
+				root: 2,
+				allocation: allocation.C[*node.N]{
+					1: node.New(node.O{
+						ID:     "foo",
+						Index:  1,
+						Parent: 2,
+						Bound:  Interval(0, 100),
+					}),
+					2: node.New(node.O{
+						Left:  3,
+						Right: 1,
+						Bound: Interval(0, 101),
+					}),
+					3: node.New(node.O{
+						ID:     "bar",
+						Index:  3,
+						Parent: 2,
+						Bound:  Interval(99, 101),
+					}),
+				},
+			},
+		},
+		{
+			name: "Ancestor",
+			nodes: allocation.C[*node.N]{
+				1: node.New(node.O{
+					Index: 1,
+					Left:  2,
+					Right: 3,
+					Bound: Interval(0, 100),
+				}),
+
+				2: node.New(node.O{
+					ID:     "foo",
+					Index:  2,
+					Parent: 1,
+					Bound:  Interval(0, 10),
+				}),
+				3: node.New(node.O{
+					ID:     "bar",
+					Index:  3,
+					Parent: 1,
+					Bound:  Interval(90, 100),
+				}),
+			},
+			rid:   2,
+			id:    "baz",
+			bound: Interval(99, 101),
+			want: result{
+				root: 1,
+				allocation: allocation.C[*node.N]{
+					1: node.New(node.O{
+						Index: 1,
+						Left:  4,
+						Right: 3,
+						Bound: Interval(0, 101),
+					}),
+
+					2: node.New(node.O{
+						ID:     "foo",
+						Index:  2,
+						Parent: 4,
+						Bound:  Interval(0, 10),
+					}),
+					3: node.New(node.O{
+						ID:     "bar",
+						Index:  3,
+						Parent: 1,
+						Bound:  Interval(90, 100),
+					}),
+
+					4: node.New(node.O{
+						Index:  4,
+						Parent: 1,
+						Left:   5,
+						Right:  2,
+						Bound:  Interval(0, 101),
+					}),
+					5: node.New(node.O{
+						ID:     "baz",
+						Index:  5,
+						Parent: 4,
+						Bound:  Interval(99, 101),
+					}),
+				},
+			},
+		},
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			pid := createParent(c.nodes, c.rid, c.id, c.bound)
+			for ; node.Parent(c.nodes, c.nodes[pid]) != nil; pid = node.Parent(c.nodes, c.nodes[pid]).Index() {
+			}
+			if diff := cmp.Diff(
+				c.want,
+				result{
+					allocation: c.nodes,
+					root:       pid,
+				},
+				cmp.AllowUnexported(
+					node.N{},
+					hyperrectangle.R{},
+				),
+				cmp.Comparer(
+					func(r result, s result) bool {
+						return util.Equal(r.allocation, r.root, s.allocation, s.root)
+					},
+				),
+			); diff != "" {
+				for i, w := range c.want.allocation {
+					t.Errorf("want: %v: %v\n", i, w)
+				}
+				for i, g := range c.nodes {
+					t.Errorf("got: %v: %v\n", i, g)
+				}
+				t.Errorf("createParent() mismatch (-want +got):\n%v", diff)
+			}
+		})
+	}
+}
+
 func TestExecute(t *testing.T) {
 	type result struct {
 		allocation allocation.C[*node.N]

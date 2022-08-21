@@ -37,12 +37,8 @@ func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound
 	// Create new parent.
 	pid := createParent(nodes, cid, id, bound)
 
-	// Walk back up the tree refitting AABBs and applying rotations, and
-	// find the new root.
 	var m *node.N
 	for m = nodes[pid]; node.Parent(nodes, m) != nil; m = node.Parent(nodes, m) {
-		m.SetBound(bhr.Union(bound, m.Bound()))
-
 		// TODO(minkezhang): Apply rotation.
 	}
 
@@ -50,11 +46,17 @@ func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound
 }
 
 // createParent creates a new parent node for a candidate r. This parent will
-// have have the old node and a newly-created node with the given bounds.
+// have have the old node and a newly-created node with the given bounds. The
+// sibling ID rid must exist and refer to a non-nil node.
 //
 // This function will modify the allocation table as a side-effect.
+//
+// This function returns the allocation ID of the newly-created parent.
 func createParent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
 	r := nodes[rid]
+	if r == nil {
+		panic(fmt.Sprintf("given right allocation ID does not exist: %v", rid))
+	}
 
 	pid := nodes.Allocate()
 	lid := nodes.Allocate()
@@ -92,6 +94,12 @@ func createParent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, b
 	}
 	r.SetParent(pid)
 	node.Left(nodes, p).SetParent(pid)
+
+	// Walk back up the tree refitting AABBs and applying rotations, and
+	// find the new root.
+	for m := nodes[pid]; m != nil; m = node.Parent(nodes, m) {
+		m.SetBound(bhr.Union(bound, m.Bound()))
+	}
 
 	return pid
 }
