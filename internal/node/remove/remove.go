@@ -1,6 +1,8 @@
 package remove
 
 import (
+	"fmt"
+
 	"github.com/downflux/go-bvh/internal/allocation"
 	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/node"
@@ -13,6 +15,10 @@ import (
 // We are guaranteed the node to be deleted nid exists in the allocation.
 func Execute(nodes allocation.C[*node.N], nid id.ID) id.ID {
 	n := nodes[nid]
+	if !node.Leaf(nodes, n) {
+		panic(fmt.Sprintf("cannot directly remove an interior node: %v", nid))
+	}
+
 	p := node.Parent(nodes, n)
 
 	// Handle case where n is the root.
@@ -37,6 +43,8 @@ func Execute(nodes allocation.C[*node.N], nid id.ID) id.ID {
 		} else {
 			a.SetRight(s.Index())
 		}
+
+		s.SetParent(a.Index())
 	}
 
 	nodes.Remove(p.Index())

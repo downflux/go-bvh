@@ -47,6 +47,134 @@ func TestExecute(t *testing.T) {
 				root:       0,
 			},
 		},
+		{
+			name: "RemoveChild",
+			data: allocation.C[*node.N]{
+				1: node.New(node.O{
+					Index: 1,
+					Left:  2,
+					Right: 3,
+					Bound: interval(0, 100),
+				}),
+
+				2: node.New(node.O{
+					ID:     "foo",
+					Index:  2,
+					Parent: 1,
+					Bound:  interval(0, 1),
+				}),
+				3: node.New(node.O{
+					ID:     "foo",
+					Index:  3,
+					Parent: 1,
+					Bound:  interval(99, 100),
+				}),
+			},
+			nid: 2,
+			want: result{
+				allocation: allocation.C[*node.N]{
+					3: node.New(node.O{
+						ID:     "foo",
+						Index:  3,
+						Parent: 1,
+						Bound:  interval(99, 100),
+					}),
+				},
+				root: 3,
+			},
+		},
+		{
+			name: "RemoveGrandChildRefit",
+			data: allocation.C[*node.N]{
+				1: node.New(node.O{
+					Index: 1,
+					Left:  2,
+					Right: 3,
+					Bound: interval(0, 100),
+				}),
+
+				2: node.New(node.O{
+					Index:  2,
+					Parent: 1,
+					Left:   4,
+					Right:  5,
+					Bound:  interval(0, 10),
+				}),
+				3: node.New(node.O{
+					Index:  3,
+					Parent: 1,
+					Left:   6,
+					Right:  7,
+					Bound:  interval(90, 100),
+				}),
+
+				4: node.New(node.O{
+					ID:     "foo",
+					Index:  4,
+					Parent: 2,
+					Bound:  interval(0, 1),
+				}),
+				5: node.New(node.O{
+					ID:     "bar",
+					Index:  5,
+					Parent: 2,
+					Bound:  interval(9, 10),
+				}),
+
+				6: node.New(node.O{
+					ID:     "baz",
+					Index:  6,
+					Parent: 3,
+					Bound:  interval(90, 91),
+				}),
+				7: node.New(node.O{
+					ID:     "qux",
+					Index:  7,
+					Parent: 3,
+					Bound:  interval(99, 100),
+				}),
+			},
+			nid: 7,
+			want: result{
+				allocation: allocation.C[*node.N]{
+					1: node.New(node.O{
+						Index: 1,
+						Left:  2,
+						Right: 6,
+						Bound: interval(0, 91),
+					}),
+
+					2: node.New(node.O{
+						Index:  2,
+						Parent: 1,
+						Left:   4,
+						Right:  5,
+						Bound:  interval(0, 10),
+					}),
+
+					4: node.New(node.O{
+						ID:     "foo",
+						Index:  4,
+						Parent: 2,
+						Bound:  interval(0, 1),
+					}),
+					5: node.New(node.O{
+						ID:     "bar",
+						Index:  5,
+						Parent: 2,
+						Bound:  interval(9, 10),
+					}),
+
+					6: node.New(node.O{
+						ID:     "baz",
+						Index:  6,
+						Parent: 1,
+						Bound:  interval(90, 91),
+					}),
+				},
+				root: 1,
+			},
+		},
 	}
 
 	for _, c := range configs {

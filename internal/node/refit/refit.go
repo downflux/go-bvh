@@ -13,9 +13,15 @@ func Execute(nodes allocation.C[*node.N], nid id.ID) {
 		return
 	}
 
-	bound := n.Bound()
 	// Walk back up the tree refitting AABBs.
-	for n := node.Parent(nodes, n); n != nil; n = node.Parent(nodes, n) {
-		n.SetBound(hyperrectangle.Union(bound, n.Bound()))
+	for p := node.Parent(nodes, n); p != nil; p = node.Parent(nodes, p) {
+		var s *node.N
+		if node.Left(nodes, p) == n {
+			s = node.Right(nodes, p)
+		} else {
+			s = node.Left(nodes, p)
+		}
+		p.SetBound(hyperrectangle.Union(n.Bound(), s.Bound()))
+		n = p
 	}
 }
