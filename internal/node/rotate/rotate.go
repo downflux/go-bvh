@@ -17,16 +17,16 @@ import (
 // We refer to the local subtree using the same labels as the Catto
 // presentation, i.e.
 //
-//        A
-//       / \
-//      /   \
-//     B     C
-//    / \   / \
-//   D   E F   G
+//	     A
+//	    / \
+//	   /   \
+//	  B     C
+//	 / \   / \
+//	D   E F   G
 //
 // We will attempt to apply a rotation on the node pairs
 //
-//   BF, BG, CD, and CE
+//	BF, BG, CD, and CE
 //
 // and choose the configuration with the minimal "surface area" heuristic.
 //
