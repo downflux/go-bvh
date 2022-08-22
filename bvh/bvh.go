@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/filter"
 	"github.com/downflux/go-bvh/internal/allocation"
+	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/insert"
 	"github.com/downflux/go-bvh/point"
@@ -16,7 +17,7 @@ type BVH[T point.P] struct {
 	data map[point.ID]T
 
 	allocation allocation.C[*node.N]
-	root       allocation.ID
+	root       id.ID
 }
 
 func New[T point.P](data []T) *BVH[T] {
