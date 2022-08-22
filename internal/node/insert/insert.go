@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/downflux/go-bvh/internal/allocation"
+	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/rotate"
@@ -18,7 +19,7 @@ import (
 // be created with a new index.
 //
 // This function will return the new root.
-func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
+func Execute(nodes allocation.C[*node.N], root id.ID, id point.ID, bound hyperrectangle.R) id.ID {
 	if _, ok := nodes[root]; !ok {
 		nid := nodes.Allocate()
 		n := node.New(node.O{
@@ -50,18 +51,18 @@ func Execute(nodes allocation.C[*node.N], root allocation.ID, id point.ID, bound
 //
 // This function will modify the allocation table as a side-effect.
 //
-// This function returns the allocation ID of the newly-created parent.
-func createParent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, bound hyperrectangle.R) allocation.ID {
+// This function returns the id.ID of the newly-created parent.
+func createParent(nodes allocation.C[*node.N], rid id.ID, i point.ID, bound hyperrectangle.R) id.ID {
 	r := nodes[rid]
 	if r == nil {
-		panic(fmt.Sprintf("given right allocation ID does not exist: %v", rid))
+		panic(fmt.Sprintf("given right id.ID does not exist: %v", rid))
 	}
 
 	pid := nodes.Allocate()
 	lid := nodes.Allocate()
 
 	l := node.New(node.O{
-		ID: id,
+		ID: i,
 
 		Index:  lid,
 		Parent: pid,
@@ -69,7 +70,7 @@ func createParent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, b
 		Bound: bound,
 	})
 
-	var aid allocation.ID
+	var aid id.ID
 	if node.Parent(nodes, r) != nil {
 		aid = node.Parent(nodes, r).Index()
 	}
@@ -105,7 +106,7 @@ func createParent(nodes allocation.C[*node.N], rid allocation.ID, id point.ID, b
 // findSibling finds the node to which an object with the given bound will
 // siblings. A new parent node will be created above both the sibling and the
 // input bound. This is based on the branch-and-bound algorithm (Catto 2019).
-func findSibling(nodes allocation.C[*node.N], rid allocation.ID, bound hyperrectangle.R) allocation.ID {
+func findSibling(nodes allocation.C[*node.N], rid id.ID, bound hyperrectangle.R) id.ID {
 	root, ok := nodes[rid]
 	if !ok {
 		panic("cannot find candidate for an empty root node")

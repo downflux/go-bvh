@@ -2,21 +2,23 @@ package allocation
 
 import (
 	"testing"
+
+	"github.com/downflux/go-bvh/internal/allocation/id"
 )
 
 type m struct{}
 
 func TestAllocate(t *testing.T) {
 	const n = 10000
-	ids := map[ID]bool{}
+	ids := map[id.ID]bool{}
 
 	c := *New[*m]()
 	for i := 0; i < n; i++ {
-		id := c.Allocate()
-		if ids[id] {
+		i := c.Allocate()
+		if ids[i] {
 			t.Errorf("allocating an already allocated node")
 		}
-		ids[id] = true
+		ids[i] = true
 	}
 }
 
@@ -25,7 +27,7 @@ func TestInsert(t *testing.T) {
 		name string
 		c    C[*m]
 
-		id   ID
+		id   id.ID
 		data *m
 
 		succ bool
@@ -44,13 +46,13 @@ func TestInsert(t *testing.T) {
 		}(),
 		func() config {
 			c := *New[*m]()
-			id := c.Allocate()
-			c.Insert(id, &m{})
+			i := c.Allocate()
+			c.Insert(i, &m{})
 
 			return config{
 				name: "Duplicate",
 				c:    c,
-				id:   id,
+				id:   i,
 				data: &m{},
 				succ: false,
 			}
@@ -82,7 +84,7 @@ func TestDelete(t *testing.T) {
 		name string
 
 		c  C[*m]
-		id ID
+		id id.ID
 
 		succ bool
 	}

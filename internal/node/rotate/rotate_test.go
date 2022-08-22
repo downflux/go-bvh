@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/downflux/go-bvh/internal/allocation"
+	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
@@ -18,14 +19,14 @@ func interval(min float64, max float64) hyperrectangle.R {
 func TestExecute(t *testing.T) {
 	type result struct {
 		allocation allocation.C[*node.N]
-		root       allocation.ID
+		root       id.ID
 	}
 
 	type config struct {
 		name string
 
 		nodes allocation.C[*node.N]
-		aid   allocation.ID
+		aid   id.ID
 
 		want result
 	}
@@ -250,7 +251,7 @@ func TestExecute(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			Execute(c.nodes, c.aid)
-			var rid allocation.ID
+			var rid id.ID
 			for rid = c.aid; node.Parent(c.nodes, c.nodes[rid]) != nil; rid = node.Parent(c.nodes, c.nodes[rid]).Index() {
 			}
 

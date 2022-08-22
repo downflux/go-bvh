@@ -2,6 +2,7 @@ package util
 
 import (
 	"github.com/downflux/go-bvh/internal/allocation"
+	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
@@ -35,12 +36,12 @@ func Construct(c allocation.C[*node.N], n *node.N) *N {
 
 // Equal is a test-only function which determines the equality between two
 // allocation objects. We consider allocations equal if the node relations are
-// invariant under allocation IDs.
+// invariant under id.IDs.
 func Equal(
 	a allocation.C[*node.N],
-	r allocation.ID,
+	r id.ID,
 	b allocation.C[*node.N],
-	s allocation.ID,
+	s id.ID,
 ) bool {
 	return cmp.Equal(
 		Construct(a, a[r]),

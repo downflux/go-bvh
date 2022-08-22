@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/downflux/go-bvh/internal/allocation"
+	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-bvh/point"
@@ -21,10 +22,10 @@ func TestFindCandidate(t *testing.T) {
 		name string
 
 		nodes allocation.C[*node.N]
-		rid   allocation.ID
+		rid   id.ID
 		bound hyperrectangle.R
 
-		want allocation.ID
+		want id.ID
 	}
 
 	configs := []config{
@@ -115,14 +116,14 @@ func TestFindCandidate(t *testing.T) {
 func TestCreateParent(t *testing.T) {
 	type result struct {
 		allocation allocation.C[*node.N]
-		root       allocation.ID
+		root       id.ID
 	}
 
 	type config struct {
 		name string
 
 		nodes allocation.C[*node.N]
-		rid   allocation.ID
+		rid   id.ID
 		id    point.ID
 		bound hyperrectangle.R
 
@@ -262,14 +263,14 @@ func TestCreateParent(t *testing.T) {
 func TestExecute(t *testing.T) {
 	type result struct {
 		allocation allocation.C[*node.N]
-		root       allocation.ID
+		root       id.ID
 	}
 
 	type config struct {
 		name string
 
 		nodes allocation.C[*node.N]
-		rid   allocation.ID
+		rid   id.ID
 		id    point.ID
 		bound hyperrectangle.R
 		want  result

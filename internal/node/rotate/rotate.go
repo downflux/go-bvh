@@ -3,6 +3,7 @@ package rotate
 import (
 	"github.com/downflux/go-bvh/hyperrectangle"
 	"github.com/downflux/go-bvh/internal/allocation"
+	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
 )
@@ -34,7 +35,7 @@ import (
 //
 // TODO(minkezhang): Investigate relative performance characteristics of
 // choosing between these two balancing modes.
-func Execute(nodes allocation.C[*node.N], aid allocation.ID) {
+func Execute(nodes allocation.C[*node.N], aid id.ID) {
 	var a, b, c, d, e, f, g *node.N
 
 	a = nodes[aid]
