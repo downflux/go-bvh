@@ -7,6 +7,7 @@ import (
 	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
+	"github.com/downflux/go-bvh/internal/node/refit"
 	"github.com/downflux/go-bvh/internal/node/rotate"
 	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
@@ -42,7 +43,11 @@ func Execute(nodes allocation.C[*node.N], root id.ID, id point.ID, bound hyperre
 	// Rebalance the tree up to the root.
 	rotate.Execute(nodes, pid)
 
-	return pid
+	r := node.Root(nodes, nodes[pid])
+	if r == nil {
+		return 0
+	}
+	return r.Index()
 }
 
 // createParent creates a new parent node for a candidate r. This parent will
@@ -96,9 +101,7 @@ func createParent(nodes allocation.C[*node.N], rid id.ID, i point.ID, bound hype
 	node.Left(nodes, p).SetParent(pid)
 
 	// Walk back up the tree refitting AABBs.
-	for n := nodes[pid]; n != nil; n = node.Parent(nodes, n) {
-		n.SetBound(bhr.Union(bound, n.Bound()))
-	}
+	refit.Execute(nodes, pid)
 
 	return pid
 }

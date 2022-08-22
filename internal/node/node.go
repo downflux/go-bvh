@@ -56,3 +56,13 @@ func Leaf(c allocation.C[*N], n *N) bool { return Left(c, n) == nil && Right(c, 
 func Left(c allocation.C[*N], n *N) *N   { return c[n.left] }
 func Right(c allocation.C[*N], n *N) *N  { return c[n.right] }
 func Parent(c allocation.C[*N], n *N) *N { return c[n.parent] }
+
+func Root(c allocation.C[*N], n *N) *N {
+	if n == nil {
+		return nil
+	}
+	var r *N
+	for r = n; Parent(c, r) != nil; r = Parent(c, r) {
+	}
+	return r
+}
