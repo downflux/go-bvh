@@ -19,8 +19,9 @@ import (
 // Execute adds the given point into the tree. If a new node is created, it will
 // be created with a new index.
 //
-// This function will return the new root.
-func Execute(nodes allocation.C[*node.N], root id.ID, id point.ID, bound hyperrectangle.R) id.ID {
+// This function will return the tuple (new, root) allocation IDs of the altered
+// allocation table.
+func Execute(nodes allocation.C[*node.N], root id.ID, id point.ID, bound hyperrectangle.R) (id.ID, id.ID) {
 	if _, ok := nodes[root]; !ok {
 		nid := nodes.Allocate()
 		n := node.New(node.O{
@@ -31,7 +32,7 @@ func Execute(nodes allocation.C[*node.N], root id.ID, id point.ID, bound hyperre
 		if err := nodes.Insert(nid, n); err != nil {
 			panic(fmt.Sprintf("cannot insert node: %s", err))
 		}
-		return n.Index()
+		return n.Index(), n.Index()
 	}
 
 	// Find best new sibling for the new leaf.
@@ -45,9 +46,11 @@ func Execute(nodes allocation.C[*node.N], root id.ID, id point.ID, bound hyperre
 
 	r := node.Root(nodes, nodes[pid])
 	if r == nil {
-		return 0
+		return 0, 0
 	}
-	return r.Index()
+
+	// New node is always inserted as the left child.
+	return node.Left(nodes, nodes[pid]).Index(), r.Index()
 }
 
 // createParent creates a new parent node for a candidate r. This parent will

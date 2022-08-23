@@ -360,7 +360,7 @@ func TestExecute(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			qid := Execute(c.nodes, c.rid, c.id, c.bound)
+			_, qid := Execute(c.nodes, c.rid, c.id, c.bound)
 			got := result{
 				allocation: c.nodes,
 				root:       qid,
