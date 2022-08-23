@@ -13,6 +13,8 @@ import (
 // Execute removes a node from the tree and rebalances the resulting structure.
 //
 // We are guaranteed the node to be deleted nid exists in the allocation.
+//
+// Delete returns the new root.
 func Execute(nodes allocation.C[*node.N], nid id.ID) id.ID {
 	n := nodes[nid]
 	if !node.Leaf(nodes, n) {

@@ -8,13 +8,13 @@ import (
 	"github.com/downflux/go-geometry/nd/vector"
 )
 
-type BoundOpt[T point.P] struct {
+type BoundOpt[T point.RO] struct {
 	Data []T
 	K    vector.D
 	Size int
 }
 
-func Bound[T point.P](o BoundOpt[T]) hyperrectangle.R {
+func Bound[T point.RO](o BoundOpt[T]) hyperrectangle.R {
 	min := make([]float64, o.K)
 	max := make([]float64, o.K)
 
@@ -52,6 +52,20 @@ func Bound[T point.P](o BoundOpt[T]) hyperrectangle.R {
 	}
 
 	return b
+}
+
+// Contains checks if the input rectangle r fully encloses s.
+func Contains(r hyperrectangle.R, s hyperrectangle.R) bool {
+	if r.Min().Dimension() != s.Min().Dimension() {
+		panic("mismatching vector dimensions")
+	}
+
+	for i := vector.D(0); i < r.Min().Dimension(); i++ {
+		if s.Min().X(i) <= r.Min().X(i) || s.Max().X(i) >= r.Max().X(i) {
+			return false
+		}
+	}
+	return true
 }
 
 func Collision(r hyperrectangle.R, s hyperrectangle.R) bool {

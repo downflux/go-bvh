@@ -6,7 +6,7 @@ import (
 
 type ID string
 
-type P interface {
+type RO interface {
 	Bound() hyperrectangle.R
 	ID() ID
 }

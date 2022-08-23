@@ -8,13 +8,13 @@ import (
 	"github.com/downflux/go-bvh/internal/allocation/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/insert"
+	"github.com/downflux/go-bvh/internal/node/move"
 	"github.com/downflux/go-bvh/internal/node/remove"
 	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
-	"github.com/downflux/go-geometry/nd/vector"
 )
 
-type BVH[T point.P] struct {
+type BVH[T point.RO] struct {
 	data   map[point.ID]T
 	lookup map[point.ID]id.ID
 
@@ -22,7 +22,7 @@ type BVH[T point.P] struct {
 	root       id.ID
 }
 
-func New[T point.P](data []T) *BVH[T] {
+func New[T point.RO](data []T) *BVH[T] {
 	bvh := &BVH[T]{
 		data:       map[point.ID]T{},
 		lookup:     map[point.ID]id.ID{},
@@ -47,8 +47,17 @@ func (bvh *BVH[T]) Insert(p T) {
 	bvh.lookup[p.ID()] = i
 }
 
-func (bvh *BVH[T]) Move(id point.ID, dp vector.V) bool {
-	panic("unimplemented")
+// Move moves a new node into a new position. N.B.: The caller must manually set
+// the bound on the point external to this struct.
+func (bvh *BVH[T]) Move(i point.ID, r hyperrectangle.R) {
+	if _, ok := bvh.data[i]; !ok {
+		panic(fmt.Sprintf("attempting to move a point which does not exist in the BVH: %v", i))
+	}
+
+	nid := bvh.lookup[i]
+	nid, bvh.root = move.Execute(bvh.allocation, nid, r)
+
+	bvh.lookup[i] = nid
 }
 
 func (bvh *BVH[T]) Remove(i point.ID) {
@@ -61,6 +70,6 @@ func (bvh *BVH[T]) Remove(i point.ID) {
 	delete(bvh.lookup, i)
 }
 
-func RangeSearch[T point.P](bvh BVH[T], q hyperrectangle.R, f filter.F[T]) []T {
+func RangeSearch[T point.RO](bvh BVH[T], q hyperrectangle.R, f filter.F[T]) []T {
 	panic("unimplemented")
 }

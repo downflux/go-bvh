@@ -4,4 +4,4 @@ import (
 	"github.com/downflux/go-bvh/point"
 )
 
-type F[T point.P] func(p T) bool
+type F[T point.RO] func(p T) bool
