@@ -45,6 +45,8 @@ func Execute(nodes allocation.C[*node.N], nid id.ID) id.ID {
 		}
 
 		s.SetParent(a.Index())
+	} else {
+		s.SetParent(0)
 	}
 
 	nodes.Remove(p.Index())

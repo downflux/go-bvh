@@ -23,11 +23,15 @@ type BVH[T point.P] struct {
 }
 
 func New[T point.P](data []T) *BVH[T] {
-	return &BVH[T]{
+	bvh := &BVH[T]{
 		data:       map[point.ID]T{},
 		lookup:     map[point.ID]id.ID{},
 		allocation: *allocation.New[*node.N](),
 	}
+	for _, p := range data {
+		bvh.Insert(p)
+	}
+	return bvh
 }
 
 func (bvh *BVH[T]) Insert(p T) {
