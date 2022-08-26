@@ -7,7 +7,7 @@ import (
 )
 
 type D[T comparable] struct {
-	ID T
+	ID   T
 	AABB hyperrectangle.R
 }
 
@@ -16,12 +16,12 @@ type N[T comparable] struct {
 	Left   *N[T]
 	Right  *N[T]
 
-	Data []D[T]
+	Data             []D[T]
 	AABBCacheIsValid bool
-	AABBCache hyperrectangle.R
+	AABBCache        hyperrectangle.R
 }
 
-func (n *N[T]) Leaf() bool { return n.Data != nil }
+func (n *N[T]) Leaf() bool { return len(n.Data) > 0 }
 func (n *N[T]) AABB() hyperrectangle.R {
 	if n.AABBCacheIsValid {
 		return n.AABBCache
@@ -29,10 +29,13 @@ func (n *N[T]) AABB() hyperrectangle.R {
 
 	n.AABBCacheIsValid = true
 	if n.Leaf() {
-		n.AABBCache = bhr.AABB(n.Data)
+		n.AABBCache = n.Data[0].AABB
+		for _, p := range n.Data[1:] {
+			n.AABBCache = bhr.Union(n.AABBCache, p.AABB)
+		}
 	} else {
 		n.AABBCache = bhr.Union(n.Left.AABB(), n.Right.AABB())
 	}
 
-	return n.AABBCache	
+	return n.AABBCache
 }
