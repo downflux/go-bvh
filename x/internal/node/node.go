@@ -29,10 +29,11 @@ func (n *N[T]) AABB() hyperrectangle.R {
 
 	n.AABBCacheIsValid = true
 	if n.Leaf() {
-		n.AABBCache = n.Data[0].AABB
-		for _, p := range n.Data[1:] {
-			n.AABBCache = bhr.Union(n.AABBCache, p.AABB)
+		rs := make([]hyperrectangle.R, len(n.Data))
+		for i := 0; i < len(n.Data); i++ {
+			rs[i] = n.Data[i].AABB
 		}
+		n.AABBCache = bhr.AABB(rs)
 	} else {
 		n.AABBCache = bhr.Union(n.Left.AABB(), n.Right.AABB())
 	}
