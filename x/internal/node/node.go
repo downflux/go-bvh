@@ -28,9 +28,30 @@ func (n *N[T]) InvalidateAABBCache() {
 	n.aabbCacheIsValid = false
 }
 
-func (n *N[T]) Left() *N[T]   { return n.left }
-func (n *N[T]) Right() *N[T]  { return n.right }
+func (n *N[T]) clean() {
+	n.parent = nil
+	n.left = nil
+	n.right = nil
+}
+
+func (n *N[T]) Left() *N[T] { return n.left }
+func (n *N[T]) SetLeft(m *N[T]) {
+	n.Left().clean()
+
+	n.left = m
+	m.SetParent(n)
+}
+
+func (n *N[T]) Right() *N[T] { return n.right }
+func (n *N[T]) SetRight(m *N[T]) {
+	n.Right().clean()
+
+	n.right = m
+	m.SetParent(n)
+}
+
 func (n *N[T]) Parent() *N[T] { return n.parent }
+
 func (n *N[T]) Root() *N[T] {
 	if n.Parent() == nil {
 		return n
