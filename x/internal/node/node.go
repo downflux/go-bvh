@@ -21,7 +21,7 @@ type N[T comparable] struct {
 	AABBCache        hyperrectangle.R
 }
 
-func (n *N[T]) Leaf() bool { return n.Data != nil }
+func (n *N[T]) Leaf() bool { return len(n.Data) > 0 }
 func (n *N[T]) AABB() hyperrectangle.R {
 	if n.AABBCacheIsValid {
 		return n.AABBCache
@@ -29,11 +29,10 @@ func (n *N[T]) AABB() hyperrectangle.R {
 
 	n.AABBCacheIsValid = true
 	if n.Leaf() {
-		rs := make([]hyperrectangle.R, 0, len(n.Data))
-		for _, d := range n.Data {
-			rs = append(rs, d.AABB)
+		n.AABBCache = n.Data[0].AABB
+		for _, p := range n.Data[1:] {
+			n.AABBCache = bhr.Union(n.AABBCache, p.AABB)
 		}
-		n.AABBCache = bhr.AABB(rs)
 	} else {
 		n.AABBCache = bhr.Union(n.Left.AABB(), n.Right.AABB())
 	}
