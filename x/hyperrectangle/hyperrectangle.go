@@ -7,32 +7,34 @@ import (
 	"github.com/downflux/go-geometry/nd/vector"
 )
 
+const size = 128
+
 func AABB(rs []hyperrectangle.R) hyperrectangle.R {
 	if len(rs) == 0 {
-		retrun
-	min := make([]float64, k)
-	max := make([]float64, k)
-
-	for i := vector.D(0); i < k; i++ {
-		min[i] = math.Inf(0)
-		max[i] = math.Inf(-1)
+		return hyperrectangle.R{}
+	}
+	if len(rs) == 1 {
+		return rs[0]
+	}
+	if len(rs) == 2 {
+		return Union(rs[0], rs[1])
 	}
 
-	b := *hyperrectangle.New(vector.V(min), vector.V(max))
-
-	if len(rs) < size {
-		for _, r := range rs {
+	var b hyperrectangle.R
+	if len(rs) <= size {
+		b = rs[0]
+		for _, r := range rs[1:] {
 			b = Union(b, r)
 		}
 	} else {
 		l := make(chan hyperrectangle.R)
 		r := make(chan hyperrectangle.R)
 		go func(ch chan<- hyperrectangle.R) {
-			ch <- AABB(rs[0:len(rs)/2])
+			ch <- AABB(rs[:len(rs)/2])
 			close(ch)
 		}(l)
 		go func(ch chan<- hyperrectangle.R) {
-			ch <- AABB(rs[len(rs)/2:len(rs)-1])
+			ch <- AABB(rs[len(rs)/2:])
 			close(ch)
 		}(r)
 		b = Union(<-l, <-r)
