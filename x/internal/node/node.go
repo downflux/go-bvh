@@ -15,31 +15,45 @@ type D[T comparable] struct {
 }
 
 type N[T comparable] struct {
-	Parent *N[T]
-	Left   *N[T]
-	Right  *N[T]
+	parent *N[T]
+	left   *N[T]
+	right  *N[T]
 
-	Data             []D[T]
-	AABBCacheIsValid bool
-	AABBCache        hyperrectangle.R
+	data             []D[T]
+	aabbCacheIsValid bool
+	aabbCache        hyperrectangle.R
 }
 
-func (n *N[T]) Leaf() bool { return len(n.Data) > 0 }
+func (n *N[T]) InvalidateAABBCache() {
+	n.aabbCacheIsValid = false
+}
+
+func (n *N[T]) Left() *N[T]   { return n.left }
+func (n *N[T]) Right() *N[T]  { return n.right }
+func (n *N[T]) Parent() *N[T] { return n.parent }
+func (n *N[T]) Root() *N[T] {
+	if n.Parent() == nil {
+		return n
+	}
+	return n.Parent().Root()
+}
+
+func (n *N[T]) Leaf() bool { return len(n.data) > 0 }
 func (n *N[T]) AABB() hyperrectangle.R {
-	if n.AABBCacheIsValid {
-		return n.AABBCache
+	if n.aabbCacheIsValid {
+		return n.aabbCache
 	}
 
-	n.AABBCacheIsValid = true
+	n.aabbCacheIsValid = true
 	if n.Leaf() {
-		rs := make([]hyperrectangle.R, len(n.Data))
-		for i := 0; i < len(n.Data); i++ {
-			rs[i] = n.Data[i].AABB
+		rs := make([]hyperrectangle.R, len(n.data))
+		for i := 0; i < len(n.data); i++ {
+			rs[i] = n.data[i].AABB
 		}
-		n.AABBCache = bhr.AABB(rs)
+		n.aabbCache = bhr.AABB(rs)
 	} else {
-		n.AABBCache = bhr.Union(n.Left.AABB(), n.Right.AABB())
+		n.aabbCache = bhr.Union(n.Left().AABB(), n.Right().AABB())
 	}
 
-	return n.AABBCache
+	return n.aabbCache
 }
