@@ -1,3 +1,6 @@
+// Package node is an internal-only node implementation struct, and its
+// properties and data points should only be accessed via the operations API in
+// the /internal/node/op/ directory.
 package node
 
 import (
