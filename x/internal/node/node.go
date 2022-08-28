@@ -79,6 +79,14 @@ func (n *N) InvalidateAABBCache() {
 }
 
 func (n *N) Swap(m *N) {
+	if m == nil {
+		panic("cannot swap with empty node")
+	}
+
+	if (n.IsRoot() && m.IsLeaf()) || (n.IsLeaf() && m.IsRoot()) {
+		panic("cannot swap leaf and root nodes")
+	}
+
 	if !n.IsRoot() {
 		if n.Parent().Left() == n {
 			n.Parent().left = m
@@ -96,6 +104,13 @@ func (n *N) Swap(m *N) {
 		m.InvalidateAABBCache()
 	}
 	n.parent, m.parent = m.parent, n.parent
+
+	if err := Validate(n); err != nil {
+		panic(fmt.Errorf("could not swap nodes: %v", err))
+	}
+	if err := Validate(m); err != nil {
+		panic(fmt.Errorf("could not swap nodes: %v", err))
+	}
 }
 
 func (n *N) Left() *N   { return n.left }
