@@ -4,63 +4,64 @@
 package node
 
 import (
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	bhr "github.com/downflux/go-bvh/x/hyperrectangle"
 )
 
-type D[T comparable] struct {
-	ID   T
+type D struct {
+	ID   id.ID
 	AABB hyperrectangle.R
 }
 
-type N[T comparable] struct {
-	parent *N[T]
-	left   *N[T]
-	right  *N[T]
+type N struct {
+	parent *N
+	left   *N
+	right  *N
 
-	data             []D[T]
+	data             []D
 	aabbCacheIsValid bool
 	aabbCache        hyperrectangle.R
 }
 
-func (n *N[T]) InvalidateAABBCache() {
+func (n *N) InvalidateAABBCache() {
 	n.aabbCacheIsValid = false
 }
 
-func (n *N[T]) clean() {
+func (n *N) clean() {
 	n.parent = nil
 	n.left = nil
 	n.right = nil
 }
 
-func (n *N[T]) Left() *N[T] { return n.left }
-func (n *N[T]) SetLeft(m *N[T]) {
+func (n *N) Left() *N { return n.left }
+func (n *N) SetLeft(m *N) {
 	n.Left().clean()
 
 	n.left = m
-	m.SetParent(n)
+	m.parent = n
 }
 
-func (n *N[T]) Right() *N[T] { return n.right }
-func (n *N[T]) SetRight(m *N[T]) {
+func (n *N) Right() *N { return n.right }
+func (n *N) SetRight(m *N) {
 	n.Right().clean()
 
 	n.right = m
-	m.SetParent(n)
+	m.parent = n
 }
 
-func (n *N[T]) Parent() *N[T] { return n.parent }
+func (n *N) Parent() *N { return n.parent }
 
-func (n *N[T]) Root() *N[T] {
+func (n *N) Root() *N {
 	if n.Parent() == nil {
 		return n
 	}
 	return n.Parent().Root()
 }
 
-func (n *N[T]) Leaf() bool { return len(n.data) > 0 }
-func (n *N[T]) AABB() hyperrectangle.R {
+func (n *N) Leaf() bool { return len(n.data) > 0 }
+func (n *N) AABB() hyperrectangle.R {
 	if n.aabbCacheIsValid {
 		return n.aabbCache
 	}

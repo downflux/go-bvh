@@ -3,6 +3,7 @@ package bvh
 import (
 	"fmt"
 
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 )
@@ -11,35 +12,25 @@ import (
 // any data associated with the AABBs aside from the object ID. The caller is
 // responsible for storing any data associated with the AABB (e.g. in a separate
 // map).
-type BVH[T comparable] struct {
-	lookup map[T]*node.N[T]
-	root   *node.N[T]
+type BVH struct {
+	lookup map[id.ID]*node.N
+	root   *node.N
 }
 
-type D[T comparable] struct {
-	ID   T
-	AABB hyperrectangle.R
-}
-
-func New[T comparable](data []D[T]) *BVH[T] {
-	bvh := &BVH[T]{
-		lookup: map[T]*node.N[T]{},
+func New() *BVH {
+	return &BVH{
+		lookup: map[id.ID]*node.N{},
 	}
-
-	for _, p := range data {
-		bvh.Insert(p.ID, p.AABB)
-	}
-	return bvh
 }
 
 // Insert adds a new AABB bounding box into the BVH tree. The input AABB should
 // be larger than the actual object to account for movement updates.
-func (bvh *BVH[T]) Insert(id T, aabb hyperrectangle.R) error {
+func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
 	return fmt.Errorf("unimplemented")
 }
 
 // Remove will delete the BVH node which encapsulates the given object.
-func (bvh *BVH[T]) Remove(id T) error {
+func (bvh *BVH) Remove(id id.ID) error {
 	return fmt.Errorf("unimplemented")
 }
 
@@ -52,6 +43,6 @@ func (bvh *BVH[T]) Remove(id T) error {
 // N.B.: The BVH is not responsible for updating the object itself -- the caller
 // will need to do that separately. This function is called only to update the
 // state of the BVH.
-func (bvh *BVH[T]) Update(id T, q hyperrectangle.R, aabb hyperrectangle.R) error {
+func (bvh *BVH) Update(id id.ID, q hyperrectangle.R, aabb hyperrectangle.R) error {
 	return fmt.Errorf("unimplemented")
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/node"
 )
 
-func Execute[T comparable](n *node.N[T]) *node.N[T] {
+func Execute(n *node.N) *node.N {
 	n.InvalidateAABBCache()
 	if n.Parent() == nil {
 		return n
