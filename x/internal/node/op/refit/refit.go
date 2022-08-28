@@ -10,8 +10,5 @@ func Execute(n *node.N) *node.N {
 	}
 
 	n.InvalidateAABBCache()
-	if n.IsRoot() {
-		return n
-	}
-	return Execute(n.Parent())
+	return n.Root()
 }
