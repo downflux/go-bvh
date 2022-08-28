@@ -3,8 +3,10 @@ package rotate
 import (
 	"testing"
 
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-bvh/x/internal/node/util"
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -17,8 +19,8 @@ func TestExecute(t *testing.T) {
 
 	configs := []config{
 		func() config {
-			data := map[util.NodeID][]node.D{
-				100: []node.D{{ID: 1, AABB: util.Interval(0, 100)}},
+			data := map[util.NodeID]map[id.ID]hyperrectangle.R{
+				100: {1: util.Interval(0, 100)},
 			}
 			return config{
 				name: "NoRotate/Root",
@@ -35,9 +37,9 @@ func TestExecute(t *testing.T) {
 			}
 		}(),
 		func() config {
-			data := map[util.NodeID][]node.D{
-				101: []node.D{{ID: 1, AABB: util.Interval(0, 100)}},
-				102: []node.D{{ID: 1, AABB: util.Interval(101, 200)}},
+			data := map[util.NodeID]map[id.ID]hyperrectangle.R{
+				101: {1: util.Interval(0, 100)},
+				102: {2: util.Interval(101, 200)},
 			}
 			return config{
 				name: "NoRotate/NoGrandchildren",
@@ -58,10 +60,10 @@ func TestExecute(t *testing.T) {
 			}
 		}(),
 		func() config {
-			data := map[util.NodeID][]node.D{
-				101: []node.D{{ID: 1, AABB: util.Interval(1, 2)}},    // B
-				103: []node.D{{ID: 2, AABB: util.Interval(99, 100)}}, // F
-				104: []node.D{{ID: 3, AABB: util.Interval(0, 1)}},    // G
+			data := map[util.NodeID]map[id.ID]hyperrectangle.R{
+				101: {1: util.Interval(1, 2)},    // B
+				103: {2: util.Interval(99, 100)}, // F
+				104: {3: util.Interval(0, 1)},    // G
 			}
 			return config{
 				name: "Rotate/BF",
@@ -94,10 +96,10 @@ func TestExecute(t *testing.T) {
 			}
 		}(),
 		func() config {
-			data := map[util.NodeID][]node.D{
-				101: []node.D{{ID: 1, AABB: util.Interval(99, 100)}}, // B
-				103: []node.D{{ID: 2, AABB: util.Interval(1, 2)}},    // F
-				104: []node.D{{ID: 3, AABB: util.Interval(0, 1)}},    // G
+			data := map[util.NodeID]map[id.ID]hyperrectangle.R{
+				101: {1: util.Interval(99, 100)}, // B
+				103: {2: util.Interval(1, 2)},    // F
+				104: {3: util.Interval(0, 1)},    // G
 			}
 
 			//   A

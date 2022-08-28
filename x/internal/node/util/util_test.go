@@ -3,6 +3,7 @@ package util
 import (
 	"testing"
 
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
@@ -19,22 +20,24 @@ func TestNew(t *testing.T) {
 		{
 			name: "Trivial",
 			t: T{
-				Data: map[NodeID][]node.D{
-					101: []node.D{{ID: 1, AABB: Interval(0, 100)}},
+				Data: map[NodeID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
 				},
 				Nodes: map[NodeID]N{},
 				Root:  101,
 			},
 			want: node.New(node.O{
-				Data: []node.D{{ID: 1, AABB: Interval(0, 100)}},
+				Data: map[id.ID]hyperrectangle.R{
+					1: Interval(0, 100),
+				},
 			}),
 		},
 		{
 			name: "Children",
 			t: T{
-				Data: map[NodeID][]node.D{
-					101: []node.D{{ID: 1, AABB: Interval(0, 100)}},
-					102: []node.D{{ID: 2, AABB: Interval(101, 200)}},
+				Data: map[NodeID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					102: {2: Interval(101, 200)},
 				},
 				Nodes: map[NodeID]N{
 					100: N{Left: 101, Right: 102},
@@ -43,10 +46,14 @@ func TestNew(t *testing.T) {
 			},
 			want: node.New(node.O{
 				Left: node.New(node.O{
-					Data: []node.D{{ID: 1, AABB: Interval(0, 100)}},
+					Data: map[id.ID]hyperrectangle.R{
+						1: Interval(0, 100),
+					},
 				}),
 				Right: node.New(node.O{
-					Data: []node.D{{ID: 2, AABB: Interval(101, 200)}},
+					Data: map[id.ID]hyperrectangle.R{
+						2: Interval(101, 200),
+					},
 				}),
 			}),
 		},
@@ -79,10 +86,10 @@ func TestNodeSwap(t *testing.T) {
 
 	configs := []config{
 		func() config {
-			data := map[NodeID][]node.D{
-				101: []node.D{{ID: 1, AABB: Interval(0, 100)}},
-				103: []node.D{{ID: 2, AABB: Interval(101, 200)}},
-				104: []node.D{{ID: 3, AABB: Interval(201, 300)}},
+			data := map[NodeID]map[id.ID]hyperrectangle.R{
+				101: {1: Interval(0, 100)},
+				103: {2: Interval(101, 200)},
+				104: {3: Interval(201, 300)},
 			}
 
 			input := New(

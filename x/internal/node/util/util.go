@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -15,7 +16,7 @@ func Interval(min, max float64) hyperrectangle.R {
 type NodeID uint64
 
 type T struct {
-	Data  map[NodeID][]node.D
+	Data  map[NodeID]map[id.ID]hyperrectangle.R
 	Nodes map[NodeID]N
 	Root  NodeID
 }

@@ -12,15 +12,10 @@ import (
 	bhr "github.com/downflux/go-bvh/x/hyperrectangle"
 )
 
-type D struct {
-	ID   id.ID
-	AABB hyperrectangle.R
-}
-
 type O struct {
 	Left  *N
 	Right *N
-	Data  []D
+	Data  map[id.ID]hyperrectangle.R
 }
 
 type N struct {
@@ -28,7 +23,7 @@ type N struct {
 	left   *N
 	right  *N
 
-	data             []D
+	data             map[id.ID]hyperrectangle.R
 	aabbCacheIsValid bool
 	aabbCache        hyperrectangle.R
 }
@@ -143,9 +138,9 @@ func (n *N) AABB() hyperrectangle.R {
 
 	n.aabbCacheIsValid = true
 	if n.IsLeaf() {
-		rs := make([]hyperrectangle.R, len(n.data))
-		for i := 0; i < len(n.data); i++ {
-			rs[i] = n.data[i].AABB
+		rs := make([]hyperrectangle.R, 0, len(n.data))
+		for _, aabb := range n.data {
+			rs = append(rs, aabb)
 		}
 		n.aabbCache = bhr.AABB(rs)
 	} else {
