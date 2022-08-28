@@ -4,6 +4,8 @@
 package node
 
 import (
+	"fmt"
+
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
@@ -15,6 +17,12 @@ type D struct {
 	AABB hyperrectangle.R
 }
 
+type O struct {
+	Left  *N
+	Right *N
+	Data  []D
+}
+
 type N struct {
 	parent *N
 	left   *N
@@ -23,6 +31,44 @@ type N struct {
 	data             []D
 	aabbCacheIsValid bool
 	aabbCache        hyperrectangle.R
+}
+
+func Validate(n *N) error {
+	if (n.left != nil && n.right == nil) || (n.right != nil && n.left == nil) {
+		return fmt.Errorf("node has mismatching child nodes")
+	}
+	if n.left != nil && n.right != nil && len(n.data) > 0 {
+		return fmt.Errorf("non-leaf node contains data")
+	}
+	if n.left == nil && n.right == nil && len(n.data) == 0 {
+		return fmt.Errorf("leaf node contains no data")
+	}
+	if (n.left != nil && n.left.parent != n) || (n.right != nil && n.right.parent != n) {
+		return fmt.Errorf("node child does not link to the parent")
+	}
+	if n.parent != nil && n.parent.left != n && n.parent.right != n {
+		return fmt.Errorf("node parent does not link to child")
+	}
+	return nil
+}
+
+func New(o O) *N {
+	n := &N{
+		left:  o.Left,
+		right: o.Right,
+		data:  o.Data,
+	}
+	if n.left != nil {
+		n.left.parent = n
+	}
+	if n.right != nil {
+		n.right.parent = n
+	}
+
+	if err := Validate(n); err != nil {
+		panic(fmt.Sprintf("cannot construct node: %v", err))
+	}
+	return n
 }
 
 func (n *N) InvalidateAABBCache() {
