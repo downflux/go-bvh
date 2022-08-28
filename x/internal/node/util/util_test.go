@@ -8,10 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func interval(min, max float64) hyperrectangle.R {
-	return *hyperrectangle.New([]float64{min}, []float64{max})
-}
-
 func TestNew(t *testing.T) {
 	type config struct {
 		name string
@@ -24,21 +20,21 @@ func TestNew(t *testing.T) {
 			name: "Trivial",
 			t: T{
 				Data: map[NodeID][]node.D{
-					101: []node.D{{ID: 1, AABB: interval(0, 100)}},
+					101: []node.D{{ID: 1, AABB: Interval(0, 100)}},
 				},
 				Nodes: map[NodeID]N{},
 				Root:  101,
 			},
 			want: node.New(node.O{
-				Data: []node.D{{ID: 1, AABB: interval(0, 100)}},
+				Data: []node.D{{ID: 1, AABB: Interval(0, 100)}},
 			}),
 		},
 		{
 			name: "Children",
 			t: T{
 				Data: map[NodeID][]node.D{
-					101: []node.D{{ID: 1, AABB: interval(0, 100)}},
-					102: []node.D{{ID: 2, AABB: interval(101, 200)}},
+					101: []node.D{{ID: 1, AABB: Interval(0, 100)}},
+					102: []node.D{{ID: 2, AABB: Interval(101, 200)}},
 				},
 				Nodes: map[NodeID]N{
 					100: N{Left: 101, Right: 102},
@@ -47,10 +43,10 @@ func TestNew(t *testing.T) {
 			},
 			want: node.New(node.O{
 				Left: node.New(node.O{
-					Data: []node.D{{ID: 1, AABB: interval(0, 100)}},
+					Data: []node.D{{ID: 1, AABB: Interval(0, 100)}},
 				}),
 				Right: node.New(node.O{
-					Data: []node.D{{ID: 2, AABB: interval(101, 200)}},
+					Data: []node.D{{ID: 2, AABB: Interval(101, 200)}},
 				}),
 			}),
 		},
@@ -84,9 +80,9 @@ func TestNodeSwap(t *testing.T) {
 	configs := []config{
 		func() config {
 			data := map[NodeID][]node.D{
-				101: []node.D{{ID: 1, AABB: interval(0, 100)}},
-				103: []node.D{{ID: 2, AABB: interval(101, 200)}},
-				104: []node.D{{ID: 3, AABB: interval(201, 300)}},
+				101: []node.D{{ID: 1, AABB: Interval(0, 100)}},
+				103: []node.D{{ID: 2, AABB: Interval(101, 200)}},
+				104: []node.D{{ID: 3, AABB: Interval(201, 300)}},
 			}
 
 			input := New(

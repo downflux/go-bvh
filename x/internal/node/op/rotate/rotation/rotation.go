@@ -17,18 +17,18 @@ func Generate(n *node.N) []R {
 
 	var rs []R
 	if !t.A.IsLeaf() { // t.B and t.C are non-nil
-		if !t.B.IsLeaf() { // t.F and t.G are non-nil
+		if !t.B.IsLeaf() { // t.E and t.D are non-nil
 			rs = append(rs, R{
-				B: t.B, C: t.C, F: t.F, G: t.G,
+				B: t.C, C: t.B, F: t.D, G: t.E,
 			}, R{
-				B: t.B, C: t.C, F: t.F, G: t.G,
+				B: t.C, C: t.B, F: t.E, G: t.D,
 			})
 		}
-		if !t.C.IsLeaf() { // t.E and t.D are non-nil
+		if !t.C.IsLeaf() { // t.F and t.G are non-nil
 			rs = append(rs, R{
-				B: t.C, C: t.B, F: t.E, G: t.D,
+				B: t.B, C: t.C, F: t.F, G: t.G,
 			}, R{
-				B: t.C, C: t.B, F: t.D, G: t.E,
+				B: t.B, C: t.C, F: t.G, G: t.F,
 			})
 		}
 	}
@@ -61,6 +61,7 @@ func Optimal(n *node.N) R {
 				r.G.AABB(),
 			),
 		); g < h {
+			h = g
 			optimal = r
 		}
 	}

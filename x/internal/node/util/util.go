@@ -3,9 +3,14 @@ package util
 import (
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
+
+func Interval(min, max float64) hyperrectangle.R {
+	return *hyperrectangle.New(*vector.New(min), *vector.New(max))
+}
 
 type NodeID uint64
 
@@ -44,6 +49,10 @@ func Equal(a *node.N, b *node.N) bool {
 	if (a.IsLeaf() && !b.IsLeaf()) || (!a.IsLeaf() && b.IsLeaf()) {
 		return false
 	}
+	if !cmp.Equal(a.AABB(), b.AABB(), cmp.AllowUnexported(hyperrectangle.R{})) {
+		return false
+	}
+
 	if a.IsLeaf() && b.IsLeaf() {
 		return cmp.Equal(
 			a,
@@ -53,8 +62,6 @@ func Equal(a *node.N, b *node.N) bool {
 				"left",
 				"right",
 				"parent",
-				"aabbCacheIsValid",
-				"aabbCache",
 			),
 			cmp.AllowUnexported(node.N{}, hyperrectangle.R{}),
 		)
