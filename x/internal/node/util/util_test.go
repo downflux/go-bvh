@@ -72,3 +72,66 @@ func TestNew(t *testing.T) {
 		})
 	}
 }
+
+func TestNodeSwap(t *testing.T) {
+	type config struct {
+		name string
+		n    *node.N
+		m    *node.N
+		want *node.N // root
+	}
+
+	configs := []config{
+		func() config {
+			data := map[NodeID][]node.D{
+				101: []node.D{{ID: 1, AABB: interval(0, 100)}},
+				103: []node.D{{ID: 2, AABB: interval(101, 200)}},
+				104: []node.D{{ID: 3, AABB: interval(201, 300)}},
+			}
+
+			input := New(
+				T{
+					Data: data,
+					Nodes: map[NodeID]N{
+						100: N{Left: 101, Right: 102},
+						102: N{Left: 103, Right: 104},
+					},
+					Root: 100,
+				},
+			)
+			return config{
+				name: "Simple",
+				n:    input.Left(),
+				m:    input.Right().Right(),
+				want: New(
+					T{
+						Data: data,
+						Nodes: map[NodeID]N{
+							100: N{Left: 104, Right: 102},
+							102: N{Left: 103, Right: 101},
+						},
+						Root: 100,
+					},
+				),
+			}
+		}(),
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			c.n.Swap(c.m)
+			got := c.n.Root()
+
+			if diff := cmp.Diff(
+				c.want,
+				got,
+				cmp.AllowUnexported(
+					node.N{},
+					hyperrectangle.R{},
+				),
+			); diff != "" {
+				t.Errorf("New() mismatch (-want +got):\n%v", diff)
+			}
+		})
+	}
+}
