@@ -6,6 +6,21 @@ import (
 )
 
 func Execute(n *node.N) *node.N {
-	rotation.Generate(n)
-	return nil
+	if n == nil {
+		panic("cannot rotate a nil node")
+	}
+
+	if n.IsLeaf() {
+		return Execute(n.Parent())
+	}
+
+	r := rotation.Optimal(n)
+	if r == (rotation.R{}) {
+		if n.IsRoot() {
+			return n
+		}
+		return Execute(n.Parent())
+	}
+
+	return r.B
 }

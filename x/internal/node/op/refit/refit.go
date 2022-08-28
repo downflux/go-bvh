@@ -5,8 +5,12 @@ import (
 )
 
 func Execute(n *node.N) *node.N {
+	if n == nil {
+		panic("cannot refit a nil node")
+	}
+
 	n.InvalidateAABBCache()
-	if n.Parent() == nil {
+	if n.IsRoot() {
 		return n
 	}
 	return Execute(n.Parent())

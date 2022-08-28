@@ -43,6 +43,16 @@ func AABB(rs []hyperrectangle.R) hyperrectangle.R {
 	return b
 }
 
+// V returns the n-dimensional volume of a hyperrectangle.
+func V(r hyperrectangle.R) float64 {
+	v := 1.0
+	d := r.D()
+	for i := vector.D(0); i < d.Dimension(); i++ {
+		v *= d.X(i)
+	}
+	return v
+}
+
 // Contains checks if the input rectangle r fully encloses s.
 func Contains(r hyperrectangle.R, s hyperrectangle.R) bool {
 	if r.Min().Dimension() != s.Min().Dimension() {

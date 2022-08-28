@@ -12,15 +12,19 @@ func New(n *node.N) *T {
 	t := &T{
 		A: n,
 	}
-	if n.Left() != nil {
+
+	if !n.IsLeaf() {
 		t.B = n.Left()
-		t.D = n.Left().Left()
-		t.E = n.Left().Right()
-	}
-	if n.Right() != nil {
 		t.C = n.Right()
-		t.F = n.Right().Left()
-		t.G = n.Right().Right()
+
+		if !n.Left().IsLeaf() {
+			t.D = n.Left().Left()
+			t.E = n.Left().Right()
+		}
+		if !n.Right().IsLeaf() {
+			t.F = n.Right().Left()
+			t.G = n.Right().Right()
+		}
 	}
 	return t
 }

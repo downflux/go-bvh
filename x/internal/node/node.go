@@ -60,14 +60,15 @@ func (n *N) Root() *N {
 	return n.Parent().Root()
 }
 
-func (n *N) Leaf() bool { return len(n.data) > 0 }
+func (n *N) IsLeaf() bool { return len(n.data) > 0 }
+func (n *N) IsRoot() bool { return n.Parent() == nil }
 func (n *N) AABB() hyperrectangle.R {
 	if n.aabbCacheIsValid {
 		return n.aabbCache
 	}
 
 	n.aabbCacheIsValid = true
-	if n.Leaf() {
+	if n.IsLeaf() {
 		rs := make([]hyperrectangle.R, len(n.data))
 		for i := 0; i < len(n.data); i++ {
 			rs[i] = n.data[i].AABB
