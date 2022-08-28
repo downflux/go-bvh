@@ -7,6 +7,39 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
+type NodeID uint64
+
+type T struct {
+	Data  map[NodeID][]node.D
+	Nodes map[NodeID]N
+	Root  NodeID
+}
+
+type N struct {
+	Left  NodeID
+	Right NodeID
+}
+
+func New(t T) *node.N {
+	if len(t.Data[t.Root]) > 0 {
+		return node.New(node.O{
+			Data: t.Data[t.Root],
+		})
+	}
+	return node.New(node.O{
+		Left: New(T{
+			Data:  t.Data,
+			Nodes: t.Nodes,
+			Root:  t.Nodes[t.Root].Left,
+		}),
+		Right: New(T{
+			Data:  t.Data,
+			Nodes: t.Nodes,
+			Root:  t.Nodes[t.Root].Right,
+		}),
+	})
+}
+
 func Equal(a *node.N, b *node.N) bool {
 	if (a.IsLeaf() && !b.IsLeaf()) || (!a.IsLeaf() && b.IsLeaf()) {
 		return false
