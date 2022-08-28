@@ -60,6 +60,34 @@ func TestGenerate(t *testing.T) {
 				},
 			}
 		}(),
+		func() config {
+			data := map[util.NodeID]map[id.ID]hyperrectangle.R{
+				101: {1: util.Interval(0, 100)},
+				104: {2: util.Interval(101, 200)},
+				105: {3: util.Interval(201, 300)},
+			}
+			//   A
+			//  / \
+			// B   C
+			//    / \
+			//   F   G
+			root := util.New(util.T{
+				Data: data,
+				Nodes: map[util.NodeID]util.N{
+					100: util.N{Left: 101, Right: 102},
+					102: util.N{Left: 104, Right: 105},
+				},
+				Root: 100,
+			})
+			return config{
+				name: "BFG",
+				n:    root,
+				want: []R{
+					R{B: root.Left(), C: root.Right(), F: root.Right().Left(), G: root.Right().Right()},
+					R{B: root.Left(), C: root.Right(), F: root.Right().Right(), G: root.Right().Left()},
+				},
+			}
+		}(),
 	}
 
 	for _, c := range configs {
