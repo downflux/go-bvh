@@ -27,30 +27,33 @@ type N struct {
 
 func (n *N) InvalidateAABBCache() {
 	n.aabbCacheIsValid = false
+	if !n.IsRoot() {
+		n.Parent().InvalidateAABBCache()
+	}
 }
 
-func (n *N) clean() {
-	n.parent = nil
-	n.left = nil
-	n.right = nil
+func (n *N) Swap(m *N) {
+	if !n.IsRoot() {
+		if n.Parent().Left() == n {
+			n.Parent().left = m
+		} else {
+			n.Parent().right = m
+		}
+		n.InvalidateAABBCache()
+	}
+	if !m.IsRoot() {
+		if m.Parent().Left() == m {
+			m.Parent().left = n
+		} else {
+			m.Parent().right = n
+		}
+		m.InvalidateAABBCache()
+	}
+	n.parent, m.parent = m.parent, n.parent
 }
 
-func (n *N) Left() *N { return n.left }
-func (n *N) SetLeft(m *N) {
-	n.Left().clean()
-
-	n.left = m
-	m.parent = n
-}
-
-func (n *N) Right() *N { return n.right }
-func (n *N) SetRight(m *N) {
-	n.Right().clean()
-
-	n.right = m
-	m.parent = n
-}
-
+func (n *N) Left() *N   { return n.left }
+func (n *N) Right() *N  { return n.right }
 func (n *N) Parent() *N { return n.parent }
 
 func (n *N) Root() *N {
