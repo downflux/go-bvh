@@ -72,6 +72,16 @@ func New(o O) *N {
 }
 
 func (n *N) InvalidateAABBCache() {
+	// Since InvalidateAABBCache is called recursively up towards the root,
+	// and AABB is calculated towards the leaf, if the cache is invalid at
+	// some node, we are guaranteed all nodes above the current node are
+	// also marked with an invalid cache. Skipping the tree iteration here
+	// can reduce the complexity by a factor of O(log N) if we are
+	// traveling up the tree anyway in some other algorithm.
+	if !n.aabbCacheIsValid {
+		return
+	}
+
 	n.aabbCacheIsValid = false
 	if !n.IsRoot() {
 		n.Parent().InvalidateAABBCache()
