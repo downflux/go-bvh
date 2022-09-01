@@ -29,20 +29,24 @@ type N struct {
 }
 
 func Validate(n *N) error {
-	if (n.left != nil && n.right == nil) || (n.right != nil && n.left == nil) {
+	if n == nil {
+		return nil
+	}
+
+	if (n.Left() != nil && n.Right() == nil) || (n.Right() != nil && n.Left() == nil) {
 		return fmt.Errorf("node has mismatching child nodes")
 	}
-	if n.left != nil && n.right != nil && len(n.data) > 0 {
+	if n.Left() != nil && n.Right() != nil && len(n.Data()) > 0 {
 		return fmt.Errorf("non-leaf node contains data")
 	}
-	if n.left == nil && n.right == nil && len(n.data) == 0 {
+	if n.Left() == nil && n.Right() == nil && len(n.Data()) == 0 {
 		return fmt.Errorf("leaf node contains no data")
 	}
-	if (n.left != nil && n.left.parent != n) || (n.right != nil && n.right.parent != n) {
-		return fmt.Errorf("node child does not link to the parent")
+	if (n.Left() != nil && n.Left().Parent() != n) || (n.Right() != nil && n.Right().Parent() != n) {
+		return fmt.Errorf("child node does not link to the parent")
 	}
-	if n.parent != nil && n.parent.left != n && n.parent.right != n {
-		return fmt.Errorf("node parent does not link to child")
+	if n.Parent() != nil && n.Parent().Left() != n && n.Parent().Right() != n {
+		return fmt.Errorf("parent node does not link to child")
 	}
 	return nil
 }
@@ -53,11 +57,9 @@ func New(o O) *N {
 		right: o.Right,
 		data:  o.Data,
 	}
-	if n.left != nil {
-		n.left.parent = n
-	}
-	if n.right != nil {
-		n.right.parent = n
+	if !n.IsLeaf() {
+		n.Left().parent = n
+		n.Right().parent = n
 	}
 
 	if err := Validate(n); err != nil {
@@ -83,33 +85,69 @@ func (n *N) InvalidateAABBCache() {
 	}
 }
 
+// IsAncestor returns true if the current node n is an ancestor of m.
+func (n *N) IsAncestor(m *N) bool {
+	if n == m {
+		return true
+	}
+	if m.IsRoot() {
+		return false
+	}
+	return n.IsAncestor(m.Parent())
+}
+
+func (n *N) Insert(m *N) {
+	if m == nil {
+		panic("cannot insert an empty node")
+	}
+	if !m.IsRoot() {
+		panic("cannot insert an internal node")
+	}
+
+	n.left, n.right = m, New(O{
+		Left:  n.left,
+		Right: n.right,
+		Data:  n.data,
+	})
+	n.right.parent = n
+	n.left.parent = n
+
+	if err := Validate(n.Left()); err != nil {
+		panic(fmt.Errorf("cannot insert node: %v", err))
+	}
+	if err := Validate(n.Right()); err != nil {
+		panic(fmt.Errorf("cannot insert node: %v", err))
+	}
+}
+
 func (n *N) Swap(m *N) {
 	if m == nil {
 		panic("cannot swap with empty node")
 	}
 
-	if (n.IsRoot() && m.IsLeaf()) || (n.IsLeaf() && m.IsRoot()) {
-		panic("cannot swap leaf and root nodes")
+	if n.IsAncestor(m) || m.IsAncestor(n) {
+		panic("cannot swap a child node with its ancestor")
 	}
 
 	if !n.IsRoot() {
-		if n.Parent().Left() == n {
-			n.Parent().left = m
+		p := n.Parent()
+		if p.Left() == n {
+			p.left = m
 		} else {
-			n.Parent().right = m
+			p.right = m
 		}
-		n.InvalidateAABBCache()
+		p.InvalidateAABBCache()
 	}
 	if !m.IsRoot() {
-		if m.Parent().Left() == m {
-			m.Parent().left = n
+		p := m.Parent()
+		if p.Left() == m {
+			p.left = n
 		} else {
-			m.Parent().right = n
+			p.right = n
 		}
-		m.InvalidateAABBCache()
+		p.InvalidateAABBCache()
 	}
-	n.parent, m.parent = m.parent, n.parent
-
+	n.parent, m.parent = m.Parent(), n.Parent()
 	if err := Validate(n); err != nil {
 		panic(fmt.Errorf("could not swap nodes: %v", err))
 	}
@@ -118,7 +156,44 @@ func (n *N) Swap(m *N) {
 	}
 }
 
-func (n *N) Left() *N   { return n.left }
+func (n *N) Data() map[id.ID]hyperrectangle.R { return n.data }
+func (n *N) Left() *N                         { return n.left }
+
+/*
+func (n *N) SetLeft(m *N) {
+	if m == nil {
+		panic("cannot set an empty node as a child")
+	}
+
+	if !m.IsRoot() {
+		panic("cannot add an internal node as a child")
+	}
+
+	if n.IsLeaf() {
+		panic("cannot directly set a child on a leaf node")
+	}
+
+	q := n.Left()
+
+	// Avoid memory leaks -- since n can no longer access the old
+	// child, ensure the old child cannot access n.
+	q.parent = nil
+
+	n.left = m
+	m.parent = n
+
+	if err := Validate(q); err != nil {
+		panic(fmt.Errorf("could not set child node: %v", err))
+	}
+	if err := Validate(n); err != nil {
+		panic(fmt.Errorf("could not set child node: %v", err))
+	}
+	if err := Validate(m); err != nil {
+		panic(fmt.Errorf("could not set child node: %v", err))
+	}
+}
+*/
+
 func (n *N) Right() *N  { return n.right }
 func (n *N) Parent() *N { return n.parent }
 

@@ -1,8 +1,6 @@
 package insert
 
 import (
-	"fmt"
-
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-bvh/x/internal/node/op/insert/heuristic"
@@ -23,18 +21,14 @@ func parent(n *node.N, pid id.ID, aabb hyperrectangle.R) *node.N {
 		},
 	})
 
-	p := n.Parent()
-	q := node.New(node.O{
+	if !n.IsRoot() {
+		n.Parent().Insert(m)
+		return m.Parent()
+	}
+	return node.New(node.O{
 		Left:  m,
 		Right: n,
 	})
-	if !q.IsRoot() {
-		p.Swap(q)
-		fmt.Printf("DEBUG: p.P = %v, p.L = %v, p.R = %v\n", p.Parent(), p.Left(), p.Right())
-		fmt.Printf("DEBUG: n.P = %v, m.P = %v\n", n.Parent(), m.Parent())
-	}
-
-	return q
 }
 
 // sibling finds the node to which an object with the given bound will siblings.

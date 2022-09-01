@@ -116,8 +116,8 @@ func TestParent(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			got := parent(c.n, c.pid, c.aabb)
 			if diff := cmp.Diff(
-				c.want.Root(),
-				got.Root(),
+				c.want, // .Root(),
+				got,    // .Root(),
 				cmp.Comparer(util.Equal),
 			); diff != "" {
 				t.Errorf("parent() mismatch (-want +got):\n%v", diff)
