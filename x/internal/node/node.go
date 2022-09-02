@@ -11,18 +11,18 @@ import (
 	nid "github.com/downflux/go-bvh/x/internal/node/id"
 )
 
-type L struct {
+type C struct {
 	lookup map[nid.ID]*N
 }
 
-func Cache() *L {
-	return &L{
+func Cache() *C {
+	return &C{
 		lookup: map[nid.ID]*N{},
 	}
 }
 
 type O struct {
-	Nodes *L
+	Nodes *C
 
 	ID     nid.ID
 	Left   nid.ID
@@ -33,7 +33,7 @@ type O struct {
 }
 
 type N struct {
-	nodes *L
+	nodes *C
 
 	id     nid.ID
 	left   nid.ID

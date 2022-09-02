@@ -7,6 +7,8 @@ import (
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
+
+	nid "github.com/downflux/go-bvh/x/internal/node/id"
 )
 
 func TestNew(t *testing.T) {
@@ -18,45 +20,65 @@ func TestNew(t *testing.T) {
 
 	configs := []config{
 		{
-			name: "Trivial",
+			name: "Leaf",
 			t: T{
-				Data: map[NodeID]map[id.ID]hyperrectangle.R{
-					101: {1: Interval(0, 100)},
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: Interval(0, 100)},
 				},
-				Nodes: map[NodeID]N{},
-				Root:  101,
-			},
-			want: node.New(node.O{
-				Data: map[id.ID]hyperrectangle.R{
-					1: Interval(0, 100),
-				},
-			}),
-		},
-		{
-			name: "Children",
-			t: T{
-				Data: map[NodeID]map[id.ID]hyperrectangle.R{
-					101: {1: Interval(0, 100)},
-					102: {2: Interval(101, 200)},
-				},
-				Nodes: map[NodeID]N{
-					100: N{Left: 101, Right: 102},
+				Nodes: map[nid.ID]N{
+					100: {},
 				},
 				Root: 100,
 			},
 			want: node.New(node.O{
-				Left: node.New(node.O{
-					Data: map[id.ID]hyperrectangle.R{
-						1: Interval(0, 100),
-					},
-				}),
-				Right: node.New(node.O{
-					Data: map[id.ID]hyperrectangle.R{
-						2: Interval(101, 200),
-					},
-				}),
+				Nodes: node.Cache(),
+				ID:    100,
+				Data: map[id.ID]hyperrectangle.R{
+					1: Interval(0, 100),
+				},
 			}),
-		},
+		}, func() config {
+			c := node.Cache()
+			r := node.New(node.O{
+				Nodes: c,
+				ID:    100,
+				Left:  101,
+				Right: 102,
+			})
+			node.New(node.O{
+				Nodes:  c,
+				ID:     101,
+				Parent: 100,
+				Data: map[id.ID]hyperrectangle.R{
+					1: Interval(0, 100),
+				},
+			})
+			node.New(node.O{
+				Nodes:  c,
+				ID:     102,
+				Parent: 100,
+				Data: map[id.ID]hyperrectangle.R{
+					2: Interval(101, 200),
+				},
+			})
+
+			return config{
+				name: "Root",
+				t: T{
+					Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+						101: {1: Interval(0, 100)},
+						102: {2: Interval(101, 200)},
+					},
+					Nodes: map[nid.ID]N{
+						100: {Left: 101, Right: 102},
+						101: {Parent: 100},
+						102: {Parent: 100},
+					},
+					Root: 100,
+				},
+				want: r,
+			}
+		}(),
 	}
 
 	for _, c := range configs {
@@ -67,69 +89,7 @@ func TestNew(t *testing.T) {
 				got,
 				cmp.AllowUnexported(
 					node.N{},
-					hyperrectangle.R{},
-				),
-			); diff != "" {
-				t.Errorf("New() mismatch (-want +got):\n%v", diff)
-			}
-		})
-	}
-}
-
-func TestNodeSwap(t *testing.T) {
-	type config struct {
-		name string
-		n    *node.N
-		m    *node.N
-		want *node.N // root
-	}
-
-	configs := []config{
-		func() config {
-			data := map[NodeID]map[id.ID]hyperrectangle.R{
-				101: {1: Interval(0, 100)},
-				103: {2: Interval(101, 200)},
-				104: {3: Interval(201, 300)},
-			}
-
-			input := New(
-				T{
-					Data: data,
-					Nodes: map[NodeID]N{
-						100: N{Left: 101, Right: 102},
-						102: N{Left: 103, Right: 104},
-					},
-					Root: 100,
-				},
-			)
-			return config{
-				name: "Simple",
-				n:    input.Left(),
-				m:    input.Right().Right(),
-				want: New(
-					T{
-						Data: data,
-						Nodes: map[NodeID]N{
-							100: N{Left: 104, Right: 102},
-							102: N{Left: 103, Right: 101},
-						},
-						Root: 100,
-					},
-				),
-			}
-		}(),
-	}
-
-	for _, c := range configs {
-		t.Run(c.name, func(t *testing.T) {
-			c.n.Swap(c.m)
-			got := c.n.Root()
-
-			if diff := cmp.Diff(
-				c.want,
-				got,
-				cmp.AllowUnexported(
-					node.N{},
+					node.C{},
 					hyperrectangle.R{},
 				),
 			); diff != "" {
