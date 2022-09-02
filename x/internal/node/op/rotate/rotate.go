@@ -3,7 +3,7 @@ package rotate
 import (
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-bvh/x/internal/node/op/rotate/rotation"
-	"github.com/downflux/go-bvh/x/internal/node/op/swap"
+	"github.com/downflux/go-bvh/x/internal/node/op/rotate/swap"
 )
 
 func Execute(a *node.N) *node.N {
