@@ -25,30 +25,34 @@ func Execute(n *node.N, m *node.N) {
 		panic("cannot swap an empty node")
 	}
 
+	if n.Root() != m.Root() {
+		panic("cannot swap nodes of disjoint trees")
+	}
+
 	if isAncestor(n, m) || isAncestor(m, n) {
 		panic("cannot swap a node with its ancestor")
 	}
 
-	if !n.IsRoot() {
-		p := n.Parent()
-		if p.Left() == n {
-			p.SetLeft(m)
-		} else {
-			p.SetRight(m)
-		}
-		p.InvalidateAABBCache()
-	}
-	if !m.IsRoot() {
-		p := m.Parent()
-		if p.Left() == m {
-			p.SetLeft(n)
-		} else {
-			p.SetRight(n)
-		}
-		p.InvalidateAABBCache()
-	}
+	// Since the root node is an ancestor of all nodes, we can assume n and
+	// m are not the root.
 	p := n.Parent()
 	q := m.Parent()
+
+	if p.Left() == n {
+		p.SetLeft(m)
+	} else {
+		p.SetRight(m)
+	}
+
+	if q.Left() == m {
+		q.SetLeft(n)
+	} else {
+		q.SetRight(n)
+	}
+
 	n.SetParent(q)
 	m.SetParent(p)
+
+	p.InvalidateAABBCache()
+	q.InvalidateAABBCache()
 }
