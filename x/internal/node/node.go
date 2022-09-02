@@ -63,6 +63,8 @@ func New(o O) *N {
 	return n
 }
 
+func (n *N) Cache() *C { return n.nodes }
+
 func (n *N) InvalidateAABBCache() {
 	// Since InvalidateAABBCache is called recursively up towards the root,
 	// and AABB is calculated towards the leaf, if the cache is invalid at
