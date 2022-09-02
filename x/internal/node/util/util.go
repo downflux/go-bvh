@@ -7,43 +7,46 @@ import (
 	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	nid "github.com/downflux/go-bvh/x/internal/node/id"
 )
 
 func Interval(min, max float64) hyperrectangle.R {
 	return *hyperrectangle.New(*vector.New(min), *vector.New(max))
 }
 
-type NodeID uint64
-
 type T struct {
-	Data  map[NodeID]map[id.ID]hyperrectangle.R
-	Nodes map[NodeID]N
-	Root  NodeID
+	Data  map[nid.ID]map[id.ID]hyperrectangle.R
+	Nodes map[nid.ID]N
+	Root  nid.ID
 }
 
 type N struct {
-	Left  NodeID
-	Right NodeID
+	Left   nid.ID
+	Right  nid.ID
+	Parent nid.ID
 }
 
 func New(t T) *node.N {
-	if len(t.Data[t.Root]) > 0 {
-		return node.New(node.O{
-			Data: t.Data[t.Root],
+	c := node.Cache()
+
+	var r *node.N
+	for id, n := range t.Nodes {
+		m := node.New(node.O{
+			Nodes: c,
+
+			ID:     id,
+			Left:   n.Left,
+			Right:  n.Right,
+			Parent: n.Parent,
+
+			Data: t.Data[id],
 		})
+		if m.ID() == t.Root {
+			r = m
+		}
 	}
-	return node.New(node.O{
-		Left: New(T{
-			Data:  t.Data,
-			Nodes: t.Nodes,
-			Root:  t.Nodes[t.Root].Left,
-		}),
-		Right: New(T{
-			Data:  t.Data,
-			Nodes: t.Nodes,
-			Root:  t.Nodes[t.Root].Right,
-		}),
-	})
+	return r
 }
 
 func Equal(a *node.N, b *node.N) bool {
@@ -60,9 +63,7 @@ func Equal(a *node.N, b *node.N) bool {
 			b,
 			cmpopts.IgnoreFields(
 				node.N{},
-				"left",
-				"right",
-				"parent",
+				"nodes",
 			),
 			cmp.AllowUnexported(node.N{}, hyperrectangle.R{}),
 		)
