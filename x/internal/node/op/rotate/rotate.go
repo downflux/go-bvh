@@ -3,6 +3,7 @@ package rotate
 import (
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-bvh/x/internal/node/op/rotate/rotation"
+	"github.com/downflux/go-bvh/x/internal/node/op/swap"
 )
 
 func Execute(a *node.N) *node.N {
@@ -12,7 +13,7 @@ func Execute(a *node.N) *node.N {
 
 	if !a.IsLeaf() {
 		if r := rotation.Optimal(a); r != (rotation.R{}) {
-			r.B.Swap(r.F)
+			swap.Execute(r.B, r.F)
 		}
 	}
 
