@@ -8,6 +8,8 @@ import (
 	"github.com/downflux/go-bvh/x/internal/node/util"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
+
+	nid "github.com/downflux/go-bvh/x/internal/node/id"
 )
 
 func TestGenerate(t *testing.T) {
@@ -19,21 +21,23 @@ func TestGenerate(t *testing.T) {
 
 	configs := []config{
 		func() config {
-			data := map[util.NodeID]map[id.ID]hyperrectangle.R{
+			data := map[nid.ID]map[id.ID]hyperrectangle.R{
 				100: {1: util.Interval(0, 100)},
 			}
 			return config{
 				name: "Leaf",
 				n: util.New(util.T{
-					Data:  data,
-					Nodes: map[util.NodeID]util.N{},
-					Root:  100,
+					Data: data,
+					Nodes: map[nid.ID]util.N{
+						100: util.N{},
+					},
+					Root: 100,
 				}),
 				want: nil,
 			}
 		}(),
 		func() config {
-			data := map[util.NodeID]map[id.ID]hyperrectangle.R{
+			data := map[nid.ID]map[id.ID]hyperrectangle.R{
 				102: {1: util.Interval(0, 100)},
 				103: {2: util.Interval(101, 200)},
 				104: {3: util.Interval(201, 300)},
@@ -45,9 +49,12 @@ func TestGenerate(t *testing.T) {
 			// D   E
 			root := util.New(util.T{
 				Data: data,
-				Nodes: map[util.NodeID]util.N{
+				Nodes: map[nid.ID]util.N{
 					100: util.N{Left: 101, Right: 102},
-					101: util.N{Left: 103, Right: 104},
+					101: util.N{Left: 103, Right: 104, Parent: 100},
+					102: util.N{Parent: 100},
+					103: util.N{Parent: 101},
+					104: util.N{Parent: 104},
 				},
 				Root: 100,
 			})
@@ -61,7 +68,7 @@ func TestGenerate(t *testing.T) {
 			}
 		}(),
 		func() config {
-			data := map[util.NodeID]map[id.ID]hyperrectangle.R{
+			data := map[nid.ID]map[id.ID]hyperrectangle.R{
 				101: {1: util.Interval(0, 100)},
 				104: {2: util.Interval(101, 200)},
 				105: {3: util.Interval(201, 300)},
@@ -73,9 +80,12 @@ func TestGenerate(t *testing.T) {
 			//   F   G
 			root := util.New(util.T{
 				Data: data,
-				Nodes: map[util.NodeID]util.N{
+				Nodes: map[nid.ID]util.N{
 					100: util.N{Left: 101, Right: 102},
-					102: util.N{Left: 104, Right: 105},
+					101: util.N{Parent: 100},
+					102: util.N{Left: 104, Right: 105, Parent: 100},
+					104: util.N{Parent: 102},
+					105: util.N{Parent: 105},
 				},
 				Root: 100,
 			})
