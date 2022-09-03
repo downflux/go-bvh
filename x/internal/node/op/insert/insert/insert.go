@@ -1,9 +1,15 @@
 // Package defines an operation which adds a new subtree into an existing tree.
 package insert
 
+import (
+	"github.com/downflux/go-bvh/x/internal/node"
+
+	nid "github.com/downflux/go-bvh/x/internal/node/id"
+)
+
 // Execute inserts the node m as a sibling of n. The returned node is the new
 // root of the tree.
-func Execute(n *node.N, m *node.N) *node.N {
+func Execute(n *node.N, m *node.N, id nid.ID) *node.N {
 	if n == nil || m == nil {
 		panic("cannot insert an empty node into a (possibly) empty tree")
 	}
@@ -12,19 +18,31 @@ func Execute(n *node.N, m *node.N) *node.N {
 		panic("cannot insert nodes with mismatching lookup tables")
 	}
 
+	p := n.Parent()
 	var aid nid.ID
 	if !n.IsRoot() {
-		aid = n.Parent().ID()
+		aid = p.ID()
 	}
 
-	p := node.New(node.O{
-		Cache: n.Cache(),
+	q := node.New(node.O{
+		Nodes: n.Cache(),
 
-		Left: n.ID(),
-		Right: m.ID(),
+		ID:     id,
+		Left:   n.ID(),
+		Right:  m.ID(),
 		Parent: aid,
 	})
 
-	m.SetParent(p)
-	
+	if !n.IsRoot() {
+		if p.Left() == n {
+			p.SetLeft(q)
+		} else {
+			p.SetRight(q)
+		}
+	}
+
+	m.SetParent(q)
+	n.SetParent(q)
+
+	return n.Root()
 }
