@@ -24,8 +24,9 @@ func New() *BVH {
 	}
 }
 
-// Insert adds a new AABB bounding box into the BVH tree. The input AABB should
-// be larger than the actual object to account for movement updates.
+// Insert adds a new AABB bounding box into the BVH tree. The input AABB may be
+// larger than the actual object if e.g. the object is not a rectangle, or to
+// account for movement updates.
 func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) {
 	n := insert.Execute(bvh.root, id, aabb)
 	bvh.lookup[id] = n
