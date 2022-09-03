@@ -69,7 +69,7 @@ func TestExecute(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := Execute(c.root, c.id, c.aabb)
+			got := Execute(c.root, c.id, c.aabb).Root()
 			if diff := cmp.Diff(c.want, got, cmp.Comparer(util.Equal)); diff != "" {
 				t.Errorf("Execute() mismatch (-want +got):\n%v", diff)
 			}

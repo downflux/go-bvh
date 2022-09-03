@@ -11,7 +11,7 @@ import (
 )
 
 // Execute adds a new node with the given data into the tree. The returned node
-// is the new root of the tree.
+// is the newly-created node.
 func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
 	var c *node.C
 	if root == nil {
@@ -30,7 +30,9 @@ func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
 		return m
 	}
 
-	return rotate.Execute(insert.Execute(sibling(root, aabb), m))
+	rotate.Execute(insert.Execute(sibling(root, aabb), m))
+
+	return m
 }
 
 // sibling finds the node to which an object with the given bound will siblings.

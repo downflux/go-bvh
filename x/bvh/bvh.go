@@ -25,8 +25,10 @@ func New() *BVH {
 
 // Insert adds a new AABB bounding box into the BVH tree. The input AABB should
 // be larger than the actual object to account for movement updates.
-func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
-	return fmt.Errorf("unimplemented")
+func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) {
+	n := insert.Execute(bvh.root, id, aabb)
+	bvh.lookup[id] = n
+	bvh.root = n.Root()
 }
 
 // Remove will delete the BVH node which encapsulates the given object.
