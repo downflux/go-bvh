@@ -38,6 +38,51 @@ func TestSibling(t *testing.T) {
 				want: root,
 			}
 		}(),
+		func() config {
+			root := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: util.Interval(0, 100)},
+					102: {2: util.Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{Left: 101, Right: 102},
+					101: util.N{Parent: 100},
+					102: util.N{Parent: 100},
+				},
+				Root: 100,
+			})
+
+			return config{
+				// Check that we do not travel further down the tree
+				// than necessary -- we incur a depth penalty via the
+				// inherited cost heuristic.
+				name: "Root/LimitTravel",
+				root: root,
+				aabb: util.Interval(0, 1),
+				want: root,
+			}
+		}(),
+		func() config {
+			root := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: util.Interval(0, 10)},
+					102: {2: util.Interval(50, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{Left: 101, Right: 102},
+					101: util.N{Parent: 100},
+					102: util.N{Parent: 100},
+				},
+				Root: 100,
+			})
+
+			return config{
+				name: "Leaf",
+				root: root,
+				aabb: util.Interval(45, 60),
+				want: root.Right(),
+			}
+		}(),
 	}
 
 	for _, c := range configs {
