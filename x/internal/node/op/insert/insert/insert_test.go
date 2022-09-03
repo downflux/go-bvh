@@ -98,7 +98,7 @@ func TestExecute(t *testing.T) {
 						104: util.N{Parent: 102},                        // E
 					},
 					Root: 100,
-				}),
+				}).Right(),
 			}
 		}(),
 	}

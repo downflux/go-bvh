@@ -7,8 +7,8 @@ import (
 	nid "github.com/downflux/go-bvh/x/internal/node/id"
 )
 
-// Execute inserts the node m as a sibling of n. The returned node is the new
-// root of the tree.
+// Execute inserts the node m as a sibling of n. The returned node is the newly
+// created node.
 func Execute(n *node.N, m *node.N) *node.N {
 	if n == nil || m == nil {
 		panic("cannot insert an empty node into a (possibly) empty tree")
@@ -47,5 +47,6 @@ func Execute(n *node.N, m *node.N) *node.N {
 	m.SetParent(q)
 	n.SetParent(q)
 
-	return n.Root()
+	q.InvalidateAABBCache()
+	return q
 }
