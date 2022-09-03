@@ -43,6 +43,10 @@ func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
 
 // Remove will delete the BVH node which encapsulates the given object.
 func (bvh *BVH) Remove(id id.ID) error {
+	if bvh.lookup[id] == nil {
+		return fmt.Errorf("cannot remove a non-existent object with ID %v", id)
+	}
+
 	return fmt.Errorf("unimplemented")
 }
 
