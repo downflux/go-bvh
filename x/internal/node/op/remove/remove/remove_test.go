@@ -96,7 +96,7 @@ func TestExecute(t *testing.T) {
 					103: {Parent: 100},
 				},
 				Root: 100,
-			}), // A
+			}).Right(), // F
 		},
 	}
 
@@ -105,6 +105,21 @@ func TestExecute(t *testing.T) {
 			got := Execute(c.n)
 			if diff := cmp.Diff(c.want, got, cmp.Comparer(util.Equal)); diff != "" {
 				t.Errorf("Execute() mismatch (-want +got):\n%v", diff)
+			}
+			if c.want != nil {
+				// Ensure we are actually deleting data from the
+				// lookup table to ensure no memory leaks.
+				if diff := cmp.Diff(
+					c.want.Cache(),
+					got.Cache(),
+					cmp.AllowUnexported(
+						node.C{},
+						node.N{},
+						hyperrectangle.R{},
+					),
+				); diff != "" {
+					t.Errorf("Cache() mismatch (-want +got):\n%v", diff)
+				}
 			}
 		})
 	}

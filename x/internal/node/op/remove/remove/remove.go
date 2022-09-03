@@ -5,7 +5,8 @@ import (
 	"github.com/downflux/go-bvh/x/internal/node/op/remove/remove/subtree"
 )
 
-// Execute will remove an entire subtree. The returned node is the new local root.
+// Execute will remove an entire subtree. The returned node is the sibling node
+// for the input node.
 func Execute(n *node.N) *node.N {
 	if n == nil {
 		panic("cannot remove a nil node")
@@ -48,8 +49,5 @@ func Execute(n *node.N) *node.N {
 	// B   F
 	//
 	// Where F may be the new root.
-	if t.F == nil || t.F.IsRoot() {
-		return t.F
-	}
-	return t.A
+	return t.F
 }
