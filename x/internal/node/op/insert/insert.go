@@ -26,11 +26,10 @@ func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
 			x: aabb,
 		},
 	})
-	if root == nil {
-		return m
-	}
 
-	rotate.Execute(insert.Execute(sibling(root, aabb), m))
+	if root != nil {
+		rotate.Execute(insert.Execute(sibling(root, aabb), m))
+	}
 
 	return m
 }
