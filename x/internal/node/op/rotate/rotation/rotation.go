@@ -3,7 +3,7 @@ package rotation
 import (
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-bvh/x/internal/node"
-	"github.com/downflux/go-bvh/x/internal/node/op/insert/rotate/subtree"
+	"github.com/downflux/go-bvh/x/internal/node/op/rotate/subtree"
 
 	bhr "github.com/downflux/go-bvh/x/hyperrectangle"
 )
