@@ -14,6 +14,10 @@ func Execute(n *node.N, m *node.N) *node.N {
 		panic("cannot insert an empty node into a (possibly) empty tree")
 	}
 
+	if !m.IsRoot() {
+		panic("cannot insert an internal node into an existing tree")
+	}
+
 	if n.Cache() != m.Cache() {
 		panic("cannot insert nodes with mismatching lookup tables")
 	}
