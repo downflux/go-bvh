@@ -98,6 +98,39 @@ func TestExecute(t *testing.T) {
 				Root: 100,
 			}).Right(), // F
 		},
+		{
+			name: "Descendants",
+			//   A
+			//  / \
+			// B   C
+			//    / \
+			//   F   G
+			n: util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: util.Interval(0, 100)},   // B
+					103: {2: util.Interval(101, 200)}, // F
+					104: {3: util.Interval(201, 300)}, // G
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{Left: 101, Right: 102},              // A
+					101: util.N{Parent: 100},                        // B
+					102: util.N{Left: 103, Right: 104, Parent: 100}, // C
+					103: util.N{Parent: 102},                        // F
+					104: util.N{Parent: 102},                        // G
+				},
+				Root: 100,
+			}).Right(), // C
+			// B
+			want: util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: util.Interval(0, 100)}, // B
+				},
+				Nodes: map[nid.ID]util.N{
+					101: {},
+				},
+				Root: 101,
+			}), // B
+		},
 	}
 
 	for _, c := range configs {
