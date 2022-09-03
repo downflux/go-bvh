@@ -24,11 +24,9 @@ func Execute(n *node.N, m *node.N) {
 	if n == nil || m == nil {
 		panic("cannot swap an empty node")
 	}
-
 	if n.Root() != m.Root() {
 		panic("cannot swap nodes of disjoint trees")
 	}
-
 	if isAncestor(n, m) || isAncestor(m, n) {
 		panic("cannot swap a node with its ancestor")
 	}
@@ -44,7 +42,9 @@ func Execute(n *node.N, m *node.N) {
 		p.SetRight(m)
 	}
 
-	if q.Left() == m {
+	// If n and m are direct siblings, we want to ensure nodes are not
+	// swapped back.
+	if q.Left() == m && p != q {
 		q.SetLeft(n)
 	} else {
 		q.SetRight(n)

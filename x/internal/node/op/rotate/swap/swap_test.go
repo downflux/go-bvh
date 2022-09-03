@@ -150,6 +150,52 @@ func TestSwap(t *testing.T) {
 				want: want,
 			}
 		}(),
+		func() config {
+			data := map[nid.ID]map[id.ID]hyperrectangle.R{
+				101: {1: util.Interval(0, 100)},   // B
+				103: {2: util.Interval(101, 200)}, // D
+				104: {3: util.Interval(201, 300)}, // E
+			}
+
+			root := util.New(util.T{
+				Data: data,
+				//   A
+				//  / \
+				// B   C
+				//    / \
+				//   D   E
+				Nodes: map[nid.ID]util.N{
+					100: util.N{Left: 101, Right: 102},              // A
+					101: util.N{Parent: 100},                        // B
+					102: util.N{Left: 103, Right: 104, Parent: 100}, // C
+					103: util.N{Parent: 102},                        // D
+					104: util.N{Parent: 102},                        // E
+				},
+				Root: 100,
+			})
+			want := util.New(util.T{
+				Data: data,
+				//   A
+				//  / \
+				// D   C
+				//    / \
+				//   B   E
+				Nodes: map[nid.ID]util.N{
+					100: util.N{Left: 103, Right: 102},              // A
+					101: util.N{Parent: 102},                        // B
+					102: util.N{Left: 101, Right: 104, Parent: 100}, // C
+					103: util.N{Parent: 100},                        // D
+					104: util.N{Parent: 102},                        // E
+				},
+				Root: 100,
+			})
+			return config{
+				name: "Internal/Leaf",
+				n:    root.Left(),         // B
+				m:    root.Right().Left(), // D
+				want: want,
+			}
+		}(),
 	}
 
 	for _, c := range configs {
