@@ -22,12 +22,17 @@ func Cache() *C {
 }
 
 func (c *C) Allocate() nid.ID {
-	id := nid.Generate()
+	var id nid.ID
+	for ; id.IsZero(); id = nid.Generate() {}
 	for _, ok := c.lookup[id]; ok; {
 		id = nid.Increment(id)
 	}
 	c.lookup[id] = nil
 	return id
+}
+
+func (c *C) Delete(id nid.ID) {
+	delete(c.lookup, id)
 }
 
 type O struct {
@@ -134,7 +139,14 @@ func (n *N) Parent() *N { return n.nodes.lookup[n.parent] }
 
 func (n *N) SetLeft(m *N)   { n.left = m.ID() }
 func (n *N) SetRight(m *N)  { n.right = m.ID() }
-func (n *N) SetParent(m *N) { n.parent = m.ID() }
+func (n *N) SetParent(m *N) {
+	// We may be attempting to set the node as the new root.
+	var id nid.ID
+	if m != nil {
+		id = m.ID()
+	}
+	n.parent = id
+}
 
 func (n *N) Root() *N {
 	if n.Parent() == nil {
