@@ -27,8 +27,8 @@ func Execute(n *node.N, m *node.N) *node.N {
 	q := node.New(node.O{
 		Nodes: n.Cache(),
 
-		Left:   n.ID(),
-		Right:  m.ID(),
+		Left:   m.ID(),
+		Right:  n.ID(),
 		Parent: aid,
 	})
 
