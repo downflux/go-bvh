@@ -105,3 +105,81 @@ func TestAABB(t *testing.T) {
 		})
 	}
 }
+
+func TestDisjoint(t *testing.T) {
+	type config struct {
+		name string
+		r    hyperrectangle.R
+		s    hyperrectangle.R
+		want bool
+	}
+
+	configs := []config{
+		{
+			name: "Simple/Disjoint",
+			r: *hyperrectangle.New(
+				[]float64{0},
+				[]float64{10},
+			),
+			s: *hyperrectangle.New(
+				[]float64{11},
+				[]float64{20},
+			),
+			want: true,
+		},
+		{
+			name: "Simple/Overlap",
+			r: *hyperrectangle.New(
+				[]float64{0},
+				[]float64{10},
+			),
+			s: *hyperrectangle.New(
+				[]float64{9},
+				[]float64{20},
+			),
+			want: false,
+		},
+		{
+			name: "Simple/Disjoint/Commutative",
+			r: *hyperrectangle.New(
+				[]float64{11},
+				[]float64{20},
+			),
+			s: *hyperrectangle.New(
+				[]float64{0},
+				[]float64{10},
+			),
+			want: true,
+		},
+		{
+			name: "2D/Disjoint",
+			r: *hyperrectangle.New(
+				[]float64{0, 0},
+				[]float64{10, 10},
+			),
+			s: *hyperrectangle.New(
+				[]float64{5, 11},
+				[]float64{20, 20},
+			),
+			want: true,
+		},
+		{
+			name: "2D/Overlap",
+			r: *hyperrectangle.New(
+				[]float64{0, 0},
+				[]float64{10, 10},
+			),
+			s: *hyperrectangle.New(
+				[]float64{5, 5},
+				[]float64{20, 20},
+			),
+			want: false,
+		},
+	}
+
+	for _, c := range configs {
+		if got := Disjoint(c.r, c.s); got != c.want {
+			t.Errorf("Disjoint() = %v, want = %v", got, c.want)
+		}
+	}
+}
