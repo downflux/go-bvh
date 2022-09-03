@@ -49,3 +49,5 @@ func (bvh *BVH) Remove(id id.ID) error {
 func (bvh *BVH) Update(id id.ID, q hyperrectangle.R, aabb hyperrectangle.R) error {
 	return fmt.Errorf("unimplemented")
 }
+
+func BroadPhase(bvh *BVH, aabb hyperrectangle.R) []id.ID { return bvh.root.BroadPhase(aabb) }
