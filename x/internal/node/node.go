@@ -115,6 +115,34 @@ func (n *N) Root() *N {
 	return n.Parent().Root()
 }
 
+func (n *N) Query(q hyperrectangle.R) []id.ID {
+	if bhr.Disjoint(q, n.AABB()) {
+		return nil
+	}
+
+	if n.IsLeaf() {
+		ids := make([]id.ID, 0, len(n.data))
+		for id, h := range n.data {
+			if bhr.Contains(q, h) {
+				ids = append(ids, id)
+			}
+		}
+		return ids
+	}
+	l := make(chan []id.ID)
+	r := make(chan []id.ID)
+	go func(ch chan<- []id.ID) {
+		defer close(ch)
+		ch <- n.Left().Query(q)
+	}(l)
+	go func(ch chan<- []id.ID) {
+		defer close(ch)
+		ch <- n.Right().Query(q)
+	}(r)
+
+	return append(<-l, <-r...)
+}
+
 func (n *N) IsLeaf() bool { return len(n.data) > 0 }
 func (n *N) IsRoot() bool { return n.Parent() == nil }
 func (n *N) AABB() hyperrectangle.R {
