@@ -4,31 +4,33 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-bvh/x/internal/node/op/insert/heuristic"
+	"github.com/downflux/go-bvh/x/internal/node/op/insert/insert"
+	"github.com/downflux/go-bvh/x/internal/node/op/rotate"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-pq/pq"
 )
 
-// parent creates a new parent node which will have the input sibling node and
-// input data as its children.
-func parent(n *node.N, pid id.ID, aabb hyperrectangle.R) *node.N {
-	if n == nil {
-		panic("cannot create parent for an empty sibling node")
+// Execute adds a new node with the given data into the tree. The returned node
+// is the new root of the tree.
+func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
+	var c *node.C
+	if root == nil {
+		c = node.Cache()
+	} else {
+		c = root.Cache()
 	}
 
 	m := node.New(node.O{
+		Nodes: c,
 		Data: map[id.ID]hyperrectangle.R{
-			pid: aabb,
+			x: aabb,
 		},
 	})
-
-	if !n.IsRoot() {
-		n.Parent().Insert(m)
-		return m.Parent()
+	if root == nil {
+		return m
 	}
-	return node.New(node.O{
-		Left:  m,
-		Right: n,
-	})
+
+	return rotate.Execute(insert.Execute(sibling(root, aabb), m))
 }
 
 // sibling finds the node to which an object with the given bound will siblings.
@@ -36,12 +38,10 @@ func parent(n *node.N, pid id.ID, aabb hyperrectangle.R) *node.N {
 // This is based on the branch-and-bound algorithm (Catto 2019).
 //
 // The hyperrectangle input is the AABB of the new prospective node.
-func sibling(n *node.N, aabb hyperrectangle.R) *node.N {
-	if n == nil {
+func sibling(root *node.N, aabb hyperrectangle.R) *node.N {
+	if root == nil {
 		panic("cannot find sibling candidate for an empty root node")
 	}
-
-	root := n.Root()
 
 	q := pq.New[*node.N](0)
 
