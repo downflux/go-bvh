@@ -96,6 +96,17 @@ func New(o O) *N {
 	return n
 }
 
+// Get returns the AABB of the associated object from a leaf node. If the object
+// is not found, a false value will be returned.
+func (n *N) Get(id id.ID) (hyperrectangle.R, bool) {
+	if !n.IsLeaf() {
+		panic("cannot get a bounding box from a non-leaf node")
+	}
+
+	aabb, ok := n.data[id]
+	return aabb, ok
+}
+
 func (n *N) Cache() *C { return n.nodes }
 
 func (n *N) InvalidateAABBCache() {
