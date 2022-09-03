@@ -6,11 +6,11 @@ import (
 
 // T is a local subtree representation around an input "local" leaf G.
 //
-//     A
-//    / \
-//   B   C
-//      / \
-//     F   G
+//	  A
+//	 / \
+//	B   C
+//	   / \
+//	  F   G
 type T struct {
 	A, B, C, F, G *node.N
 }

@@ -4,6 +4,8 @@
 package node
 
 import (
+	"fmt"
+
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
@@ -23,7 +25,8 @@ func Cache() *C {
 
 func (c *C) Allocate() nid.ID {
 	var id nid.ID
-	for ; id.IsZero(); id = nid.Generate() {}
+	for ; id.IsZero(); id = nid.Generate() {
+	}
 	for _, ok := c.lookup[id]; ok; {
 		id = nid.Increment(id)
 	}
@@ -112,6 +115,15 @@ func (n *N) Get(id id.ID) (hyperrectangle.R, bool) {
 	return aabb, ok
 }
 
+func (n *N) Remove(id id.ID) {
+	if _, ok := n.data[id]; !ok {
+		panic(fmt.Sprintf("cannot find specified object ID %v", id))
+	}
+
+	delete(n.data, id)
+	n.InvalidateAABBCache()
+}
+
 func (n *N) Cache() *C { return n.nodes }
 
 func (n *N) InvalidateAABBCache() {
@@ -137,8 +149,8 @@ func (n *N) Left() *N   { return n.nodes.lookup[n.left] }
 func (n *N) Right() *N  { return n.nodes.lookup[n.right] }
 func (n *N) Parent() *N { return n.nodes.lookup[n.parent] }
 
-func (n *N) SetLeft(m *N)   { n.left = m.ID() }
-func (n *N) SetRight(m *N)  { n.right = m.ID() }
+func (n *N) SetLeft(m *N)  { n.left = m.ID() }
+func (n *N) SetRight(m *N) { n.right = m.ID() }
 func (n *N) SetParent(m *N) {
 	// We may be attempting to set the node as the new root.
 	var id nid.ID
@@ -188,8 +200,9 @@ func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
 	return append(<-l, <-r...)
 }
 
-func (n *N) IsLeaf() bool { return len(n.data) > 0 }
-func (n *N) IsRoot() bool { return n.Parent() == nil }
+func (n *N) IsLeaf() bool  { return n.left.IsZero() && n.right.IsZero() }
+func (n *N) IsRoot() bool  { return n.Parent() == nil }
+func (n *N) IsEmpty() bool { return n.IsLeaf() && len(n.data) == 0 }
 func (n *N) AABB() hyperrectangle.R {
 	if n.aabbCacheIsValid {
 		return n.aabbCache
@@ -197,6 +210,9 @@ func (n *N) AABB() hyperrectangle.R {
 
 	n.aabbCacheIsValid = true
 	if n.IsLeaf() {
+		if n.IsEmpty() {
+			panic("AABB is not defined for an empty leaf node")
+		}
 		rs := make([]hyperrectangle.R, 0, len(n.data))
 		for _, aabb := range n.data {
 			rs = append(rs, aabb)
