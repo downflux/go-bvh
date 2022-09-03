@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/node"
+	"github.com/downflux/go-bvh/x/internal/node/op/insert"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 )
 
