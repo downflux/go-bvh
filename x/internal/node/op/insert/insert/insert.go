@@ -9,7 +9,7 @@ import (
 
 // Execute inserts the node m as a sibling of n. The returned node is the new
 // root of the tree.
-func Execute(n *node.N, m *node.N, id nid.ID) *node.N {
+func Execute(n *node.N, m *node.N) *node.N {
 	if n == nil || m == nil {
 		panic("cannot insert an empty node into a (possibly) empty tree")
 	}
@@ -27,7 +27,6 @@ func Execute(n *node.N, m *node.N, id nid.ID) *node.N {
 	q := node.New(node.O{
 		Nodes: n.Cache(),
 
-		ID:     id,
 		Left:   n.ID(),
 		Right:  m.ID(),
 		Parent: aid,

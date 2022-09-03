@@ -21,6 +21,15 @@ func Cache() *C {
 	}
 }
 
+func (c *C) Allocate() nid.ID {
+	id := nid.Generate()
+	for _, ok := c.lookup[id]; ok; {
+		id = nid.Increment(id)
+	}
+	c.lookup[id] = nil
+	return id
+}
+
 type O struct {
 	Nodes *C
 
@@ -47,9 +56,16 @@ type N struct {
 }
 
 func New(o O) *N {
+	// If the user does not specify an ID, automatically allocate one to
+	// use.
+	id := o.ID
+	if id.IsNil() {
+		id = o.Nodes.Allocate()
+	}
+
 	n := &N{
 		nodes:  o.Nodes,
-		id:     o.ID,
+		id:     id,
 		left:   o.Left,
 		right:  o.Right,
 		parent: o.Parent,
