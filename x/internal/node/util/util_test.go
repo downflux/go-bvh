@@ -11,6 +11,182 @@ import (
 	nid "github.com/downflux/go-bvh/x/internal/node/id"
 )
 
+func TestEqual(t *testing.T) {
+	type config struct {
+		name string
+		a    *node.N
+		b    *node.N
+		want bool
+	}
+
+	configs := []config{
+		{
+			name: "Trivial",
+			a:    nil,
+			b:    nil,
+			want: true,
+		},
+		{
+			name: "Leaf/NoLeaf",
+			a: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+			}),
+			b: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					102: {2: Interval(101, 200)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Left: 101, Right: 102},
+					101: N{Parent: 100},
+					102: N{Parent: 100},
+				},
+				Root: 100,
+			}),
+			want: false,
+		},
+		{
+			name: "Leaf/NoEqual/Data",
+			a: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+			}),
+			b: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {
+						1: Interval(0, 100),
+						2: Interval(101, 200),
+					},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+			}),
+			want: false,
+		},
+		{
+			name: "Leaf/NoEqual",
+			a: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+			}),
+			b: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {2: Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+			}),
+			want: false,
+		},
+		{
+			name: "Leaf/NIDInvariant",
+			a: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+			}),
+			b: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					1001: {1: Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]N{
+					1001: N{},
+				},
+				Root: 1001,
+			}),
+			want: true,
+		},
+		{
+			name: "Internal/BadLeaf",
+			a: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					102: {2: Interval(101, 200)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Left: 101, Right: 102},
+					101: N{Parent: 100},
+					102: N{Parent: 100},
+				},
+				Root: 100,
+			}),
+			b: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					102: {2: Interval(101, 200)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Left: 102, Right: 101},
+					101: N{Parent: 100},
+					102: N{Parent: 100},
+				},
+				Root: 100,
+			}),
+			want: false,
+		},
+		{
+			name: "Internal/NIDInvariant",
+			a: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					102: {2: Interval(101, 200)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Left: 101, Right: 102},
+					101: N{Parent: 100},
+					102: N{Parent: 100},
+				},
+				Root: 100,
+			}),
+			b: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					1001: {1: Interval(0, 100)},
+					1002: {2: Interval(101, 200)},
+				},
+				Nodes: map[nid.ID]N{
+					1000: N{Left: 1001, Right: 1002},
+					1001: N{Parent: 1000},
+					1002: N{Parent: 1000},
+				},
+				Root: 1000,
+			}),
+			want: true,
+		},
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			if got := Equal(c.a, c.b); got != c.want {
+				t.Errorf("Equal() = %v, want = %v", got, c.want)
+			}
+		})
+	}
+}
+
 func TestNew(t *testing.T) {
 	type config struct {
 		name string

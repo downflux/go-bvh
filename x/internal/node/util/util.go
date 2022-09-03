@@ -50,6 +50,12 @@ func New(t T) *node.N {
 }
 
 func Equal(a *node.N, b *node.N) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if (a == nil && b != nil) || (a != nil && b == nil) {
+		return false
+	}
 	if (a.IsLeaf() && !b.IsLeaf()) || (!a.IsLeaf() && b.IsLeaf()) {
 		return false
 	}
@@ -58,15 +64,19 @@ func Equal(a *node.N, b *node.N) bool {
 	}
 
 	if a.IsLeaf() && b.IsLeaf() {
-		return cmp.Equal(
-			a,
-			b,
+		return cmp.Equal(a, b,
 			cmpopts.IgnoreFields(
 				node.N{},
 				"nodes",
+				"id",
+				"parent",
+				"left",
+				"right",
 			),
-			cmp.AllowUnexported(node.N{}, hyperrectangle.R{}),
+			cmp.AllowUnexported(node.N{}, node.C{}, hyperrectangle.R{}),
 		)
 	}
-	return (Equal(a.Left(), b.Left()) && Equal(a.Right(), b.Right())) || (Equal(a.Left(), b.Right()) && Equal(a.Right(), b.Left()))
+	// Check the nodes match orientation. This is purely for debugging
+	// purposes -- in real life, left and right node swaps do not matter.
+	return Equal(a.Left(), b.Left()) && Equal(a.Right(), b.Right())
 }
