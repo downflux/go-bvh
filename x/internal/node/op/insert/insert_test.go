@@ -21,7 +21,51 @@ func TestExecute(t *testing.T) {
 		want *node.N
 	}
 
-	configs := []config{}
+	configs := []config{
+		{
+			name: "Trivial",
+			root: nil,
+			id:   1,
+			aabb: util.Interval(0, 100),
+			want: util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: util.Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{},
+				},
+				Root: 100,
+			}),
+		},
+		func() config {
+			return config{
+				name: "Root",
+				root: util.New(util.T{
+					Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+						100: {1: util.Interval(0, 10)},
+					},
+					Nodes: map[nid.ID]util.N{
+						100: util.N{},
+					},
+					Root: 100,
+				}),
+				id:   2,
+				aabb: util.Interval(20, 50),
+				want: util.New(util.T{
+					Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+						101: {1: util.Interval(0, 10)},
+						102: {2: util.Interval(20, 50)},
+					},
+					Nodes: map[nid.ID]util.N{
+						100: util.N{Left: 102, Right: 101},
+						101: util.N{Parent: 100},
+						102: util.N{Parent: 100},
+					},
+					Root: 100,
+				}),
+			}
+		}(),
+	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
