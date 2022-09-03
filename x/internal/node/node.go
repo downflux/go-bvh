@@ -31,13 +31,30 @@ func (c *C) Allocate() nid.ID {
 }
 
 type O struct {
+	// Nodes ia a node lookup table. This is to reduce the amount of random
+	// memory jumps necessary with a pointer implementation, as well as
+	// frustrating double-pointer details, e.g. memory leaks and test
+	// verbosity.
 	Nodes *C
 
-	ID     nid.ID
+	// ID represents the internal node ID. If the ID is unspecified, a
+	// random ID will be generated.
+	ID nid.ID
+
+	// N.B.: The left, right, and parent node IDs may not exist or be
+	// allocated in the cache at construct time, as the nodes may be built
+	// out of order. If the given IDs still do not exist when calling e.g.
+	// n.Left(), a nil value will be returned.
+
 	Left   nid.ID
 	Right  nid.ID
 	Parent nid.ID
 
+	// Data represents an object to AABB lookup for the leaf node. Note that
+	// these AABBs here do not necessarily represent the physical boundaries
+	// of the object -- remember that these AABBs could take into account
+	// some physical buffer space to reduce the amount of tree mutations
+	// that occur, per Catto 2019.
 	Data map[id.ID]hyperrectangle.R
 }
 
@@ -59,7 +76,7 @@ func New(o O) *N {
 	// If the user does not specify an ID, automatically allocate one to
 	// use.
 	id := o.ID
-	if id.IsNil() {
+	if id.IsZero() {
 		id = o.Nodes.Allocate()
 	}
 
@@ -115,7 +132,12 @@ func (n *N) Root() *N {
 	return n.Parent().Root()
 }
 
-func (n *N) Query(q hyperrectangle.R) []id.ID {
+// BroadPhase returns a list of object IDs which intersect with the query
+// hyperrectangle.
+//
+// Further refinement should be done by the caller to check if the objects
+// actually collide.
+func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
 	if bhr.Disjoint(q, n.AABB()) {
 		return nil
 	}
@@ -123,7 +145,7 @@ func (n *N) Query(q hyperrectangle.R) []id.ID {
 	if n.IsLeaf() {
 		ids := make([]id.ID, 0, len(n.data))
 		for id, h := range n.data {
-			if bhr.Contains(q, h) {
+			if !bhr.Disjoint(q, h) {
 				ids = append(ids, id)
 			}
 		}
@@ -133,11 +155,11 @@ func (n *N) Query(q hyperrectangle.R) []id.ID {
 	r := make(chan []id.ID)
 	go func(ch chan<- []id.ID) {
 		defer close(ch)
-		ch <- n.Left().Query(q)
+		ch <- n.Left().BroadPhase(q)
 	}(l)
 	go func(ch chan<- []id.ID) {
 		defer close(ch)
-		ch <- n.Right().Query(q)
+		ch <- n.Right().BroadPhase(q)
 	}(r)
 
 	return append(<-l, <-r...)
