@@ -5,7 +5,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-bvh/x/internal/node/op/insert/heuristic"
 	"github.com/downflux/go-bvh/x/internal/node/op/insert/insert"
-	"github.com/downflux/go-bvh/x/internal/node/op/rotate"
+	"github.com/downflux/go-bvh/x/internal/node/op/insert/rotate"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-pq/pq"
 )
