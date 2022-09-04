@@ -76,6 +76,7 @@ func (bvh *BVH) Update(id id.ID, q hyperrectangle.R, aabb hyperrectangle.R) erro
 		panic(fmt.Sprintf("object %v has vanished", id))
 	}
 
+	// Update the BVH tree.
 	if !bhr.Contains(r, q) {
 		if err := bvh.Remove(id); err != nil {
 			return fmt.Errorf("cannot update object: %v", err)
