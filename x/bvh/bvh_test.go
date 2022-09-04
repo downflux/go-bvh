@@ -12,6 +12,81 @@ import (
 	nid "github.com/downflux/go-bvh/x/internal/node/id"
 )
 
+func TestRemove(t *testing.T) {
+	type config struct {
+		name string
+		bvh  *BVH
+		id   id.ID
+		want *BVH
+	}
+
+	configs := []config{
+		func() config {
+			root := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: util.Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{},
+				},
+				Root: 100,
+			})
+			bvh := &BVH{
+				lookup: map[id.ID]*node.N{
+					1: root,
+				},
+				root: root,
+			}
+			return config{
+				name: "Trivial",
+				bvh:  bvh,
+				id:   1,
+				want: &BVH{
+					lookup: map[id.ID]*node.N{},
+					root:   nil,
+				},
+			}
+		}(),
+		func() config {
+			root := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: util.Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{},
+				},
+				Root: 100,
+			})
+			bvh := &BVH{
+				lookup: map[id.ID]*node.N{
+					1: root,
+				},
+				root: root,
+			}
+			return config{
+				name: "DNE",
+				bvh:  bvh,
+				id:   2,
+				want: bvh,
+			}
+		}(),
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			c.bvh.Remove(c.id)
+			if diff := cmp.Diff(
+				c.want,
+				c.bvh,
+				cmp.Comparer(util.Equal),
+				cmp.AllowUnexported(BVH{}),
+			); diff != "" {
+				t.Errorf("Remove() mismatch (-want +got):\n%v", diff)
+			}
+		})
+	}
+}
+
 func TestInsert(t *testing.T) {
 	type config struct {
 		name string
