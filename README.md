@@ -4,7 +4,7 @@ Golang AABB-backed BVH implementation
 ## Testing
 
 ```
-go test -race -coverprofile=coverage.out github.com/downflux/go-bvh/x/...
+go test -race -coverprofile=coverage.out github.com/downflux/go-bvh/...
 go tool cover -html=coverage.out
 ```
 
