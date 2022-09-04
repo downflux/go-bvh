@@ -13,6 +13,123 @@ import (
 	nid "github.com/downflux/go-bvh/x/internal/node/id"
 )
 
+func TestUpdate(t *testing.T) {
+	type config struct {
+		name string
+		bvh  *BVH
+		id   id.ID
+		q    hyperrectangle.R
+		aabb hyperrectangle.R
+		want *BVH
+	}
+
+	configs := []config{
+		func() config {
+			root := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: util.Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{},
+				},
+				Root: 100,
+			})
+			bvh := &BVH{
+				lookup: map[id.ID]*node.N{
+					1: root,
+				},
+				root: root,
+			}
+			return config{
+				name: "NoUpdate",
+				bvh:  bvh,
+				id:   1,
+				q:    util.Interval(1, 99),
+				aabb: util.Interval(101, 200),
+				want: bvh,
+			}
+		}(),
+		func() config {
+			root := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: util.Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{},
+				},
+				Root: 100,
+			})
+			bvh := &BVH{
+				lookup: map[id.ID]*node.N{
+					1: root,
+				},
+				root: root,
+			}
+			return config{
+				name: "DNE",
+				bvh:  bvh,
+				id:   2,
+				q:    util.Interval(1, 99),
+				aabb: util.Interval(101, 200),
+				want: bvh,
+			}
+		}(),
+		func() config {
+			root := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: util.Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{},
+				},
+				Root: 100,
+			})
+			want := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: util.Interval(100, 201)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{},
+				},
+				Root: 100,
+			})
+
+			return config{
+				name: "Simple",
+				bvh: &BVH{
+					lookup: map[id.ID]*node.N{
+						1: root,
+					},
+					root: root,
+				},
+				id:   1,
+				q:    util.Interval(101, 200),
+				aabb: util.Interval(100, 201),
+				want: &BVH{
+					lookup: map[id.ID]*node.N{
+						1: want,
+					},
+					root: want,
+				},
+			}
+		}(),
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			c.bvh.Update(c.id, c.q, c.aabb)
+			if diff := cmp.Diff(
+				c.want,
+				c.bvh,
+				cmp.Comparer(util.Equal),
+				cmp.AllowUnexported(BVH{}),
+			); diff != "" {
+				t.Errorf("Update() mismatch (-want +got):\n%v", diff)
+			}
+		})
+	}
+}
+
 func TestBroadPhase(t *testing.T) {
 	type config struct {
 		name string
