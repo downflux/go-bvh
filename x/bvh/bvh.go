@@ -6,6 +6,7 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-bvh/x/internal/node/op/insert"
+	"github.com/downflux/go-bvh/x/internal/node/op/remove"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	bhr "github.com/downflux/go-bvh/x/hyperrectangle"
@@ -47,7 +48,10 @@ func (bvh *BVH) Remove(id id.ID) error {
 		return fmt.Errorf("cannot remove a non-existent object with ID %v", id)
 	}
 
-	return fmt.Errorf("unimplemented")
+	bvh.root = remove.Execute(bvh.lookup[id], id)
+	delete(bvh.lookup, id)
+
+	return nil
 }
 
 // Update will conditionally update the BVH tree if the new position of the
