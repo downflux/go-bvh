@@ -3,73 +3,94 @@ package bvh
 import (
 	"fmt"
 
-	"github.com/downflux/go-bvh/filter"
-	"github.com/downflux/go-bvh/internal/allocation"
-	"github.com/downflux/go-bvh/internal/allocation/id"
+	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-bvh/internal/node/insert"
-	"github.com/downflux/go-bvh/internal/node/move"
-	"github.com/downflux/go-bvh/internal/node/remove"
-	"github.com/downflux/go-bvh/point"
+	"github.com/downflux/go-bvh/internal/node/op/insert"
+	"github.com/downflux/go-bvh/internal/node/op/remove"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+
+	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
-type BVH[T point.RO] struct {
-	data   map[point.ID]T
-	lookup map[point.ID]id.ID
-
-	allocation allocation.C[*node.N]
-	root       id.ID
+// BVH is an AABB-backed bounded volume hierarchy. This struct does not store
+// any data associated with the AABBs aside from the object ID. The caller is
+// responsible for storing any data associated with the AABB (e.g. in a separate
+// map).
+type BVH struct {
+	lookup map[id.ID]*node.N
+	root   *node.N
 }
 
-func New[T point.RO](data []T) *BVH[T] {
-	bvh := &BVH[T]{
-		data:       map[point.ID]T{},
-		lookup:     map[point.ID]id.ID{},
-		allocation: *allocation.New[*node.N](),
+func New() *BVH {
+	return &BVH{
+		lookup: map[id.ID]*node.N{},
 	}
-	for _, p := range data {
-		bvh.Insert(p)
-	}
-	return bvh
 }
 
-func (bvh *BVH[T]) Insert(p T) {
-	// Cannot re-insert a point which already exists in the BVH.
-	if _, ok := bvh.data[p.ID()]; ok {
-		panic(fmt.Sprintf("cannot insert a point which already exists in the BVH: %v", p.ID()))
+// Insert adds a new AABB bounding box into the BVH tree. The input AABB may be
+// larger than the actual object if e.g. the object is not a rectangle, or to
+// account for movement updates.
+func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
+	if bvh.lookup[id] != nil {
+		return fmt.Errorf("cannot insert a node with duplicate ID %v", id)
 	}
 
-	bvh.data[p.ID()] = p
-	// TODO(minkezhang): Expand bound by some percentage.
-	var i id.ID
-	i, bvh.root = insert.Execute(bvh.allocation, bvh.root, p.ID(), p.Bound())
-	bvh.lookup[p.ID()] = i
+	n := insert.Execute(bvh.root, id, aabb)
+	bvh.lookup[id] = n
+	bvh.root = n.Root()
+
+	return nil
 }
 
-// Move moves a new node into a new position. N.B.: The caller must manually set
-// the bound on the point external to this struct.
-func (bvh *BVH[T]) Move(i point.ID, r hyperrectangle.R) {
-	if _, ok := bvh.data[i]; !ok {
-		panic(fmt.Sprintf("attempting to move a point which does not exist in the BVH: %v", i))
+// Remove will delete the BVH node which encapsulates the given object.
+func (bvh *BVH) Remove(id id.ID) error {
+	if bvh.lookup[id] == nil {
+		return fmt.Errorf("cannot remove a non-existent object with ID %v", id)
 	}
 
-	nid := bvh.lookup[i]
-	nid, bvh.root = move.Execute(bvh.allocation, nid, r)
+	bvh.root = remove.Execute(bvh.lookup[id], id)
+	delete(bvh.lookup, id)
 
-	bvh.lookup[i] = nid
+	return nil
 }
 
-func (bvh *BVH[T]) Remove(i point.ID) {
-	if _, ok := bvh.data[i]; !ok {
-		panic(fmt.Sprintf("attempting to delete a point which does not exist in the BVH: %v", i))
+// Update will conditionally update the BVH tree if the new position of the
+// bounding box is no longer completely contained by the associated BVH node.
+//
+// The input aabb is the new bounding box which will be used to encapsulate the
+// object.
+//
+// N.B.: The BVH is not responsible for updating the object itself -- the caller
+// will need to do that separately. This function is called only to update the
+// state of the BVH.
+func (bvh *BVH) Update(id id.ID, q hyperrectangle.R, aabb hyperrectangle.R) error {
+	if bvh.lookup[id] == nil {
+		return fmt.Errorf("cannot update a non-existent object with ID %v", id)
 	}
-	bvh.root = remove.Execute(bvh.allocation, bvh.lookup[i])
 
-	delete(bvh.data, i)
-	delete(bvh.lookup, i)
+	r, ok := bvh.lookup[id].Get(id)
+	// If the tracked leaf node cannot find the given object, then something
+	// has gone wrong and the tree cannot recover, as the lookup table is no
+	// longer trustworthy.
+	if !ok {
+		panic(fmt.Sprintf("object %v has vanished", id))
+	}
+
+	// Update the BVH tree.
+	if !bhr.Contains(r, q) {
+		if err := bvh.Remove(id); err != nil {
+			return fmt.Errorf("cannot update object: %v", err)
+		}
+		if err := bvh.Insert(id, aabb); err != nil {
+			return fmt.Errorf("cannot update object: %v", err)
+		}
+	}
+
+	return nil
 }
 
-func RangeSearch[T point.RO](bvh BVH[T], q hyperrectangle.R, f filter.F[T]) []T {
-	panic("unimplemented")
-}
+// BroadPhase returns all objects which may collide with the input query.  The
+// list of objects returned may not actually collide, e.g. if the actual hitbox
+// in user-space is smaller than the query AABB. The user is responsible for
+// further collision refinement.
+func BroadPhase(bvh *BVH, q hyperrectangle.R) []id.ID { return bvh.root.BroadPhase(q) }

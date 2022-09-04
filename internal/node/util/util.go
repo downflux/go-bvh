@@ -1,53 +1,82 @@
 package util
 
 import (
-	"github.com/downflux/go-bvh/internal/allocation"
-	"github.com/downflux/go-bvh/internal/allocation/id"
+	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-bvh/point"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+
+	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
+func Interval(min, max float64) hyperrectangle.R {
+	return *hyperrectangle.New(*vector.New(min), *vector.New(max))
+}
+
+type T struct {
+	Data  map[nid.ID]map[id.ID]hyperrectangle.R
+	Nodes map[nid.ID]N
+	Root  nid.ID
+}
+
 type N struct {
-	ID point.ID
-
-	Left  *N
-	Right *N
-
-	Bound hyperrectangle.R
+	Left   nid.ID
+	Right  nid.ID
+	Parent nid.ID
 }
 
-func Construct(c allocation.C[*node.N], n *node.N) *N {
-	if n == nil {
-		return nil
+func New(t T) *node.N {
+	c := node.Cache()
+
+	var r *node.N
+	for id, n := range t.Nodes {
+		m := node.New(node.O{
+			Nodes: c,
+
+			ID:     id,
+			Left:   n.Left,
+			Right:  n.Right,
+			Parent: n.Parent,
+
+			Data: t.Data[id],
+		})
+		if m.ID() == t.Root {
+			r = m
+		}
 	}
-
-	m := &N{
-		ID:    n.ID(),
-		Bound: n.Bound(),
-	}
-
-	m.Left = Construct(c, node.Left(c, n))
-	m.Right = Construct(c, node.Right(c, n))
-
-	return m
+	return r
 }
 
-// Equal is a test-only function which determines the equality between two
-// allocation objects. We consider allocations equal if the node relations are
-// invariant under id.IDs.
-func Equal(
-	a allocation.C[*node.N],
-	r id.ID,
-	b allocation.C[*node.N],
-	s id.ID,
-) bool {
-	return cmp.Equal(
-		Construct(a, a[r]),
-		Construct(b, b[s]),
-		cmp.AllowUnexported(
-			hyperrectangle.R{},
-		),
-	)
+func Equal(a *node.N, b *node.N) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if (a == nil && b != nil) || (a != nil && b == nil) {
+		return false
+	}
+	if (a.IsLeaf() && !b.IsLeaf()) || (!a.IsLeaf() && b.IsLeaf()) {
+		return false
+	}
+	if !cmp.Equal(a.AABB(), b.AABB(), cmp.AllowUnexported(hyperrectangle.R{})) {
+		return false
+	}
+
+	if a.IsLeaf() && b.IsLeaf() {
+		return cmp.Equal(a, b,
+			cmpopts.IgnoreFields(
+				node.N{},
+				"nodes",
+				"id",
+				"parent",
+				"left",
+				"right",
+			),
+			cmp.AllowUnexported(node.N{}, node.C{}, hyperrectangle.R{}),
+		)
+	}
+	// Check the nodes match orientation. This is purely for debugging
+	// purposes -- in real life, left and right node swaps do not matter.
+	return Equal(a.Left(), b.Left()) && Equal(a.Right(), b.Right())
 }

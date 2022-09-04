@@ -1,6 +1,13 @@
 # go-bvh
 Golang AABB-backed BVH implementation
 
+## Testing
+
+```
+go test -race -coverprofile=coverage.out github.com/downflux/go-bvh/x/...
+go tool cover -html=coverage.out
+```
+
 ## Sources
 
 1. Gold, Nash. "Is BVH faster than the octree/kd-tree for raytracing the objects on a GPU?" https://computergraphics.stackexchange.com/q/10098. Aug 2011.
