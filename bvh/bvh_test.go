@@ -180,7 +180,7 @@ func TestBroadPhase(t *testing.T) {
 					root: root,
 				},
 				q:    util.Interval(101, 102),
-				want: nil,
+				want: []id.ID{},
 			}
 		}(),
 	}

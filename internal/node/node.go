@@ -173,31 +173,25 @@ func (n *N) Root() *N {
 // Further refinement should be done by the caller to check if the objects
 // actually collide.
 func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
-	if bhr.Disjoint(q, n.AABB()) {
-		return nil
-	}
+	ids := make([]id.ID, 0, 128)
+	open := make([]*N, 0, 128)
+	open = append(open, n)
 
-	if n.IsLeaf() {
-		ids := make([]id.ID, 0, len(n.data))
-		for id, h := range n.data {
-			if !bhr.Disjoint(q, h) {
-				ids = append(ids, id)
+	var m *N
+	for len(open) > 0 {
+		m, open = open[len(open)-1], open[:len(open)-1]
+		if !m.IsLeaf() && !bhr.Disjoint(q, n.AABB()) {
+			open = append(open, m.Left(), m.Right())
+		}
+		if m.IsLeaf() {
+			for id, h := range m.data {
+				if !bhr.Disjoint(q, h) {
+					ids = append(ids, id)
+				}
 			}
 		}
-		return ids
 	}
-	l := make(chan []id.ID)
-	r := make(chan []id.ID)
-	go func(ch chan<- []id.ID) {
-		defer close(ch)
-		ch <- n.Left().BroadPhase(q)
-	}(l)
-	go func(ch chan<- []id.ID) {
-		defer close(ch)
-		ch <- n.Right().BroadPhase(q)
-	}(r)
-
-	return append(<-l, <-r...)
+	return ids
 }
 
 func (n *N) IsLeaf() bool  { return n.left.IsZero() && n.right.IsZero() }

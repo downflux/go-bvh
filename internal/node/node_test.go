@@ -74,7 +74,7 @@ func TestBroadPhase(t *testing.T) {
 				},
 			}),
 			q:    *hyperrectangle.New([]float64{100.1}, []float64{100.2}),
-			want: nil,
+			want: []id.ID{},
 		},
 	}
 
