@@ -115,6 +115,15 @@ func (n *N) Get(id id.ID) (hyperrectangle.R, bool) {
 	return aabb, ok
 }
 
+func (n *N) Insert(id id.ID, aabb hyperrectangle.R) {
+	if _, ok := n.data[id]; ok {
+		panic(fmt.Sprintf("cannot insert an existing object ID %v", id))
+	}
+
+	n.data[id] = aabb
+	n.InvalidateAABBCache()
+}
+
 func (n *N) Remove(id id.ID) {
 	if _, ok := n.data[id]; !ok {
 		panic(fmt.Sprintf("cannot find specified object ID %v", id))
@@ -122,6 +131,15 @@ func (n *N) Remove(id id.ID) {
 
 	delete(n.data, id)
 	n.InvalidateAABBCache()
+}
+
+// Return the list of entities in this node.
+func (n *N) Data() []id.ID {
+	data := make([]id.ID, 0, len(n.data))
+	for k := range n.data {
+		data = append(data, k)
+	}
+	return data
 }
 
 func (n *N) Cache() *C { return n.nodes }
@@ -143,6 +161,7 @@ func (n *N) InvalidateAABBCache() {
 	}
 }
 
+// Return the node ID.
 func (n *N) ID() nid.ID { return n.id }
 
 func (n *N) Left() *N   { return n.nodes.lookup[n.left] }
@@ -161,10 +180,10 @@ func (n *N) SetParent(m *N) {
 }
 
 func (n *N) Root() *N {
-	if n.Parent() == nil {
-		return n
+	var p *N
+	for p = n; !p.IsRoot(); p = p.Parent() {
 	}
-	return n.Parent().Root()
+	return p
 }
 
 // BroadPhase returns a list of object IDs which intersect with the query
