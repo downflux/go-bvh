@@ -134,13 +134,11 @@ func (n *N) Remove(id id.ID) {
 }
 
 // Return the list of entities in this node.
-func (n *N) Data() []id.ID {
-	data := make([]id.ID, 0, len(n.data))
-	for k := range n.data {
-		data = append(data, k)
-	}
-	return data
-}
+//
+// N.B.: This data is the original copy stored in the node -- the caller must
+// not mutate this. We are returning the original data because the caller is the
+// library itself, and to save on an extra memory allocation.
+func (n *N) Data() map[id.ID]hyperrectangle.R { return n.data }
 
 func (n *N) Cache() *C { return n.nodes }
 

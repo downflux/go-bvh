@@ -39,8 +39,8 @@ func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
 
 	// We may have split the leaf node, in which case some data may have
 	// shifted.
-	for _, x := range n.Data() {
-		bvh.lookup[x] = n
+	for k := range n.Data() {
+		bvh.lookup[k] = n
 	}
 	bvh.root = n.Root()
 
