@@ -69,7 +69,7 @@ func sibling(root *node.N, aabb hyperrectangle.R) *node.N {
 			//
 			// Note that the inherited heuristic is the same between the
 			// left and right children.
-			if estimate := heuristic.Estimate(n, aabb); estimate >= d {
+			if estimate := heuristic.Estimate(n, aabb); estimate > d {
 				q.Push(n.Left(), -estimate)
 				q.Push(n.Right(), -estimate)
 			}
