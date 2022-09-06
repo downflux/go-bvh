@@ -29,6 +29,23 @@ func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
 		},
 	})
 
+	/**
+	 * TODO(minkezhang): Implement this.
+	 *
+	 * s := sibling(root, aabb)
+	 * if s.IsLeaf() {
+	 *   if s.IsFull() {
+	 *     s = split.Execute(s)
+	 *   } else {
+	 *     s.Insert(x, aabb)
+	 *   }
+	 *   rotate.Execute(s.Parent())
+	 * } else {
+	 *     rotate.Execute(insert.Execute(s, m))
+	 *     return m
+	 * }
+	 */
+
 	if root != nil {
 		rotate.Execute(insert.Execute(sibling(root, aabb), m))
 	}
