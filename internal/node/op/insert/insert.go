@@ -1,6 +1,8 @@
 package insert
 
 import (
+	"math"
+
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/op/insert/heuristic"
@@ -38,6 +40,8 @@ func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
 // A new parent node will be created above both the sibling and the input bound.
 // This is based on the branch-and-bound algorithm (Catto 2019).
 //
+// See https://en.wikipedia.org/wiki/Branch_and_bound.
+//
 // The hyperrectangle input is the AABB of the new prospective node.
 func sibling(root *node.N, aabb hyperrectangle.R) *node.N {
 	if root == nil {
@@ -48,18 +52,18 @@ func sibling(root *node.N, aabb hyperrectangle.R) *node.N {
 
 	// Note that the priority queue is a max-heap, so we will need to flip
 	// the heuristic signs.
-	q.Push(root, -heuristic.Actual(root, aabb))
+	q.Push(root, -heuristic.B(root, aabb))
 
-	c := root
-	d := -q.Priority()
+	var c *node.N
+	f := math.Inf(0)
 
 	for q.Len() > 0 {
 		n := q.Pop()
 
 		// Check if the current node is a better insertion candidate.
-		if actual := heuristic.Actual(n, aabb); actual < d {
+		if actual := heuristic.F(n, aabb); actual < f {
 			c = n
-			d = actual
+			f = actual
 		}
 
 		if !n.IsLeaf() {
@@ -69,7 +73,7 @@ func sibling(root *node.N, aabb hyperrectangle.R) *node.N {
 			//
 			// Note that the inherited heuristic is the same between the
 			// left and right children.
-			if estimate := heuristic.Estimate(n, aabb); estimate > d {
+			if estimate := heuristic.B(n, aabb); estimate < f {
 				q.Push(n.Left(), -estimate)
 				q.Push(n.Right(), -estimate)
 			}

@@ -7,24 +7,26 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
-func Estimate(n *node.N, aabb hyperrectangle.R) float64 {
+// B is the lower bound of the insertion cost for the node.
+func B(n *node.N, aabb hyperrectangle.R) float64 {
 	return inherited(n, aabb) + bhr.V(aabb)
 }
 
-func Actual(n *node.N, aabb hyperrectangle.R) float64 {
+// F is the actual cost for inserting the AABB into the node.
+func F(n *node.N, aabb hyperrectangle.R) float64 {
 	return inherited(n, aabb) + direct(n, aabb)
 }
 
+// direct calculates (per Catto 2019) "the surface area of the new internal node
+// that will be created for the siblings."
 func direct(n *node.N, aabb hyperrectangle.R) float64 {
-	if n == nil {
-		return bhr.V(aabb)
-	}
-
 	return bhr.V(bhr.Union(n.AABB(), aabb))
 }
 
+// inherited calculates (per Catto 2019) "the increased surface area caused by
+// refitting the ancestor's boxes."
 func inherited(n *node.N, aabb hyperrectangle.R) float64 {
-	if n == nil {
+	if n.IsRoot() {
 		return 0
 	}
 
