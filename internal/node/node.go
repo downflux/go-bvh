@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/downflux/go-bvh/id"
+	"github.com/downflux/go-bvh/internal/node/stack"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
@@ -190,25 +191,25 @@ func (n *N) Root() *N {
 // Further refinement should be done by the caller to check if the objects
 // actually collide.
 func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
-	ids := make([]id.ID, 0, 128)
-	open := make([]*N, 0, 128)
-	open = append(open, n)
+	open := stack.New(make([]*N, 0, 128))
+	open.Push(n)
 
-	var m *N
-	for len(open) > 0 {
-		m, open = open[len(open)-1], open[:len(open)-1]
-		if !m.IsLeaf() && !bhr.Disjoint(q, n.AABB()) {
-			open = append(open, m.Left(), m.Right())
-		}
+	ids := stack.New(make([]id.ID, 0, 128))
+
+	for m, ok := open.Pop(); ok; m, ok = open.Pop() {
 		if m.IsLeaf() {
 			for id, h := range m.data {
 				if !bhr.Disjoint(q, h) {
-					ids = append(ids, id)
+					ids.Push(id)
 				}
 			}
+		} else {
+			open.Push(m.Left())
+			open.Push(m.Right())
 		}
 	}
-	return ids
+
+	return ids.Data()
 }
 
 func (n *N) IsLeaf() bool  { return n.left.IsZero() && n.right.IsZero() }
