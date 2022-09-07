@@ -32,6 +32,7 @@ func TestGenerate(t *testing.T) {
 						100: util.N{},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 				want: nil,
 			}
@@ -57,6 +58,7 @@ func TestGenerate(t *testing.T) {
 					104: util.N{Parent: 104},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "CDE",
@@ -88,6 +90,7 @@ func TestGenerate(t *testing.T) {
 					105: util.N{Parent: 105},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "BFG",
