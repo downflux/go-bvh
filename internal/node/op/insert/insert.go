@@ -22,6 +22,17 @@ func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
 		c = root.Cache()
 	}
 
+	if root != nil {
+		s := sibling(root, aabb)
+		if s != nil && s.IsLeaf() && !s.IsFull() {
+			s.Insert(x, aabb)
+			if !s.IsRoot() {
+				rotate.Execute(s.Parent())
+			}
+			return s
+		}
+	}
+
 	m := node.New(node.O{
 		Nodes: c,
 		Data: map[id.ID]hyperrectangle.R{

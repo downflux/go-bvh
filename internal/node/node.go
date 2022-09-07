@@ -65,6 +65,10 @@ type O struct {
 	// some physical buffer space to reduce the amount of tree mutations
 	// that occur, per Catto 2019.
 	Data map[id.ID]hyperrectangle.R
+
+	// Size represents how many objects may be added to a leaf node before
+	// the node splits.
+	Size int
 }
 
 type N struct {
@@ -76,6 +80,7 @@ type N struct {
 	parent nid.ID
 
 	data map[id.ID]hyperrectangle.R
+	size int
 
 	aabbCacheIsValid bool
 	aabbCache        hyperrectangle.R
@@ -96,6 +101,7 @@ func New(o O) *N {
 		right:  o.Right,
 		parent: o.Parent,
 		data:   o.Data,
+		size:   16, // o.Size,
 	}
 
 	if o.Nodes.lookup[n.ID()] != nil {
@@ -214,6 +220,7 @@ func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
 
 func (n *N) IsLeaf() bool  { return n.left.IsZero() && n.right.IsZero() }
 func (n *N) IsRoot() bool  { return n.Parent() == nil }
+func (n *N) IsFull() bool  { return n.IsLeaf() && len(n.data) == n.size }
 func (n *N) IsEmpty() bool { return n.IsLeaf() && len(n.data) == 0 }
 func (n *N) AABB() hyperrectangle.R {
 	if n.aabbCacheIsValid {
