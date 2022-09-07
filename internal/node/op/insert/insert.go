@@ -7,6 +7,7 @@ import (
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/op/insert/heuristic"
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
+	"github.com/downflux/go-bvh/internal/node/op/insert/split"
 	"github.com/downflux/go-bvh/internal/node/op/rotate"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-pq/pq"
@@ -22,44 +23,43 @@ func Execute(root *node.N, size int, x id.ID, aabb hyperrectangle.R) *node.N {
 		c = root.Cache()
 	}
 
-	if root != nil {
-		s := sibling(root, aabb)
-		if s != nil && s.IsLeaf() && !s.IsFull() {
-			s.Insert(x, aabb)
-			if !s.IsRoot() {
-				rotate.Execute(s.Parent())
-			}
-			return s
-		}
+	if root == nil {
+		return node.New(node.O{
+			Nodes: c,
+			Data: map[id.ID]hyperrectangle.R{
+				x: aabb,
+			},
+			Size: size,
+		})
 	}
 
-	m := node.New(node.O{
-		Nodes: c,
-		Data: map[id.ID]hyperrectangle.R{
-			x: aabb,
-		},
-		Size: size,
-	})
+	// m is the newly-created leaf node containing the input data.
+	var m *node.N
 
-	/**
-	 * TODO(minkezhang): Implement this.
-	 *
-	 * s := sibling(root, aabb)
-	 * if s.IsLeaf() {
-	 *   if s.IsFull() {
-	 *     s = split.Execute(s)
-	 *   } else {
-	 *     s.Insert(x, aabb)
-	 *   }
-	 *   rotate.Execute(s.Parent())
-	 * } else {
-	 *     rotate.Execute(insert.Execute(s, m))
-	 *     return m
-	 * }
-	 */
+	s := sibling(root, aabb)
+	if s.IsLeaf() {
+		if !s.IsFull() {
+			m = s
+		} else {
+			m = split.Execute(s)
+		}
+		m.Insert(x, aabb)
+	} else {
+		m = node.New(node.O{
+			Nodes: c,
+			Data: map[id.ID]hyperrectangle.R{
+				x: aabb,
+			},
+			Size: size,
+		})
+	}
 
-	if root != nil {
-		rotate.Execute(insert.Execute(sibling(root, aabb), m))
+	if s != m {
+		insert.Execute(s, m)
+	}
+
+	if !s.IsRoot() {
+		rotate.Execute(s.Parent())
 	}
 
 	return m

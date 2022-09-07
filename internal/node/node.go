@@ -155,6 +155,7 @@ func (n *N) Remove(id id.ID) {
 func (n *N) Data() map[id.ID]hyperrectangle.R { return n.data }
 
 func (n *N) Cache() *C { return n.nodes }
+func (n *N) Size() int { return n.size }
 
 func (n *N) InvalidateAABBCache() {
 	// Since InvalidateAABBCache is called recursively up towards the root,
