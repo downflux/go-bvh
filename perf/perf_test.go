@@ -8,6 +8,42 @@ import (
 	"github.com/downflux/go-bvh/bvh"
 )
 
+func BenchmarkNew(b *testing.B) {
+	type config struct {
+		name string
+		n    int
+		k    int
+		size int
+	}
+
+	var configs []config
+	for _, n := range []int{1e3, 1e4, 1e5, 1e6} {
+		for _, k := range []int{16} {
+			for _, size := range []int{1, 4, 16, 64} {
+				configs = append(configs, config{
+					name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
+					n:    n,
+					k:    k,
+					size: size,
+				})
+			}
+		}
+	}
+
+	for _, c := range configs {
+		b.Run(c.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				New(O{
+					Insert: 1,
+					K:      c.k,
+					N:      c.n,
+					Size:   c.size,
+				}).Apply(0, 500)
+			}
+		})
+	}
+}
+
 func BenchmarkBroadPhase(b *testing.B) {
 	type config struct {
 		name string
