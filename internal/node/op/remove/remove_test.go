@@ -34,6 +34,7 @@ func TestExecute(t *testing.T) {
 					100: {},
 				},
 				Root: 100,
+				Size: 2,
 			}),
 			id: 2,
 			want: util.New(util.T{
@@ -46,6 +47,7 @@ func TestExecute(t *testing.T) {
 					100: {},
 				},
 				Root: 100,
+				Size: 2,
 			}),
 		},
 		{
@@ -58,6 +60,7 @@ func TestExecute(t *testing.T) {
 					100: {},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			id:   1,
 			want: nil,
