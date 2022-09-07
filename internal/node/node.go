@@ -220,7 +220,7 @@ func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
 
 func (n *N) IsLeaf() bool  { return n.left.IsZero() && n.right.IsZero() }
 func (n *N) IsRoot() bool  { return n.Parent() == nil }
-func (n *N) IsFull() bool  { return n.IsLeaf() && len(n.data) == n.size }
+func (n *N) IsFull() bool  { return n.IsLeaf() && len(n.data) >= n.size }
 func (n *N) IsEmpty() bool { return n.IsLeaf() && len(n.data) == 0 }
 func (n *N) AABB() hyperrectangle.R {
 	if n.aabbCacheIsValid {
