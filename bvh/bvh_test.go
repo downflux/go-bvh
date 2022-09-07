@@ -33,12 +33,14 @@ func TestUpdate(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			bvh := &BVH{
 				lookup: map[id.ID]*node.N{
 					1: root,
 				},
 				root: root,
+				size: 1,
 			}
 			return config{
 				name: "NoUpdate",
@@ -58,12 +60,14 @@ func TestUpdate(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			bvh := &BVH{
 				lookup: map[id.ID]*node.N{
 					1: root,
 				},
 				root: root,
+				size: 1,
 			}
 			return config{
 				name: "DNE",
@@ -83,6 +87,7 @@ func TestUpdate(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			want := util.New(util.T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -92,6 +97,7 @@ func TestUpdate(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 
 			return config{
@@ -101,6 +107,7 @@ func TestUpdate(t *testing.T) {
 						1: root,
 					},
 					root: root,
+					size: 1,
 				},
 				id:   1,
 				q:    util.Interval(101, 200),
@@ -110,6 +117,7 @@ func TestUpdate(t *testing.T) {
 						1: want,
 					},
 					root: want,
+					size: 1,
 				},
 			}
 		}(),
@@ -148,6 +156,7 @@ func TestBroadPhase(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "PartialMatch",
@@ -156,6 +165,7 @@ func TestBroadPhase(t *testing.T) {
 						1: root,
 					},
 					root: root,
+					size: 1,
 				},
 				q:    util.Interval(1, 2),
 				want: []id.ID{1},
@@ -170,6 +180,7 @@ func TestBroadPhase(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "NoMatch",
@@ -178,6 +189,7 @@ func TestBroadPhase(t *testing.T) {
 						1: root,
 					},
 					root: root,
+					size: 1,
 				},
 				q:    util.Interval(101, 102),
 				want: []id.ID{},
@@ -217,12 +229,14 @@ func TestRemove(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			bvh := &BVH{
 				lookup: map[id.ID]*node.N{
 					1: root,
 				},
 				root: root,
+				size: 1,
 			}
 			return config{
 				name: "Trivial",
@@ -231,6 +245,7 @@ func TestRemove(t *testing.T) {
 				want: &BVH{
 					lookup: map[id.ID]*node.N{},
 					root:   nil,
+					size:   1,
 				},
 			}
 		}(),
@@ -243,12 +258,14 @@ func TestRemove(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			bvh := &BVH{
 				lookup: map[id.ID]*node.N{
 					1: root,
 				},
 				root: root,
+				size: 1,
 			}
 			return config{
 				name: "DNE",
@@ -293,14 +310,16 @@ func TestInsert(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			want := &BVH{
 				lookup: map[id.ID]*node.N{1: root},
 				root:   root,
+				size:   1,
 			}
 			return config{
 				name: "NilRoot",
-				bvh:  New(),
+				bvh:  New(1),
 				id:   1,
 				aabb: util.Interval(0, 100),
 				want: want,
@@ -315,10 +334,12 @@ func TestInsert(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			want := &BVH{
 				lookup: map[id.ID]*node.N{1: root},
 				root:   root,
+				size:   1,
 			}
 			return config{
 				name: "DuplicateID",

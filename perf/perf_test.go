@@ -14,23 +14,27 @@ func BenchmarkBroadPhase(b *testing.B) {
 		bvh  *bvh.BVH
 		k    int
 		f    float64
+		size int
 	}
 
 	var configs []config
 	for _, n := range []int{1e3, 1e4, 1e5, 1e6} {
 		for _, k := range []int{1} {
 			for _, f := range []float64{0.05} {
-				l := New(O{
-					Insert: 1,
-					K:      k,
-					N:      n,
-				})
-				configs = append(configs, config{
-					name: fmt.Sprintf("K=%v/N=%v/F=%v", k, n, f),
-					bvh:  l.Apply(0, 500),
-					k:    k,
-					f:    f,
-				})
+				for _, size := range []int{1, 4, 16, 64} {
+					l := New(O{
+						Insert: 1,
+						K:      k,
+						N:      n,
+						Size:   size,
+					})
+					configs = append(configs, config{
+						name: fmt.Sprintf("K=%v/N=%v/F=%v/LeafSize=%v", k, n, f, size),
+						bvh:  l.Apply(0, 500),
+						k:    k,
+						f:    f,
+					})
+				}
 			}
 		}
 	}

@@ -19,11 +19,13 @@ import (
 type BVH struct {
 	lookup map[id.ID]*node.N
 	root   *node.N
+	size   int
 }
 
-func New() *BVH {
+func New(size int) *BVH {
 	return &BVH{
 		lookup: map[id.ID]*node.N{},
+		size:   size,
 	}
 }
 
@@ -35,7 +37,7 @@ func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
 		return fmt.Errorf("cannot insert a node with duplicate ID %v", id)
 	}
 
-	n := insert.Execute(bvh.root, id, aabb)
+	n := insert.Execute(bvh.root, bvh.size, id, aabb)
 
 	// We may have split the leaf node, in which case some data may have
 	// shifted.

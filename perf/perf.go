@@ -41,7 +41,8 @@ type O struct {
 	// N is the number of opts to call.
 	N int
 
-	K int
+	K    int
+	Size int
 }
 
 type L struct {
@@ -60,7 +61,7 @@ func New(o O) *L {
 		remove: o.Remove / (o.Insert + o.Remove),
 		n:      o.N,
 		k:      o.K,
-		bvh:    bvh.New(),
+		bvh:    bvh.New(o.Size),
 		ids:    map[id.ID]bool{},
 	}
 }
