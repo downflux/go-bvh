@@ -87,6 +87,10 @@ type N struct {
 }
 
 func New(o O) *N {
+	if len(o.Data) > o.Size {
+		panic(fmt.Sprintf("cannot create node with data exceeding size %v", o.Size))
+	}
+
 	// If the user does not specify an ID, automatically allocate one to
 	// use.
 	id := o.ID
@@ -101,7 +105,7 @@ func New(o O) *N {
 		right:  o.Right,
 		parent: o.Parent,
 		data:   o.Data,
-		size:   16, // o.Size,
+		size:   o.Size,
 	}
 
 	if o.Nodes.lookup[n.ID()] != nil {
@@ -125,6 +129,9 @@ func (n *N) Get(id id.ID) (hyperrectangle.R, bool) {
 func (n *N) Insert(id id.ID, aabb hyperrectangle.R) {
 	if _, ok := n.data[id]; ok {
 		panic(fmt.Sprintf("cannot insert an existing object ID %v", id))
+	}
+	if n.IsFull() {
+		panic(fmt.Sprintf("cannot insert into a full leaf node"))
 	}
 
 	n.data[id] = aabb

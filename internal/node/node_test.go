@@ -25,6 +25,7 @@ func TestBroadPhase(t *testing.T) {
 				ID:    100,
 				Left:  101,
 				Right: 102,
+				Size:  2,
 			})
 			New(O{
 				Nodes:  c,
@@ -34,6 +35,7 @@ func TestBroadPhase(t *testing.T) {
 					1: *hyperrectangle.New([]float64{0}, []float64{24}),
 					2: *hyperrectangle.New([]float64{25}, []float64{49}),
 				},
+				Size: 2,
 			})
 			New(O{
 				Nodes:  c,
@@ -43,6 +45,7 @@ func TestBroadPhase(t *testing.T) {
 					3: *hyperrectangle.New([]float64{50}, []float64{74}),
 					4: *hyperrectangle.New([]float64{75}, []float64{99}),
 				},
+				Size: 2,
 			})
 
 			return config{
@@ -60,6 +63,7 @@ func TestBroadPhase(t *testing.T) {
 					1: *hyperrectangle.New([]float64{51}, []float64{100}),
 					2: *hyperrectangle.New([]float64{0}, []float64{50}),
 				},
+				Size: 2,
 			}),
 			q:    *hyperrectangle.New([]float64{1}, []float64{99}),
 			want: []id.ID{1, 2},
@@ -72,6 +76,7 @@ func TestBroadPhase(t *testing.T) {
 					1: *hyperrectangle.New([]float64{51}, []float64{100}),
 					2: *hyperrectangle.New([]float64{0}, []float64{50}),
 				},
+				Size: 2,
 			}),
 			q:    *hyperrectangle.New([]float64{100.1}, []float64{100.2}),
 			want: []id.ID{},

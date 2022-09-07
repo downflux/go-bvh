@@ -19,6 +19,7 @@ type T struct {
 	Data  map[nid.ID]map[id.ID]hyperrectangle.R
 	Nodes map[nid.ID]N
 	Root  nid.ID
+	Size  int
 }
 
 type N struct {
@@ -41,6 +42,7 @@ func New(t T) *node.N {
 			Parent: n.Parent,
 
 			Data: t.Data[id],
+			Size: t.Size,
 		})
 		if m.ID() == t.Root {
 			r = m

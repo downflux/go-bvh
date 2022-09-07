@@ -36,6 +36,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -48,6 +49,7 @@ func TestEqual(t *testing.T) {
 					102: N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			want: false,
 		},
@@ -61,6 +63,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 2,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -73,6 +76,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 2,
 			}),
 			want: false,
 		},
@@ -86,6 +90,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -95,6 +100,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			want: false,
 		},
@@ -108,6 +114,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -117,6 +124,7 @@ func TestEqual(t *testing.T) {
 					1001: N{},
 				},
 				Root: 1001,
+				Size: 1,
 			}),
 			want: true,
 		},
@@ -133,6 +141,7 @@ func TestEqual(t *testing.T) {
 					102: N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -145,6 +154,7 @@ func TestEqual(t *testing.T) {
 					102: N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			want: false,
 		},
@@ -161,6 +171,7 @@ func TestEqual(t *testing.T) {
 					102: N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -173,6 +184,7 @@ func TestEqual(t *testing.T) {
 					1002: N{Parent: 1000},
 				},
 				Root: 1000,
+				Size: 1,
 			}),
 			want: true,
 		},
@@ -205,6 +217,7 @@ func TestNew(t *testing.T) {
 					100: {},
 				},
 				Root: 100,
+				Size: 1,
 			},
 			want: node.New(node.O{
 				Nodes: node.Cache(),
@@ -212,6 +225,7 @@ func TestNew(t *testing.T) {
 				Data: map[id.ID]hyperrectangle.R{
 					1: Interval(0, 100),
 				},
+				Size: 1,
 			}),
 		}, func() config {
 			c := node.Cache()
@@ -220,6 +234,7 @@ func TestNew(t *testing.T) {
 				ID:    100,
 				Left:  101,
 				Right: 102,
+				Size:  1,
 			})
 			node.New(node.O{
 				Nodes:  c,
@@ -228,6 +243,7 @@ func TestNew(t *testing.T) {
 				Data: map[id.ID]hyperrectangle.R{
 					1: Interval(0, 100),
 				},
+				Size: 1,
 			})
 			node.New(node.O{
 				Nodes:  c,
@@ -236,6 +252,7 @@ func TestNew(t *testing.T) {
 				Data: map[id.ID]hyperrectangle.R{
 					2: Interval(101, 200),
 				},
+				Size: 1,
 			})
 
 			return config{
@@ -251,6 +268,7 @@ func TestNew(t *testing.T) {
 						102: {Parent: 100},
 					},
 					Root: 100,
+					Size: 1,
 				},
 				want: r,
 			}
