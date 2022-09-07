@@ -54,12 +54,15 @@ func Execute(root *node.N, size int, x id.ID, aabb hyperrectangle.R) *node.N {
 		})
 	}
 
+	// Add a shared parent between the sibling and newly-created node. Note
+	// that we will skip this step if the sibling was a non-full leaf.
 	if s != m {
 		insert.Execute(s, m)
 	}
 
-	if !s.IsRoot() {
-		rotate.Execute(s.Parent())
+	// m is now linked to the correct parent; we need to balance the tree.
+	if !m.IsRoot() {
+		rotate.Execute(m.Parent())
 	}
 
 	return m

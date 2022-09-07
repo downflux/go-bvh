@@ -42,7 +42,7 @@ func TestExecute(t *testing.T) {
 		},
 		func() config {
 			return config{
-				name: "Root",
+				name: "Root/Split",
 				root: util.New(util.T{
 					Data: map[nid.ID]map[id.ID]hyperrectangle.R{
 						100: {1: util.Interval(0, 10)},
@@ -68,6 +68,37 @@ func TestExecute(t *testing.T) {
 					},
 					Root: 100,
 					Size: 1,
+				}),
+			}
+		}(),
+		func() config {
+			return config{
+				name: "Root/Insert",
+				root: util.New(util.T{
+					Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+						100: {1: util.Interval(0, 10)},
+					},
+					Nodes: map[nid.ID]util.N{
+						100: util.N{},
+					},
+					Root: 100,
+					Size: 2,
+				}),
+				size: 1,
+				id:   2,
+				aabb: util.Interval(20, 50),
+				want: util.New(util.T{
+					Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+						100: {
+							1: util.Interval(0, 10),
+							2: util.Interval(20, 50),
+						},
+					},
+					Nodes: map[nid.ID]util.N{
+						100: util.N{},
+					},
+					Root: 100,
+					Size: 2,
 				}),
 			}
 		}(),
