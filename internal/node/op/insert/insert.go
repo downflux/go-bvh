@@ -14,7 +14,7 @@ import (
 
 // Execute adds a new node with the given data into the tree. The returned node
 // is the newly-created node.
-func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
+func Execute(root *node.N, size int, x id.ID, aabb hyperrectangle.R) *node.N {
 	var c *node.C
 	if root == nil {
 		c = node.Cache()
@@ -38,6 +38,7 @@ func Execute(root *node.N, x id.ID, aabb hyperrectangle.R) *node.N {
 		Data: map[id.ID]hyperrectangle.R{
 			x: aabb,
 		},
+		Size: size,
 	})
 
 	/**

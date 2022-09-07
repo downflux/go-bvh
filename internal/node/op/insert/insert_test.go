@@ -16,6 +16,7 @@ func TestExecute(t *testing.T) {
 	type config struct {
 		name string
 		root *node.N
+		size int
 		id   id.ID
 		aabb hyperrectangle.R
 		want *node.N
@@ -25,6 +26,7 @@ func TestExecute(t *testing.T) {
 		{
 			name: "Trivial",
 			root: nil,
+			size: 1,
 			id:   1,
 			aabb: util.Interval(0, 100),
 			want: util.New(util.T{
@@ -35,6 +37,7 @@ func TestExecute(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 		},
 		func() config {
@@ -48,7 +51,9 @@ func TestExecute(t *testing.T) {
 						100: util.N{},
 					},
 					Root: 100,
+					Size: 1,
 				}),
+				size: 1,
 				id:   2,
 				aabb: util.Interval(20, 50),
 				want: util.New(util.T{
@@ -62,6 +67,7 @@ func TestExecute(t *testing.T) {
 						102: util.N{Parent: 100},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 			}
 		}(),
@@ -69,7 +75,7 @@ func TestExecute(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := Execute(c.root, c.id, c.aabb).Root()
+			got := Execute(c.root, c.size, c.id, c.aabb).Root()
 			if diff := cmp.Diff(c.want, got, cmp.Comparer(util.Equal)); diff != "" {
 				t.Errorf("Execute() mismatch (-want +got):\n%v", diff)
 			}
@@ -95,6 +101,7 @@ func TestSibling(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "Root",
@@ -115,6 +122,7 @@ func TestSibling(t *testing.T) {
 					102: util.N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			})
 
 			return config{
@@ -139,6 +147,7 @@ func TestSibling(t *testing.T) {
 					102: util.N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			})
 
 			return config{
