@@ -41,7 +41,7 @@ func Execute(root *node.N, size int, x id.ID, aabb hyperrectangle.R) *node.N {
 		if !s.IsFull() {
 			m = s
 		} else {
-			m = split.Execute(s)
+			m = split.Execute(s, split.RandomPartition)
 		}
 		m.Insert(x, aabb)
 	} else {

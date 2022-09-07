@@ -13,9 +13,40 @@ func midpoint(aabb hyperrectangle.R, axis vector.D) float64 {
 	return (aabb.Max().X(axis) - aabb.Min().X(axis)) / 2.0
 }
 
+type P func(data map[id.ID]hyperrectangle.R) (map[id.ID]hyperrectangle.R, map[id.ID]hyperrectangle.R)
+
+func partition(data map[id.ID]hyperrectangle.R, axis vector.D, pivot float64) (map[id.ID]hyperrectangle.R, map[id.ID]hyperrectangle.R) {
+	a := map[id.ID]hyperrectangle.R{}
+	b := map[id.ID]hyperrectangle.R{}
+
+	for id, aabb := range data {
+		// At least one point is kept in n, ensuring then that m is not
+		// full.
+		if midpoint(aabb, axis) > pivot {
+			b[id] = aabb
+		} else {
+			a[id] = aabb
+		}
+	}
+	return a, b
+}
+
+func RandomPartition(data map[id.ID]hyperrectangle.R) (map[id.ID]hyperrectangle.R, map[id.ID]hyperrectangle.R) {
+	var axis vector.D
+	var pivot float64
+
+	for _, aabb := range data {
+		axis = vector.D(rand.Intn(int(aabb.Min().Dimension())))
+		pivot = midpoint(aabb, axis)
+		break
+	}
+
+	return partition(data, axis, pivot)
+}
+
 // Execute creates a new node to be inserted into the tree. The returned node is
 // a leaf that is guaranteed to have capacity for a new data point.
-func Execute(n *node.N) *node.N {
+func Execute(n *node.N, p P) *node.N {
 	if n == nil {
 		panic("cannot split an empty node")
 	}
@@ -26,29 +57,15 @@ func Execute(n *node.N) *node.N {
 		panic("cannot split a leaf node with no data")
 	}
 
-	var pivotIsSet bool
-	var axis vector.D
-	var pivot float64
-
-	m := node.New(node.O{
-		Nodes: n.Cache(),
-		Data:  map[id.ID]hyperrectangle.R{},
-		Size:  n.Size(),
-	})
-
-	for id, aabb := range n.Data() {
-		if !pivotIsSet {
-			axis = vector.D(rand.Intn(int(aabb.Min().Dimension())))
-			pivot = midpoint(aabb, axis)
-		}
-		// At least one point is kept in n, ensuring then that m is not
-		// full.
-		if midpoint(aabb, axis) > pivot {
-			m.Insert(id, aabb)
-		}
-	}
-	for id := range m.Data() {
+	data := n.Data()
+	_, b := p(data)
+	for id := range b {
 		n.Remove(id)
 	}
-	return m
+
+	return node.New(node.O{
+		Nodes: n.Cache(),
+		Data:  b,
+		Size:  n.Size(),
+	})
 }
