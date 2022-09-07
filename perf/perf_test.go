@@ -19,7 +19,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 
 	var configs []config
 	for _, n := range []int{1e3, 1e4, 1e5, 1e6} {
-		for _, k := range []int{1} {
+		for _, k := range []int{16} {
 			for _, f := range []float64{0.05} {
 				for _, size := range []int{1, 4, 16, 64} {
 					l := New(O{
