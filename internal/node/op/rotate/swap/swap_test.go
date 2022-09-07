@@ -30,6 +30,7 @@ func TestIsAncestor(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "TrivialRoot",
@@ -50,6 +51,7 @@ func TestIsAncestor(t *testing.T) {
 					102: util.N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "TrivialSibling",
@@ -70,6 +72,7 @@ func TestIsAncestor(t *testing.T) {
 					102: util.N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "ImmediateChild",
@@ -90,6 +93,7 @@ func TestIsAncestor(t *testing.T) {
 					102: util.N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "ImmediateParent",
@@ -130,6 +134,7 @@ func TestSwap(t *testing.T) {
 					102: util.N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			want := util.New(util.T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -142,6 +147,7 @@ func TestSwap(t *testing.T) {
 					102: util.N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "Siblings",
@@ -172,6 +178,7 @@ func TestSwap(t *testing.T) {
 					104: util.N{Parent: 102},                        // E
 				},
 				Root: 100,
+				Size: 1,
 			})
 			want := util.New(util.T{
 				Data: data,
@@ -188,6 +195,7 @@ func TestSwap(t *testing.T) {
 					104: util.N{Parent: 102},                        // E
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "Internal/Leaf",
