@@ -32,6 +32,7 @@ func TestExecute(t *testing.T) {
 						100: util.N{},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 				want: util.New(util.T{
 					Data: data,
@@ -39,6 +40,7 @@ func TestExecute(t *testing.T) {
 						100: util.N{},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 			}
 		}(),
@@ -57,6 +59,7 @@ func TestExecute(t *testing.T) {
 						102: util.N{Parent: 100},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 				want: util.New(util.T{
 					Data: data,
@@ -66,6 +69,7 @@ func TestExecute(t *testing.T) {
 						102: util.N{Parent: 100},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 			}
 		}(),
@@ -92,6 +96,7 @@ func TestExecute(t *testing.T) {
 						104: util.N{Parent: 102},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 				//   A
 				//  / \
@@ -108,6 +113,7 @@ func TestExecute(t *testing.T) {
 						104: util.N{Parent: 102},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 			}
 		}(),
@@ -133,6 +139,7 @@ func TestExecute(t *testing.T) {
 					104: util.N{Parent: 102},
 				},
 				Root: 100,
+				Size: 1,
 			}
 			return config{
 				name: "NoRotate",
