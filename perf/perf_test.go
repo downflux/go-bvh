@@ -2,6 +2,7 @@ package perf
 
 import (
 	"flag"
+	"math/rand"
 	"fmt"
 	"log"
 	"math"
@@ -65,7 +66,7 @@ func BenchmarkNew(b *testing.B) {
 					K:      c.k,
 					N:      c.n,
 					Size:   c.size,
-					Logger: l(*logd, fmt.Sprintf("new-%v-%v-%v", c.k, c.n, c.size)),
+					Logger: l(*logd, fmt.Sprintf("new-%v-%v-%v-%v", c.k, c.n, c.size, rand.Intn(10000))),
 				}).Apply(0, 500)
 			}
 		})
