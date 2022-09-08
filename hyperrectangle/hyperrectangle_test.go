@@ -7,35 +7,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestV(t *testing.T) {
-	type config struct {
-		name string
-		r    hyperrectangle.R
-		want float64
-	}
-
-	configs := []config{
-		{
-			name: "1D",
-			r:    *hyperrectangle.New([]float64{10}, []float64{100}),
-			want: 90,
-		},
-		{
-			name: "2D",
-			r:    *hyperrectangle.New([]float64{10, 10}, []float64{100, 100}),
-			want: 8100,
-		},
-	}
-
-	for _, c := range configs {
-		t.Run(c.name, func(t *testing.T) {
-			if got := V(c.r); got != c.want {
-				t.Errorf("V() = %v, want = %v", got, c.want)
-			}
-		})
-	}
-}
-
 func TestAABB(t *testing.T) {
 	type config struct {
 		name string
