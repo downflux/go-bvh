@@ -19,7 +19,7 @@ type T struct {
 	Data  map[nid.ID]map[id.ID]hyperrectangle.R
 	Nodes map[nid.ID]N
 	Root  nid.ID
-	Size  int
+	Size  uint
 }
 
 type N struct {

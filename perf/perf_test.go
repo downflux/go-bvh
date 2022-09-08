@@ -13,13 +13,13 @@ func BenchmarkNew(b *testing.B) {
 		name string
 		n    int
 		k    int
-		size int
+		size uint
 	}
 
 	var configs []config
 	for _, n := range []int{1e3, 1e4, 1e5, 1e6} {
 		for _, k := range []int{16} {
-			for _, size := range []int{1, 4, 16, 64} {
+			for _, size := range []uint{1, 4, 16, 64} {
 				configs = append(configs, config{
 					name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
 					n:    n,
@@ -50,14 +50,14 @@ func BenchmarkBroadPhase(b *testing.B) {
 		bvh  *bvh.BVH
 		k    int
 		f    float64
-		size int
+		size uint
 	}
 
 	var configs []config
 	for _, n := range []int{1e3, 1e4, 1e5, 1e6} {
 		for _, k := range []int{16} {
 			for _, f := range []float64{0.05} {
-				for _, size := range []int{1, 4, 16, 64} {
+				for _, size := range []uint{1, 4, 16, 64} {
 					l := New(O{
 						Insert: 1,
 						K:      k,

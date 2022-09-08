@@ -42,7 +42,7 @@ type O struct {
 	N int
 
 	K    int
-	Size int
+	Size uint
 }
 
 type L struct {

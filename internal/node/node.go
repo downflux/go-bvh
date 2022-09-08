@@ -68,7 +68,7 @@ type O struct {
 
 	// Size represents how many objects may be added to a leaf node before
 	// the node splits.
-	Size int
+	Size uint
 }
 
 type N struct {
@@ -80,14 +80,14 @@ type N struct {
 	parent nid.ID
 
 	data map[id.ID]hyperrectangle.R
-	size int
+	size uint
 
 	aabbCacheIsValid bool
 	aabbCache        hyperrectangle.R
 }
 
 func New(o O) *N {
-	if len(o.Data) > o.Size {
+	if uint(len(o.Data)) > o.Size {
 		panic(fmt.Sprintf("cannot create node with data exceeding size %v", o.Size))
 	}
 
@@ -154,8 +154,8 @@ func (n *N) Remove(id id.ID) {
 // library itself, and to save on an extra memory allocation.
 func (n *N) Data() map[id.ID]hyperrectangle.R { return n.data }
 
-func (n *N) Cache() *C { return n.nodes }
-func (n *N) Size() int { return n.size }
+func (n *N) Cache() *C  { return n.nodes }
+func (n *N) Size() uint { return n.size }
 
 func (n *N) InvalidateAABBCache() {
 	// Since InvalidateAABBCache is called recursively up towards the root,
@@ -228,7 +228,7 @@ func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
 
 func (n *N) IsLeaf() bool  { return n.left.IsZero() && n.right.IsZero() }
 func (n *N) IsRoot() bool  { return n.Parent() == nil }
-func (n *N) IsFull() bool  { return n.IsLeaf() && len(n.data) >= n.size }
+func (n *N) IsFull() bool  { return n.IsLeaf() && uint(len(n.data)) >= n.Size() }
 func (n *N) IsEmpty() bool { return n.IsLeaf() && len(n.data) == 0 }
 func (n *N) AABB() hyperrectangle.R {
 	if n.aabbCacheIsValid {

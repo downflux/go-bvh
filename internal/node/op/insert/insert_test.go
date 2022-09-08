@@ -16,7 +16,7 @@ func TestExecute(t *testing.T) {
 	type config struct {
 		name string
 		root *node.N
-		size int
+		size uint
 		id   id.ID
 		aabb hyperrectangle.R
 		want *node.N

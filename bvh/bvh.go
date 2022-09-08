@@ -19,10 +19,10 @@ import (
 type BVH struct {
 	lookup map[id.ID]*node.N
 	root   *node.N
-	size   int
+	size   uint
 }
 
-func New(size int) *BVH {
+func New(size uint) *BVH {
 	return &BVH{
 		lookup: map[id.ID]*node.N{},
 		size:   size,
