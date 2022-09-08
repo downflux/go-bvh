@@ -35,11 +35,13 @@ func (s *PerfTestSize) Set(v string) error {
 	*s = size
 	return nil
 }
+
 func (s PerfTestSize) N() []int {
 	return map[PerfTestSize][]int{
 		SizeLarge: []int{1e3, 1e4, 1e5, 1e6},
 	}[s]
 }
+
 func (s PerfTestSize) F() []float64 {
 	return map[PerfTestSize][]float64{
 		SizeLarge: []float64{0.05},

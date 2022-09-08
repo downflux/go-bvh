@@ -53,6 +53,9 @@ func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
 		bvh.lookup[k] = n
 	}
 	bvh.root = n.Root()
+	if bvh.logger != nil {
+		bvh.logger.Printf("Inserting rectangle %v; height = %v, elements = %v", aabb, bvh.root.Height(), len(bvh.lookup))
+	}
 
 	return nil
 }

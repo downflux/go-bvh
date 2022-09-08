@@ -3,8 +3,10 @@ package perf
 import (
 	"flag"
 	"fmt"
+	"log"
 	"math"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/downflux/go-bvh/bvh"
@@ -12,7 +14,7 @@ import (
 
 var (
 	suite = SizeLarge
-	logf  = flag.String("log", "/dev/null", "log file location")
+	logd  = flag.String("log_directory", "", "log directory")
 )
 
 func TestMain(m *testing.M) {
@@ -20,6 +22,17 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 
 	os.Exit(m.Run())
+}
+
+func l(d string, fn string) *log.Logger {
+	if d == "" {
+		return nil
+	}
+	f, err := os.OpenFile(path.Join(d, fmt.Sprintf("%v.log", fn)), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		panic(fmt.Sprintf("could not create logger: %v", err))
+	}
+	return log.New(f, "", log.Lshortfile)
 }
 
 func BenchmarkNew(b *testing.B) {
@@ -52,6 +65,7 @@ func BenchmarkNew(b *testing.B) {
 					K:      c.k,
 					N:      c.n,
 					Size:   c.size,
+					Logger: l(*logd, fmt.Sprintf("new-%v-%v-%v", c.k, c.n, c.size)),
 				}).Apply(0, 500)
 			}
 		})
@@ -77,6 +91,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 						K:      k,
 						N:      n,
 						Size:   size,
+						Logger: l(*logd, fmt.Sprintf("broadphase-%v-%v-%v-%v", k, n, f, size)),
 					})
 					configs = append(configs, config{
 						name: fmt.Sprintf("K=%v/N=%v/F=%v/LeafSize=%v", k, n, f, size),
