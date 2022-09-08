@@ -124,7 +124,50 @@ func TestOptimal(t *testing.T) {
 		want R
 	}
 
-	configs := []config{}
+	configs := []config{
+		{
+			name: "Trivial",
+			n: util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: util.Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: util.N{},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: R{},
+		},
+		func() config {
+			n := util.New(util.T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: util.Interval(49, 50)},
+					103: {2: util.Interval(0, 1)},
+					104: {3: util.Interval(50, 100)},
+				},
+				Nodes: map[nid.ID]util.N{
+					100: {Left: 101, Right: 102},
+					101: {Parent: 100},
+					102: {Left: 103, Right: 104, Parent: 100},
+					103: {Parent: 102},
+					104: {Parent: 102},
+				},
+				Root: 100,
+				Size: 1,
+			})
+			return config{
+				name: "Rotate",
+				n:    n,
+				want: R{
+					B: n.Left(),
+					C: n.Right(),
+					F: n.Right().Left(),
+					G: n.Right().Right(),
+				},
+			}
+		}(),
+	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {

@@ -40,15 +40,15 @@ func Generate(n *node.N) []R {
 // rotation object may be empty i.e. R{}, which indicates the existing rotation
 // is already optimal.
 func Optimal(n *node.N) R {
-	var h float64
-	var optimal R
-
-	if !n.IsLeaf() {
-		// The ancester node n will have the same AABB volume, so we
-		// will need to check the decomposed volume of the children
-		// instead.
-		h = heuristic.H(n.Left().AABB()) + heuristic.H(n.Right().AABB())
+	if n.IsLeaf() {
+		return R{}
 	}
+
+	// The ancester node n will have the same AABB volume, so we
+	// will need to check the decomposed volume of the children
+	// instead.
+	h := heuristic.H(n.Left().AABB()) + heuristic.H(n.Right().AABB())
+	var optimal R
 
 	for _, r := range Generate(n) {
 		// Calculate the decomposed volume of the simulated rotation F

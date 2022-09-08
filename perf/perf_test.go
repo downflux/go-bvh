@@ -2,10 +2,10 @@ package perf
 
 import (
 	"flag"
-	"math/rand"
 	"fmt"
 	"log"
 	"math"
+	"math/rand"
 	"os"
 	"path"
 	"testing"
