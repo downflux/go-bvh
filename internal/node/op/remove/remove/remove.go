@@ -20,8 +20,6 @@ func Execute(n *node.N) *node.N {
 		} else {
 			t.A.SetRight(t.F)
 		}
-
-		t.A.InvalidateAABBCache()
 	}
 	if t.C != nil {
 		n.Cache().Delete(t.C.ID())

@@ -51,6 +51,5 @@ func Execute(n *node.N, m *node.N) *node.N {
 	m.SetParent(q)
 	n.SetParent(q)
 
-	q.InvalidateAABBCache()
 	return q
 }

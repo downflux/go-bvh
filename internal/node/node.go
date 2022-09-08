@@ -5,6 +5,7 @@ package node
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node/stack"
@@ -84,6 +85,9 @@ type N struct {
 
 	aabbCacheIsValid bool
 	aabbCache        hyperrectangle.R
+
+	heightCacheIsValid bool
+	heightCache        uint
 }
 
 func New(o O) *N {
@@ -135,7 +139,7 @@ func (n *N) Insert(id id.ID, aabb hyperrectangle.R) {
 	}
 
 	n.data[id] = aabb
-	n.InvalidateAABBCache()
+	n.invalidateAABBCache()
 }
 
 func (n *N) Remove(id id.ID) {
@@ -144,7 +148,7 @@ func (n *N) Remove(id id.ID) {
 	}
 
 	delete(n.data, id)
-	n.InvalidateAABBCache()
+	n.invalidateAABBCache()
 }
 
 // Return the list of entities in this node.
@@ -157,8 +161,18 @@ func (n *N) Data() map[id.ID]hyperrectangle.R { return n.data }
 func (n *N) Cache() *C  { return n.nodes }
 func (n *N) Size() uint { return n.size }
 
-func (n *N) InvalidateAABBCache() {
-	// Since InvalidateAABBCache is called recursively up towards the root,
+func (n *N) invalidateHeightCache() {
+	if !n.heightCacheIsValid {
+		return
+	}
+	n.heightCacheIsValid = false
+	if !n.IsRoot() {
+		n.Parent().invalidateHeightCache()
+	}
+}
+
+func (n *N) invalidateAABBCache() {
+	// Since invalidateAABBCache is called recursively up towards the root,
 	// and AABB is calculated towards the leaf, if the cache is invalid at
 	// some node, we are guaranteed all nodes above the current node are
 	// also marked with an invalid cache. Skipping the tree iteration here
@@ -170,7 +184,7 @@ func (n *N) InvalidateAABBCache() {
 
 	n.aabbCacheIsValid = false
 	if !n.IsRoot() {
-		n.Parent().InvalidateAABBCache()
+		n.Parent().invalidateAABBCache()
 	}
 }
 
@@ -181,13 +195,23 @@ func (n *N) Left() *N   { return n.nodes.lookup[n.left] }
 func (n *N) Right() *N  { return n.nodes.lookup[n.right] }
 func (n *N) Parent() *N { return n.nodes.lookup[n.parent] }
 
-func (n *N) SetLeft(m *N)  { n.left = m.ID() }
-func (n *N) SetRight(m *N) { n.right = m.ID() }
+func (n *N) SetLeft(m *N) {
+	n.left = m.ID()
+	n.invalidateHeightCache()
+	n.invalidateAABBCache()
+}
+func (n *N) SetRight(m *N) {
+	n.right = m.ID()
+	n.invalidateHeightCache()
+	n.invalidateAABBCache()
+}
 func (n *N) SetParent(m *N) {
 	// We may be attempting to set the node as the new root.
 	var id nid.ID
 	if m != nil {
 		id = m.ID()
+		m.invalidateHeightCache()
+		m.invalidateAABBCache()
 	}
 	n.parent = id
 }
@@ -230,6 +254,19 @@ func (n *N) IsLeaf() bool  { return n.left.IsZero() && n.right.IsZero() }
 func (n *N) IsRoot() bool  { return n.Parent() == nil }
 func (n *N) IsFull() bool  { return n.IsLeaf() && uint(len(n.data)) >= n.Size() }
 func (n *N) IsEmpty() bool { return n.IsLeaf() && len(n.data) == 0 }
+func (n *N) Height() uint {
+	if n.heightCacheIsValid {
+		return n.heightCache
+	}
+
+	n.heightCacheIsValid = true
+	if n.IsLeaf() {
+		n.heightCache = 1
+	} else {
+		n.heightCache = 1 + uint(math.Max(float64(n.Left().Height()), float64(n.Right().Height())))
+	}
+	return n.heightCache
+}
 func (n *N) AABB() hyperrectangle.R {
 	if n.aabbCacheIsValid {
 		return n.aabbCache
