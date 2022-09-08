@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	suite = SizeLarge
+	suite = SizeSmall
 	logd  = flag.String("log_directory", "", "log directory")
 )
 
