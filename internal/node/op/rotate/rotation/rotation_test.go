@@ -116,3 +116,26 @@ func TestGenerate(t *testing.T) {
 		})
 	}
 }
+
+func TestOptimal(t *testing.T) {
+	type config struct {
+		name string
+		n    *node.N
+		want R
+	}
+
+	configs := []config{}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			got := Optimal(c.n)
+			if diff := cmp.Diff(
+				c.want,
+				got,
+				cmp.Comparer(util.Equal),
+			); diff != "" {
+				t.Errorf("Optimal() mismatch (-want +got):\n%v", diff)
+			}
+		})
+	}
+}
