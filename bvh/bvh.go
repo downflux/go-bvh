@@ -2,6 +2,7 @@ package bvh
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
@@ -12,6 +13,11 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
+type O struct {
+	Size   uint
+	Logger *log.Logger
+}
+
 // BVH is an AABB-backed bounded volume hierarchy. This struct does not store
 // any data associated with the AABBs aside from the object ID. The caller is
 // responsible for storing any data associated with the AABB (e.g. in a separate
@@ -20,12 +26,14 @@ type BVH struct {
 	lookup map[id.ID]*node.N
 	root   *node.N
 	size   uint
+	logger *log.Logger
 }
 
-func New(size uint) *BVH {
+func New(o O) *BVH {
 	return &BVH{
 		lookup: map[id.ID]*node.N{},
-		size:   size,
+		size:   o.Size,
+		logger: o.Logger,
 	}
 }
 

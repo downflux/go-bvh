@@ -319,7 +319,7 @@ func TestInsert(t *testing.T) {
 			}
 			return config{
 				name: "NilRoot",
-				bvh:  New(1),
+				bvh:  New(O{Size: 1}),
 				id:   1,
 				aabb: util.Interval(0, 100),
 				want: want,

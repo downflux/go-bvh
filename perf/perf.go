@@ -1,6 +1,8 @@
 package perf
 
 import (
+	"fmt"
+	"log"
 	"math"
 	"math/rand"
 
@@ -9,6 +11,52 @@ import (
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 )
+
+type PerfTestSize int
+
+const (
+	SizeUnknown PerfTestSize = iota
+	SizeLarge
+)
+
+func (s *PerfTestSize) String() string {
+	return map[PerfTestSize]string{
+		SizeLarge: "large",
+	}[*s]
+}
+
+func (s *PerfTestSize) Set(v string) error {
+	size, ok := map[string]PerfTestSize{
+		"large": SizeLarge,
+	}[v]
+	if !ok {
+		return fmt.Errorf("invalid test size value: %v", v)
+	}
+	*s = size
+	return nil
+}
+func (s PerfTestSize) N() []int {
+	return map[PerfTestSize][]int{
+		SizeLarge: []int{1e3, 1e4, 1e5, 1e6},
+	}[s]
+}
+func (s PerfTestSize) F() []float64 {
+	return map[PerfTestSize][]float64{
+		SizeLarge: []float64{0.05},
+	}[s]
+}
+
+func (s PerfTestSize) LeafSize() []uint {
+	return map[PerfTestSize][]uint{
+		SizeLarge: []uint{1, 4, 16, 64},
+	}[s]
+}
+
+func (s PerfTestSize) K() []int {
+	return map[PerfTestSize][]int{
+		SizeLarge: []int{16},
+	}[s]
+}
 
 func rn(min, max float64) float64 { return rand.Float64()*(max-min) + min }
 func rv(min, max float64, k int) vector.V {
@@ -41,8 +89,10 @@ type O struct {
 	// N is the number of opts to call.
 	N int
 
-	K    int
-	Size uint
+	K int
+
+	Size   uint
+	Logger *log.Logger
 }
 
 type L struct {
@@ -61,8 +111,11 @@ func New(o O) *L {
 		remove: o.Remove / (o.Insert + o.Remove),
 		n:      o.N,
 		k:      o.K,
-		bvh:    bvh.New(o.Size),
-		ids:    map[id.ID]bool{},
+		bvh: bvh.New(bvh.O{
+			Size:   o.Size,
+			Logger: o.Logger,
+		}),
+		ids: map[id.ID]bool{},
 	}
 }
 

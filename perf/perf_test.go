@@ -1,12 +1,26 @@
 package perf
 
 import (
+	"flag"
 	"fmt"
 	"math"
+	"os"
 	"testing"
 
 	"github.com/downflux/go-bvh/bvh"
 )
+
+var (
+	suite = SizeLarge
+	logf  = flag.String("log", "/dev/null", "log file location")
+)
+
+func TestMain(m *testing.M) {
+	flag.Var(&suite, "performance_test_size", "performance test size, one of (large)")
+	flag.Parse()
+
+	os.Exit(m.Run())
+}
 
 func BenchmarkNew(b *testing.B) {
 	type config struct {
@@ -17,9 +31,9 @@ func BenchmarkNew(b *testing.B) {
 	}
 
 	var configs []config
-	for _, n := range []int{1e3, 1e4, 1e5, 1e6} {
-		for _, k := range []int{16} {
-			for _, size := range []uint{1, 4, 16, 64} {
+	for _, n := range suite.N() {
+		for _, k := range suite.K() {
+			for _, size := range suite.LeafSize() {
 				configs = append(configs, config{
 					name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
 					n:    n,
@@ -54,10 +68,10 @@ func BenchmarkBroadPhase(b *testing.B) {
 	}
 
 	var configs []config
-	for _, n := range []int{1e3, 1e4, 1e5, 1e6} {
-		for _, k := range []int{16} {
-			for _, f := range []float64{0.05} {
-				for _, size := range []uint{1, 4, 16, 64} {
+	for _, n := range suite.N() {
+		for _, k := range suite.K() {
+			for _, f := range suite.F() {
+				for _, size := range suite.LeafSize() {
 					l := New(O{
 						Insert: 1,
 						K:      k,
