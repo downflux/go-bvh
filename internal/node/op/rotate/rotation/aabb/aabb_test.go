@@ -1,10 +1,11 @@
-package rotation
+package aabb
 
 import (
 	"testing"
 
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
+	"github.com/downflux/go-bvh/internal/node/op/rotate/rotation"
 	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
@@ -12,11 +13,11 @@ import (
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
-func TestGenerate(t *testing.T) {
+func TestList(t *testing.T) {
 	type config struct {
 		name string
 		n    *node.N
-		want []R
+		want []rotation.R
 	}
 
 	configs := []config{
@@ -63,9 +64,9 @@ func TestGenerate(t *testing.T) {
 			return config{
 				name: "CDE",
 				n:    root,
-				want: []R{
-					R{B: root.Right(), C: root.Left(), F: root.Left().Left(), G: root.Left().Right()},
-					R{B: root.Right(), C: root.Left(), F: root.Left().Right(), G: root.Left().Left()},
+				want: []rotation.R{
+					rotation.R{B: root.Right(), C: root.Left(), F: root.Left().Left(), G: root.Left().Right()},
+					rotation.R{B: root.Right(), C: root.Left(), F: root.Left().Right(), G: root.Left().Left()},
 				},
 			}
 		}(),
@@ -95,33 +96,33 @@ func TestGenerate(t *testing.T) {
 			return config{
 				name: "BFG",
 				n:    root,
-				want: []R{
-					R{B: root.Left(), C: root.Right(), F: root.Right().Left(), G: root.Right().Right()},
-					R{B: root.Left(), C: root.Right(), F: root.Right().Right(), G: root.Right().Left()},
+				want: []rotation.R{
+					rotation.R{B: root.Left(), C: root.Right(), F: root.Right().Left(), G: root.Right().Right()},
+					rotation.R{B: root.Left(), C: root.Right(), F: root.Right().Right(), G: root.Right().Left()},
 				},
 			}
 		}(),
 	}
 
 	for _, c := range configs {
-		got := Generate(c.n)
+		got := list(c.n)
 		t.Run(c.name, func(t *testing.T) {
 			if diff := cmp.Diff(
 				c.want,
 				got,
 				cmp.Comparer(util.Equal),
 			); diff != "" {
-				t.Errorf("Generate() mismatch (-want +got):\n%v", diff)
+				t.Errorf("list() mismatch (-want +got):\n%v", diff)
 			}
 		})
 	}
 }
 
-func TestOptimal(t *testing.T) {
+func TestGenerate(t *testing.T) {
 	type config struct {
 		name string
 		n    *node.N
-		want R
+		want rotation.R
 	}
 
 	configs := []config{
@@ -137,14 +138,29 @@ func TestOptimal(t *testing.T) {
 				Root: 100,
 				Size: 1,
 			}),
-			want: R{},
+			want: rotation.R{},
 		},
 		func() config {
 			n := util.New(util.T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
-					101: {1: util.Interval(49, 50)},
-					103: {2: util.Interval(0, 1)},
-					104: {3: util.Interval(50, 100)},
+					101: {
+						1: *hyperrectangle.New(
+							[]float64{49, 49},
+							[]float64{50, 50},
+						),
+					},
+					103: {
+						2: *hyperrectangle.New(
+							[]float64{0, 0},
+							[]float64{1, 1},
+						),
+					},
+					104: {
+						3: *hyperrectangle.New(
+							[]float64{50, 50},
+							[]float64{100, 100},
+						),
+					},
 				},
 				Nodes: map[nid.ID]util.N{
 					100: {Left: 101, Right: 102},
@@ -159,7 +175,7 @@ func TestOptimal(t *testing.T) {
 			return config{
 				name: "Rotate",
 				n:    n,
-				want: R{
+				want: rotation.R{
 					B: n.Left(),
 					C: n.Right(),
 					F: n.Right().Left(),
@@ -171,13 +187,13 @@ func TestOptimal(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := Optimal(c.n)
+			got := Generate(c.n)
 			if diff := cmp.Diff(
 				c.want,
 				got,
 				cmp.Comparer(util.Equal),
 			); diff != "" {
-				t.Errorf("Optimal() mismatch (-want +got):\n%v", diff)
+				t.Errorf("Generate() mismatch (-want +got):\n%v", diff)
 			}
 		})
 	}

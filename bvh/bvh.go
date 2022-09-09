@@ -54,7 +54,12 @@ func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
 	}
 	bvh.root = n.Root()
 	if bvh.logger != nil {
-		bvh.logger.Printf("Inserting rectangle %v; height = %v, elements = %v", aabb, bvh.root.Height(), len(bvh.lookup))
+		bvh.logger.Printf("Inserting rectangle %v; height = %v, elements = %v, balance = %v", aabb, bvh.root.Height(), len(bvh.lookup), func() int {
+			if bvh.root.IsLeaf() {
+				return 0
+			}
+			return int(bvh.root.Left().Height()) - int(bvh.root.Right().Height())
+		}())
 	}
 
 	return nil

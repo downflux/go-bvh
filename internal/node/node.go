@@ -210,8 +210,8 @@ func (n *N) SetParent(m *N) {
 	var id nid.ID
 	if m != nil {
 		id = m.ID()
-		m.invalidateHeightCache()
-		m.invalidateAABBCache()
+		n.invalidateHeightCache()
+		n.invalidateAABBCache()
 	}
 	n.parent = id
 }

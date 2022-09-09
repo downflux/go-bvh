@@ -1,10 +1,11 @@
-package subtree
+package balance
 
 import (
 	"testing"
 
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
+	"github.com/downflux/go-bvh/internal/node/op/rotate/rotation"
 	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
@@ -12,11 +13,11 @@ import (
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
-func TestNew(t *testing.T) {
+func TestGenerate(t *testing.T) {
 	type config struct {
 		name string
 		n    *node.N
-		want *T
+		want rotation.R
 	}
 
 	configs := []config{
@@ -34,7 +35,7 @@ func TestNew(t *testing.T) {
 			return config{
 				name: "Leaf",
 				n:    n,
-				want: &T{A: n},
+				want: rotation.R{},
 			}
 		}(),
 		func() config {
@@ -73,7 +74,7 @@ func TestNew(t *testing.T) {
 			return config{
 				name: "EqualHeight",
 				n:    n,
-				want: &T{A: n},
+				want: rotation.R{},
 			}
 		}(),
 		func() config {
@@ -106,8 +107,7 @@ func TestNew(t *testing.T) {
 			return config{
 				name: "Deep/Right",
 				n:    n,
-				want: &T{
-					A: n,
+				want: rotation.R{
 					B: n.Left(),
 					C: n.Right(),
 					F: n.Right().Right(),
@@ -119,7 +119,7 @@ func TestNew(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := New(c.n)
+			got := Generate(c.n)
 			if diff := cmp.Diff(
 				c.want,
 				got,
