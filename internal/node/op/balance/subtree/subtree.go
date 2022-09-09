@@ -45,11 +45,11 @@ func New(n *node.N) *T {
 	}
 
 	if n.IsLeaf() || n.Height() < 2 {
-		return nil
+		return t
 	}
 
 	if n.Right().Height() == n.Left().Height() {
-		return nil
+		return t
 	} else if n.Right().Height() > n.Left().Height() {
 		t.B = n.Left()
 		t.C = n.Right()
