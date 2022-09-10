@@ -1,6 +1,7 @@
 package util
 
 import (
+	"log"
 	"math"
 
 	"github.com/downflux/go-bvh/id"
@@ -118,4 +119,37 @@ func PreOrder(n *node.N, f func(n *node.N)) {
 		PreOrder(n.Left(), f)
 		PreOrder(n.Right(), f)
 	}
+}
+
+func Log(l *log.Logger, n *node.N) {
+	PreOrder(n, func(n *node.N) {
+		l.Printf(
+			"node NID: %v, L: %v, R: %v, P: %v, Data: %v\n",
+			n.ID(),
+			func() nid.ID {
+				if !n.IsLeaf() {
+					return n.Left().ID()
+				}
+				return 0
+			}(),
+			func() nid.ID {
+				if !n.IsLeaf() {
+					return n.Right().ID()
+				}
+				return 0
+			}(),
+			func() nid.ID {
+				if !n.IsRoot() {
+					return n.Parent().ID()
+				}
+				return 0
+			}(),
+			func() map[id.ID]hyperrectangle.R {
+				if n.IsLeaf() {
+					return n.Data()
+				}
+				return nil
+			}(),
+		)
+	})
 }

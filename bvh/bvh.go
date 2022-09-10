@@ -12,7 +12,6 @@ import (
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
-	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
 type O struct {
@@ -47,7 +46,15 @@ func (bvh *BVH) Insert(x id.ID, aabb hyperrectangle.R) error {
 		return fmt.Errorf("cannot insert a node with duplicate ID %v", x)
 	}
 
+	if bvh.logger != nil {
+		bvh.logger.Printf("inserting rectangle ID: %v, AABB: %v", x, aabb)
+	}
+
 	n := insert.Execute(bvh.root, bvh.size, x, aabb)
+
+	if bvh.logger != nil {
+		bvh.logger.Printf("inserted rectangle into node NID: %v", n.ID())
+	}
 
 	// We may have split the leaf node, in which case some data may have
 	// shifted.
@@ -57,43 +64,13 @@ func (bvh *BVH) Insert(x id.ID, aabb hyperrectangle.R) error {
 	bvh.root = n.Root()
 	if bvh.logger != nil {
 		bvh.logger.Printf(
-			"inserting rectangle ID: %v, AABB: %v; Len: %v, H: %v, Imbalance: %v",
-			x,
-			aabb,
+			"tree root NID: %v, Len: %v, H: %v, Imbalance: %v",
+			bvh.root.ID(),
 			len(bvh.lookup),
 			bvh.root.Height(),
 			util.MaxImbalance(bvh.root),
 		)
-		util.PreOrder(bvh.root, func(n *node.N) {
-			bvh.logger.Printf(
-				"node NID: %v, L: %v, R: %v, P: %v, Data: %v",
-				n.ID(),
-				func() nid.ID {
-					if !n.IsLeaf() {
-						return n.Left().ID()
-					}
-					return 0
-				}(),
-				func() nid.ID {
-					if !n.IsLeaf() {
-						return n.Right().ID()
-					}
-					return 0
-				}(),
-				func() nid.ID {
-					if !n.IsRoot() {
-						return n.Parent().ID()
-					}
-					return 0
-				}(),
-				func() map[id.ID]hyperrectangle.R {
-					if n.IsLeaf() {
-						return n.Data()
-					}
-					return nil
-				}(),
-			)
-		})
+		util.Log(bvh.logger, bvh.root)
 	}
 
 	return nil
