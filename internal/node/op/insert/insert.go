@@ -1,12 +1,8 @@
 package insert
 
 import (
-	"log"
-	"fmt"
-
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
 	"github.com/downflux/go-bvh/internal/node/op/rotate"
@@ -18,7 +14,6 @@ import (
 // Execute adds a new node with the given data into the tree. The returned node
 // is the newly-created node.
 func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
-	fmt.Printf("DEBUG: inserting ID = %v, aabb = %v\n", x, aabb)
 	if root == nil {
 		return node.New(node.O{
 			Nodes: node.Cache(),
@@ -64,11 +59,6 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 	if s != m {
 		insert.Execute(s, m)
 	}
-
-	// DEBUG
-	fmt.Printf("DEBUG: current root pre-rotate\n")
-	util.Log(log.Default(), m.Root())
-	fmt.Printf("DEBUG: -------\n")
 
 	// m is now linked to the correct parent; we need to balance the tree.
 	if !m.IsRoot() {

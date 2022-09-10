@@ -21,15 +21,33 @@ func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 		return n
 	}
 
-	// Calculate the lower-bound heuristics for the current node -- here, we
-	// assume that the minimum heuristic is if the object is merged directly
-	// into the child.
-	l := hyperrectangle.SA(bhr.Union(n.Left().AABB(), aabb)) + hyperrectangle.SA(n.Right().AABB())
-	r := hyperrectangle.SA(bhr.Union(n.Right().AABB(), aabb)) + hyperrectangle.SA(n.Left().AABB())
+	c := 2 * hyperrectangle.SA(bhr.Union(n.AABB(), aabb))
 
-	// Calculate the cost of adding a new leaf node at the current node.
-	c := hyperrectangle.SA(n.AABB()) + hyperrectangle.SA(aabb)
+	inherited := 2 * (hyperrectangle.SA(bhr.Union(n.AABB(), aabb)) - hyperrectangle.SA(n.AABB()))
+	l := inherited
+	r := inherited
 
+	if n.Left().IsLeaf() {
+		l += hyperrectangle.SA(bhr.Union(n.Left().AABB(), aabb))
+	} else {
+		l += hyperrectangle.SA(bhr.Union(n.Left().AABB(), aabb)) - hyperrectangle.SA(n.Left().AABB())
+	}
+	if n.Right().IsLeaf() {
+		l += hyperrectangle.SA(bhr.Union(n.Right().AABB(), aabb))
+	} else {
+		l += hyperrectangle.SA(bhr.Union(n.Right().AABB(), aabb)) - hyperrectangle.SA(n.Right().AABB())
+	}
+
+	/*
+		// Calculate the lower-bound heuristics for the current node -- here, we
+		// assume that the minimum heuristic is if the object is merged directly
+		// into the child.
+		l := hyperrectangle.SA(bhr.Union(n.Left().AABB(), aabb)) + hyperrectangle.SA(n.Right().AABB())
+		r := hyperrectangle.SA(bhr.Union(n.Right().AABB(), aabb)) + hyperrectangle.SA(n.Left().AABB())
+
+		// Calculate the cost of adding a new leaf node at the current node.
+		c := hyperrectangle.SA(n.AABB()) + hyperrectangle.SA(aabb)
+	*/
 	if c < l && c < r {
 		return n
 	}

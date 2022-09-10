@@ -1,7 +1,6 @@
 package insert
 
 import (
-	"fmt"
 	"log"
 	"testing"
 
@@ -189,10 +188,10 @@ func TestExecute(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			fmt.Printf("DEBUG: c.name = %v\n", c.name)
 			got := Execute(c.root, c.size, c.id, c.aabb)
 			if diff := cmp.Diff(c.want, got.Root(), cmp.Comparer(util.Equal)); diff != "" {
-				util.Log(log.Default(), c.root)
+				// DEBUG
+				util.Log(log.Default(), got.Root())
 				t.Errorf("Execute() mismatch (-want +got):\n%v", diff)
 			}
 		})
