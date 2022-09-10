@@ -2,44 +2,6 @@
 // current Box2D rotation strategy (github.com/erincatto/box2d) and notably
 // varies from the Catto 2019 slides, which uses a rotation heuristic based on
 // node surface area.
-//
-// N.B.: The reference Box2D implementation rotates a subtree from
-//
-//	 A
-//	/ \
-//
-// B   C
-//
-//	 / \
-//	F   G
-//
-// to
-//
-//	 C
-//	/ \
-//
-// F   A
-//
-//	 / \
-//	B   G
-//
-// Where in the unrotated tree, the following conditions are met --
-//
-// 1. C.Height() > B.Height() and
-// 2. F.Height() > G.Height()
-//
-// Note that since both A and C are internal nodes, this is identical to
-//
-//	 A
-//	/ \
-//
-// F   C
-//
-//	 / \
-//	B   G
-//
-// We will instead use this latter rotation notation going forward to keep
-// consistent with the swap operation as described in the Catto 2019 slides.
 package balance
 
 import (
@@ -48,6 +10,39 @@ import (
 	"github.com/downflux/go-bvh/internal/node/op/rotate/subtree"
 )
 
+// Generate creates a rotation based on tree height.
+//
+// N.B.: The reference Box2D implementation rotates a subtree from
+//
+//   A
+//  / \
+// B   C
+//    / \
+//   F   G
+//
+// to
+//
+//   C
+//  / \
+// F   A
+//    / \
+//   B   G
+//
+// Where in the unrotated tree, the following conditions are met --
+//
+// 1. C.Height() > B.Height() and
+// 2. F.Height() > G.Height()
+//
+// Note that since both A and C are internal nodes, this is identical to
+//
+//   A
+//  / \
+// F   C
+//    / \
+//   B   G
+//
+// We will instead use this latter rotation notation going forward to keep
+// consistent with the swap operation as described in the Catto 2019 slides.
 func Generate(n *node.N) rotation.R {
 	t := subtree.New(n)
 	r := rotation.R{}

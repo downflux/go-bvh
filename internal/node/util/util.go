@@ -88,13 +88,12 @@ func Equal(a *node.N, b *node.N) bool {
 	if (a.IsLeaf() && !b.IsLeaf()) || (!a.IsLeaf() && b.IsLeaf()) {
 		return false
 	}
-	if !cmp.Equal(a.AABB(), b.AABB(), cmp.AllowUnexported(hyperrectangle.R{})) {
+	if !hyperrectangle.Within(a.AABB(), b.AABB()) {
 		return false
 	}
 	if a.Height() != b.Height() {
 		return false
 	}
-
 	if a.IsLeaf() && b.IsLeaf() {
 		return cmp.Equal(a, b,
 			cmpopts.IgnoreFields(

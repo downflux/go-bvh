@@ -33,6 +33,7 @@ func Execute(n *node.N, m *node.N) {
 		panic("cannot swap a node with its ancestor")
 	}
 
+	fmt.Printf("DEBUG: Swapping NID: %v (P: %v) with %v (P: %v)\n", n.ID(), m.ID(), n.Parent().ID(), m.Parent().ID())
 	// Since the root node is an ancestor of all nodes, we can assume n and
 	// m are not the root.
 	p := n.Parent()
