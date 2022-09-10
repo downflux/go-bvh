@@ -12,6 +12,107 @@ import (
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
+func TestExecute(t *testing.T) {
+	type config struct {
+		name string
+		n    *node.N
+		m    *node.N
+		want *node.N
+	}
+
+	configs := []config{
+		func() config {
+			data := map[nid.ID]map[id.ID]hyperrectangle.R{
+				101: {1: util.Interval(0, 100)},
+				102: {2: util.Interval(101, 200)},
+			}
+			root := util.New(util.T{
+				Data: data,
+				Nodes: map[nid.ID]util.N{
+					100: util.N{Left: 101, Right: 102},
+					101: util.N{Parent: 100},
+					102: util.N{Parent: 100},
+				},
+				Root: 100,
+				Size: 1,
+			})
+			want := util.New(util.T{
+				Data: data,
+				Nodes: map[nid.ID]util.N{
+					100: util.N{Left: 102, Right: 101},
+					101: util.N{Parent: 100},
+					102: util.N{Parent: 100},
+				},
+				Root: 100,
+				Size: 1,
+			})
+			return config{
+				name: "Siblings",
+				n:    root.Left(),
+				m:    root.Right(),
+				want: want,
+			}
+		}(),
+		func() config {
+			data := map[nid.ID]map[id.ID]hyperrectangle.R{
+				101: {1: util.Interval(0, 100)},
+				105: {2: util.Interval(101, 200)},
+				106: {3: util.Interval(201, 300)},
+			}
+			root := util.New(util.T{
+				Data: data,
+				Nodes: map[nid.ID]util.N{
+					100: {Left: 101, Right: 102},
+					101: {Parent: 100},
+					102: {Left: 105, Right: 106, Parent: 100},
+					105: {Parent: 102},
+					106: {Parent: 102},
+				},
+				Root: 100,
+				Size: 1,
+			})
+			want := util.New(util.T{
+				Data: data,
+				Nodes: map[nid.ID]util.N{
+					100: {Left: 105, Right: 102},
+					101: {Parent: 102},
+					102: {Left: 101, Right: 106, Parent: 100},
+					105: {Parent: 100},
+					106: {Parent: 102},
+				},
+				Root: 100,
+				Size: 1,
+			})
+			return config{
+				name: "BF",
+				n:    root.Left(),
+				m:    root.Right().Left(),
+				want: want,
+			}
+		}(),
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			Execute(c.n, c.m)
+			if diff := cmp.Diff(
+				c.n.Root(),
+				c.m.Root(),
+				cmp.Comparer(util.Equal),
+			); diff != "" {
+				t.Errorf("Root() mismatch (-want +got):\n%v", diff)
+			}
+			if diff := cmp.Diff(
+				c.want,
+				c.n.Root(),
+				cmp.Comparer(util.Equal),
+			); diff != "" {
+				t.Errorf("Execute() mismatch -want +got):\n%v", diff)
+			}
+		})
+	}
+}
+
 func TestIsAncestor(t *testing.T) {
 	type config struct {
 		name string
