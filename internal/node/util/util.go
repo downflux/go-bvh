@@ -115,7 +115,7 @@ func Equal(a *node.N, b *node.N) bool {
 func PreOrder(n *node.N, f func(n *node.N)) {
 	f(n)
 	if !n.IsLeaf() {
-		InOrder(n.Left(), f)
-		InOrder(n.Right(), f)
+		PreOrder(n.Left(), f)
+		PreOrder(n.Right(), f)
 	}
 }
