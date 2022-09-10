@@ -111,3 +111,11 @@ func Equal(a *node.N, b *node.N) bool {
 	// purposes -- in real life, left and right node swaps do not matter.
 	return Equal(a.Left(), b.Left()) && Equal(a.Right(), b.Right())
 }
+
+func PreOrder(n *node.N, f func(n *node.N)) {
+	f(n)
+	if !n.IsLeaf() {
+		InOrder(n.Left(), f)
+		InOrder(n.Right(), f)
+	}
+}
