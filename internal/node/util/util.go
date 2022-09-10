@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/downflux/go-bvh/id"
+	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -66,6 +67,14 @@ func MaxImbalance(n *node.N) uint {
 		),
 		math.Abs(float64(n.Left().Height())-float64(n.Right().Height())),
 	))
+}
+
+// Cost returns the total tree heuristic.
+func Cost(n *node.N) float64 {
+	if n.IsLeaf() {
+		return heuristic.H(n.AABB())
+	}
+	return heuristic.H(n.AABB()) + Cost(n.Left()) + Cost(n.Right())
 }
 
 func Equal(a *node.N, b *node.N) bool {
