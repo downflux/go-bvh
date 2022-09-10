@@ -34,10 +34,18 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 	var m *node.N
 
 	s := pq.Execute(root, aabb)
+	// If a leaf is returned, we should attempt to insert the object into
+	// this leaf if possible -- the reasoning here is that the overall
+	// heuristic for inserting into a leaf is lower than creating a new
+	// leaf.
 	if s.IsLeaf() {
 		if !s.IsFull() {
 			m = s
 		} else {
+			// If the leaf is full, we will create a new leaf, and
+			// move some of the existing elements of s into the new
+			// leaf. This is so we can minimize the total surface
+			// area heuristic between the two nodes.
 			m = split.Execute(s, split.RandomPartition)
 		}
 		m.Insert(x, aabb)
