@@ -136,29 +136,35 @@ func (l *L) IDs() []id.ID {
 }
 
 func (l *L) BVH() *bvh.BVH { return l.bvh }
-func (l *L) Apply(min, max float64) *bvh.BVH {
-	for _, f := range l.Generate(min, max) {
+func (l *L) Apply() *bvh.BVH {
+	for _, f := range l.Generate() {
 		f()
 	}
 	return l.BVH()
 }
 
-func (l *L) Generate(min, max float64) []func() {
-	fs := make([]func(), 0, l.n)
+func (l *L) Generate() []func() {
+	tiles := make([]int, 0, l.n)
 	for i := 0; i < l.n; i++ {
-		if rand.Float64() <= l.insert {
-			var j id.ID
-			for j = id.ID(rand.Uint64()); l.ids[j]; j = id.ID(rand.Uint64()) {
-			}
-			l.ids[j] = true
-			fs = append(fs, func() { l.bvh.Insert(j, rr(min, max, l.k)) })
-		} else {
-			if len(l.ids) > 0 {
-				j := l.IDs()[rand.Intn(len(l.ids))]
-				l.ids[j] = false
-				fs = append(fs, func() { l.bvh.Remove(j) })
-			}
+		tiles = append(tiles, i)
+	}
+	rand.Shuffle(len(tiles), func(i, j int) { tiles[i], tiles[j] = tiles[j], tiles[i] })
+
+	fs := make([]func(), 0, l.n)
+
+	for i := 0; i < l.n; i++ {
+		j := id.ID(i + 1)
+		l.ids[j] = true
+
+		vmin := make([]float64, l.k)
+		vmax := make([]float64, l.k)
+		for k := 0; k < l.k; k++ {
+			vmax[k] = 1
 		}
+		vmin[0] = float64(tiles[i])
+		vmax[0] = float64(tiles[i]) + 1
+
+		fs = append(fs, func() { l.bvh.Insert(j, *hyperrectangle.New(vmin, vmax)) })
 	}
 	return fs
 }

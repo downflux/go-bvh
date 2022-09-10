@@ -67,7 +67,7 @@ func BenchmarkNew(b *testing.B) {
 					N:      c.n,
 					Size:   c.size,
 					Logger: l(*logd, fmt.Sprintf("new-%v-%v-%v-%v", c.k, c.n, c.size, rand.Intn(10000))),
-				}).Apply(0, 500)
+				}).Apply()
 			}
 		})
 	}
@@ -96,7 +96,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 					})
 					configs = append(configs, config{
 						name: fmt.Sprintf("K=%v/N=%v/F=%v/LeafSize=%v", k, n, f, size),
-						bvh:  l.Apply(0, 500),
+						bvh:  l.Apply(),
 						k:    k,
 						f:    f,
 					})

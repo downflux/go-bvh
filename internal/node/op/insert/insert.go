@@ -4,10 +4,11 @@ import (
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
-	"github.com/downflux/go-bvh/internal/node/op/insert/sibling/pq"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
 	"github.com/downflux/go-bvh/internal/node/op/rotate"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+
+	sibling "github.com/downflux/go-bvh/internal/node/op/insert/sibling/singlepass"
 )
 
 // Execute adds a new node with the given data into the tree. The returned node
@@ -33,7 +34,7 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 	// m is the newly-created leaf node containing the input data.
 	var m *node.N
 
-	s := pq.Execute(root, aabb)
+	s := sibling.Execute(root, aabb)
 	// If a leaf is returned, we should attempt to insert the object into
 	// this leaf if possible -- the reasoning here is that the overall
 	// heuristic for inserting into a leaf is lower than creating a new

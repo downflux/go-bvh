@@ -8,6 +8,7 @@ import (
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/op/insert"
 	"github.com/downflux/go-bvh/internal/node/op/remove"
+	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
@@ -54,12 +55,14 @@ func (bvh *BVH) Insert(id id.ID, aabb hyperrectangle.R) error {
 	}
 	bvh.root = n.Root()
 	if bvh.logger != nil {
-		bvh.logger.Printf("Inserting rectangle %v; height = %v, elements = %v, balance = %v", aabb, bvh.root.Height(), len(bvh.lookup), func() int {
-			if bvh.root.IsLeaf() {
-				return 0
-			}
-			return int(bvh.root.Left().Height()) - int(bvh.root.Right().Height())
-		}())
+		bvh.logger.Printf(
+			"inserting rectangle [%v] %v; Len: %v, H: %v, Imbalance: %v",
+			id,
+			aabb,
+			len(bvh.lookup),
+			bvh.root.Height(),
+			util.MaxImbalance(bvh.root),
+		)
 	}
 
 	return nil
