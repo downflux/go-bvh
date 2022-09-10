@@ -1,6 +1,8 @@
 package util
 
 import (
+	"math"
+
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
@@ -49,6 +51,21 @@ func New(t T) *node.N {
 		}
 	}
 	return r
+}
+
+// MaxImbalance returns the maximum imbalance within the tree.
+func MaxImbalance(n *node.N) uint {
+	if n.IsLeaf() {
+		return 0
+	}
+
+	return uint(math.Max(
+		math.Max(
+			float64(MaxImbalance(n.Left())),
+			float64(MaxImbalance(n.Right())),
+		),
+		math.Abs(float64(n.Left().Height())-float64(n.Right().Height())),
+	))
 }
 
 func Equal(a *node.N, b *node.N) bool {

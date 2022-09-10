@@ -11,6 +11,79 @@ import (
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
+func TestMaxImbalance(t *testing.T) {
+	type config struct {
+		name string
+		n    *node.N
+		want uint
+	}
+
+	configs := []config{
+		{
+			name: "Leaf",
+			n: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: 0,
+		},
+		{
+			name: "Recursive",
+			n: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					103: {2: Interval(101, 200)},
+					104: {3: Interval(201, 300)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Left: 101, Right: 102},
+					101: N{Parent: 100},
+					102: N{Left: 103, Right: 104},
+					103: N{Parent: 102},
+					104: N{Parent: 102},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: 1,
+		},
+		{
+			name: "Recursive/Commutative",
+			n: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					103: {2: Interval(101, 200)},
+					104: {3: Interval(201, 300)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Right: 101, Left: 102},
+					101: N{Parent: 100},
+					102: N{Left: 103, Right: 104},
+					103: N{Parent: 102},
+					104: N{Parent: 102},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: 1,
+		},
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			if got := MaxImbalance(c.n); got != c.want {
+				t.Errorf("MaxImbalance() = %v, want = %v", got, c.want)
+			}
+		})
+	}
+}
+
 func TestEqual(t *testing.T) {
 	type config struct {
 		name string
