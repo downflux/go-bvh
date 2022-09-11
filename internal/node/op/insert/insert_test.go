@@ -1,7 +1,6 @@
 package insert
 
 import (
-	"log"
 	"testing"
 
 	"github.com/downflux/go-bvh/id"
@@ -190,8 +189,6 @@ func TestExecute(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			got := Execute(c.root, c.size, c.id, c.aabb)
 			if diff := cmp.Diff(c.want, got.Root(), cmp.Comparer(util.Equal)); diff != "" {
-				// DEBUG
-				util.Log(log.Default(), got.Root())
 				t.Errorf("Execute() mismatch (-want +got):\n%v", diff)
 			}
 		})
