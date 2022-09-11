@@ -7,6 +7,7 @@ import (
 	"github.com/downflux/go-bvh/internal/node/op/insert/sibling"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
 	"github.com/downflux/go-bvh/internal/node/op/rotate"
+	"github.com/downflux/go-bvh/internal/node/op/rotate/rotation/balance"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 )
 
@@ -61,7 +62,7 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 
 	// m is now linked to the correct parent; we need to balance the tree.
 	if !m.IsRoot() {
-		rotate.Execute(m.Parent())
+		rotate.Execute(m.Parent(), balance.Generate)
 	}
 
 	return m

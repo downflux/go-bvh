@@ -1,7 +1,6 @@
 package bvh
 
 import (
-	"log"
 	"testing"
 
 	"github.com/downflux/go-bvh/id"
@@ -347,54 +346,6 @@ func TestInsert(t *testing.T) {
 				bvh:  want,
 				id:   1,
 				aabb: util.Interval(0, 100),
-				want: want,
-			}
-		}(),
-		// Based on experimental results, we want to validate the
-		// branching algorithm is acting in an intuitive manner.
-		func() config {
-			data := map[nid.ID]map[id.ID]hyperrectangle.R{
-				101: {1: *hyperrectangle.New([]float64{346, 0}, []float64{347, 1})},
-				102: {2: *hyperrectangle.New([]float64{239, 0}, []float64{240, 1})},
-				103: {3: *hyperrectangle.New([]float64{896, 0}, []float64{897, 1})},
-				104: {4: *hyperrectangle.New([]float64{826, 0}, []float64{827, 1})},
-			}
-
-			bvh := New(O{Size: 1, Logger: log.Default()})
-			bvh.Insert(1, data[101][1])
-			bvh.Insert(2, data[102][2])
-			bvh.Insert(3, data[103][3])
-
-			root := util.New(util.T{
-				Data: data,
-				Nodes: map[nid.ID]util.N{
-					100: {Left: 105, Right: 106},
-					105: {Left: 104, Right: 103, Parent: 100},
-					106: {Left: 102, Right: 101, Parent: 100},
-					101: {Parent: 106},
-					102: {Parent: 106},
-					103: {Parent: 105},
-					104: {Parent: 105},
-				},
-				Root: 100,
-				Size: 1,
-			})
-			want := &BVH{
-				lookup: map[id.ID]*node.N{
-					1: root.Right().Right(),
-					2: root.Right().Left(),
-					3: root.Left().Right(),
-					4: root.Left().Left(),
-				},
-				root: root,
-				size: 1,
-			}
-
-			return config{
-				name: "Experimental",
-				bvh:  bvh,
-				id:   4,
-				aabb: data[104][4],
 				want: want,
 			}
 		}(),

@@ -146,43 +146,6 @@ func TestExecute(t *testing.T) {
 				want: want,
 			}
 		}(),
-		// Validate the experimental results by attempting to manually
-		// insert the data in the expected order one at a time.
-		func() config {
-			data := map[nid.ID]map[id.ID]hyperrectangle.R{
-				101: {1: *hyperrectangle.New([]float64{346, 0}, []float64{347, 1})},
-				102: {2: *hyperrectangle.New([]float64{239, 0}, []float64{240, 1})},
-				103: {3: *hyperrectangle.New([]float64{896, 0}, []float64{897, 1})},
-				104: {4: *hyperrectangle.New([]float64{826, 0}, []float64{827, 1})},
-			}
-			var root *node.N
-			root = Execute(root, 1, 1, data[101][1]).Root()
-			root = Execute(root, 1, 2, data[102][2]).Root()
-			root = Execute(root, 1, 3, data[103][3]).Root()
-
-			want := util.New(util.T{
-				Data: data,
-				Nodes: map[nid.ID]util.N{
-					100: {Left: 105, Right: 106},
-					105: {Left: 104, Right: 103, Parent: 100},
-					106: {Left: 102, Right: 101, Parent: 100},
-					101: {Parent: 106},
-					102: {Parent: 106},
-					103: {Parent: 105},
-					104: {Parent: 105},
-				},
-				Root: 100,
-				Size: 1,
-			})
-			return config{
-				name: "Experimental/Iterative",
-				root: root,
-				size: 1,
-				id:   4,
-				aabb: data[104][4],
-				want: want,
-			}
-		}(),
 	}
 
 	for _, c := range configs {

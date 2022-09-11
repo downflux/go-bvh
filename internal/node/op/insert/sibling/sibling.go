@@ -6,6 +6,7 @@
 package sibling
 
 import (
+	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func direct(n *node.N, aabb hyperrectangle.R) float64 {
-	return hyperrectangle.SA(bhr.Union(n.AABB(), aabb))
+	return heuristic.H(bhr.Union(n.AABB(), aabb))
 }
 
 // Execute finds a sibling node at which the input AABB should be inserted. In
@@ -27,7 +28,7 @@ func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	h := direct(n, aabb)
 	c := 2 * h
 
-	inherited := 2 * (h - hyperrectangle.SA(n.AABB()))
+	inherited := 2 * (h - heuristic.H(n.AABB()))
 	l := inherited + direct(n.Left(), aabb)
 	r := inherited + direct(n.Right(), aabb)
 
@@ -35,10 +36,10 @@ func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	// assume that the minimum heuristic is if the object is merged directly
 	// into the child.
 	if !n.Left().IsLeaf() {
-		l -= hyperrectangle.SA(n.Left().AABB())
+		l -= heuristic.H(n.Left().AABB())
 	}
 	if !n.Right().IsLeaf() {
-		r -= hyperrectangle.SA(n.Right().AABB())
+		r -= heuristic.H(n.Right().AABB())
 	}
 
 	if c < l && c < r {

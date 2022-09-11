@@ -1,3 +1,5 @@
+// Package aabb generates the best local rotation based on the Catto 2019
+// slides. This generates a better tree, but will take longer.
 package aabb
 
 import (
@@ -36,6 +38,14 @@ func list(n *node.N) []rotation.R {
 // Generate finds the optimal rotation for a given ancester node n. The returned
 // rotation object may be empty i.e. R{}, which indicates the existing rotation
 // is already optimal.
+//
+//	 A
+//	/ \
+//
+// B   C
+//
+//	 / \
+//	F   G
 func Generate(n *node.N) rotation.R {
 	if n.IsLeaf() {
 		return rotation.R{}
