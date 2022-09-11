@@ -22,10 +22,11 @@ func AABB(rs []hyperrectangle.R) hyperrectangle.R {
 
 	var b hyperrectangle.R
 	if len(rs) <= size {
-		b = rs[0]
-		for _, r := range rs[1:] {
-			b = Union(b, r)
-		}
+		b = *hyperrectangle.New(
+			make([]float64, rs[0].Min().Dimension()),
+			make([]float64, rs[0].Min().Dimension()),
+		)
+		AABBBuf(rs, b)
 	} else {
 		l := make(chan hyperrectangle.R)
 		r := make(chan hyperrectangle.R)
@@ -41,6 +42,18 @@ func AABB(rs []hyperrectangle.R) hyperrectangle.R {
 	}
 
 	return b
+}
+
+func AABBBuf(rs []hyperrectangle.R, buf hyperrectangle.R) {
+	if len(rs) == 0 {
+		return
+	}
+	copy(buf.Min(), rs[0].Min())
+	copy(buf.Max(), rs[0].Max())
+
+	for _, r := range rs {
+		UnionBuf(r, buf, buf)
+	}
 }
 
 // Contains checks if the input rectangle r fully encloses s.
@@ -72,18 +85,27 @@ func Disjoint(r hyperrectangle.R, s hyperrectangle.R) bool {
 	return false
 }
 
+func UnionBuf(r hyperrectangle.R, s hyperrectangle.R, buf hyperrectangle.R) {
+	if r.Min().Dimension() != s.Min().Dimension() || r.Min().Dimension() != buf.Min().Dimension() {
+		panic("mismatching vector dimensions")
+	}
+
+	for i := vector.D(0); i < r.Min().Dimension(); i++ {
+		buf.Min()[i] = math.Min(r.Min().X(i), s.Min().X(i))
+		buf.Max()[i] = math.Max(r.Max().X(i), s.Max().X(i))
+	}
+}
+
 func Union(r hyperrectangle.R, s hyperrectangle.R) hyperrectangle.R {
 	if r.Min().Dimension() != s.Min().Dimension() {
 		panic("mismatching vector dimensions")
 	}
 
-	min := make([]float64, r.Min().Dimension())
-	max := make([]float64, r.Min().Dimension())
+	buf := *hyperrectangle.New(
+		make([]float64, r.Min().Dimension()),
+		make([]float64, r.Min().Dimension()),
+	)
 
-	for i := vector.D(0); i < r.Min().Dimension(); i++ {
-		min[i] = math.Min(r.Min().X(i), s.Min().X(i))
-		max[i] = math.Max(r.Max().X(i), s.Max().X(i))
-	}
-
-	return *hyperrectangle.New(min, max)
+	UnionBuf(r, s, buf)
+	return buf
 }
