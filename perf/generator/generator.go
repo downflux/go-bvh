@@ -6,6 +6,7 @@ import (
 
 	"github.com/downflux/go-bvh/bvh"
 	"github.com/downflux/go-bvh/container"
+	"github.com/downflux/go-bvh/container/bruteforce"
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -42,9 +43,18 @@ func BVH(size uint, ms []M) *bvh.BVH {
 	return t
 }
 
+func BF(ms []M) bruteforce.L {
+	runtime.MemProfileRate = 0
+	defer func() { runtime.MemProfileRate = 512 * 1024 }()
+
+	l := bruteforce.New()
+	for _, f := range ms {
+		f(l)
+	}
+	return l
+}
+
 func Generate(o O, n int) []M {
-	// Generating large number of points in tests will mess with data
-	// collection figures. We should ignore these allocs.
 	runtime.MemProfileRate = 0
 	defer func() { runtime.MemProfileRate = 512 * 1024 }()
 

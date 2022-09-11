@@ -49,7 +49,7 @@ func BenchmarkInsert(b *testing.B) {
 		for _, k := range suite.K() {
 			for _, size := range suite.LeafSize() {
 				configs = append(configs, config{
-					name: fmt.Sprintf("Real/K=%v/N=%v/LeafSize=%v", k, n, size),
+					name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
 					n:    n,
 					k:    k,
 					size: size,
@@ -111,9 +111,19 @@ func BenchmarkBroadPhase(b *testing.B) {
 			K:      c.k,
 		}, c.n)
 		t := generator.BVH(c.size, ms)
+		bf := generator.BF(ms)
+		q := RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k)
+
+		if c.size == 1 {
+			b.Run(fmt.Sprintf("BruteForce/%v", c.name), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					bf.BroadPhase(q)
+				}
+			})
+		}
 		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				t.BroadPhase(RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k))
+				t.BroadPhase(q)
 			}
 		})
 	}
