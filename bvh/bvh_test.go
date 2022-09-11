@@ -1,12 +1,16 @@
 package bvh
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/downflux/go-bvh/container/bruteforce"
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/util"
+	"github.com/downflux/go-bvh/perf"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
@@ -133,6 +137,55 @@ func TestUpdate(t *testing.T) {
 				cmp.AllowUnexported(BVH{}),
 			); diff != "" {
 				t.Errorf("Update() mismatch (-want +got):\n%v", diff)
+			}
+		})
+	}
+}
+
+func TestBroadPhaseConformance(t *testing.T) {
+	type config struct {
+		name string
+		n    int
+		k    vector.D
+		size uint
+	}
+
+	var configs []config
+	for _, k := range perf.PerfTestSize(perf.SizeUnit).K() {
+		for _, n := range perf.PerfTestSize(perf.SizeUnit).N() {
+			for _, size := range perf.PerfTestSize(perf.SizeUnit).LeafSize() {
+				configs = append(configs, config{
+					name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
+					k:    k,
+					n:    n,
+					size: size,
+				})
+			}
+		}
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			data := map[id.ID]hyperrectangle.R{}
+			for i := 0; i < c.n; i++ {
+				data[id.ID(i+1)] = perf.RR(0, 500, c.k)
+			}
+			bvh := New(O{Size: c.size})
+			bf := bruteforce.New()
+
+			for x, aabb := range data {
+				bvh.Insert(x, aabb)
+				bf.Insert(x, aabb)
+			}
+
+			q := perf.RR(0, 500, c.k)
+			got := BroadPhase(bvh, q)
+			want := bf.BroadPhase(q)
+			if diff := cmp.Diff(
+				want, got,
+				cmpopts.SortSlices(func(a, b id.ID) bool { return a < b }),
+			); diff != "" {
+				t.Errorf("BroadPhase() mismatch (-want +got):\n%v", diff)
 			}
 		})
 	}
