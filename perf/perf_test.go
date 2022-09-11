@@ -59,7 +59,10 @@ func BenchmarkInsert(b *testing.B) {
 	}
 
 	for _, c := range configs {
-		t := generator.BVH(c.n, c.k, c.size)
+		t := generator.BVH(c.size, generator.Generate(generator.O{
+			Insert: 1,
+			K:      c.k,
+		}, c.n))
 		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
 			fs := generator.Generate(generator.O{
 				IDs:    t.IDs(),
@@ -103,7 +106,11 @@ func BenchmarkBroadPhase(b *testing.B) {
 	}
 
 	for _, c := range configs {
-		t := generator.BVH(c.n, c.k, c.size)
+		ms := generator.Generate(generator.O{
+			Insert: 1,
+			K:      c.k,
+		}, c.n)
+		t := generator.BVH(c.size, ms)
 		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				t.BroadPhase(RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k))

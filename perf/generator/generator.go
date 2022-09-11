@@ -29,23 +29,25 @@ func allocateID(ids map[id.ID]bool) id.ID {
 	return x
 }
 
-func BVH(n int, k vector.D, size uint) *bvh.BVH {
+func BVH(size uint, ms []M) *bvh.BVH {
 	// Generating large number of points in tests will mess with data
 	// collection figures. We should ignore these allocs.
 	runtime.MemProfileRate = 0
 	defer func() { runtime.MemProfileRate = 512 * 1024 }()
 
 	t := bvh.New(bvh.O{Size: size})
-	for _, f := range Generate(O{
-		Insert: 1,
-		K:      k,
-	}, n) {
+	for _, f := range ms {
 		f(t)
 	}
 	return t
 }
 
 func Generate(o O, n int) []M {
+	// Generating large number of points in tests will mess with data
+	// collection figures. We should ignore these allocs.
+	runtime.MemProfileRate = 0
+	defer func() { runtime.MemProfileRate = 512 * 1024 }()
+
 	ids := map[id.ID]bool{}
 	for _, x := range o.IDs {
 		ids[x] = true
