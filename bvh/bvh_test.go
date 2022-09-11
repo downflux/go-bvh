@@ -2,6 +2,7 @@ package bvh
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/downflux/go-bvh/container/bruteforce"
@@ -134,7 +135,7 @@ func TestUpdate(t *testing.T) {
 				c.want,
 				c.bvh,
 				cmp.Comparer(util.Equal),
-				cmp.AllowUnexported(BVH{}),
+				cmp.AllowUnexported(BVH{}, sync.RWMutex{}, sync.Mutex{}),
 			); diff != "" {
 				t.Errorf("Update() mismatch (-want +got):\n%v", diff)
 			}
@@ -179,7 +180,7 @@ func TestBroadPhaseConformance(t *testing.T) {
 			}
 
 			q := perf.RR(0, 500, c.k)
-			got := BroadPhase(bvh, q)
+			got := bvh.BroadPhase(q)
 			want := bf.BroadPhase(q)
 			if diff := cmp.Diff(
 				want, got,
@@ -252,7 +253,7 @@ func TestBroadPhase(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := BroadPhase(c.bvh, c.q)
+			got := c.bvh.BroadPhase(c.q)
 			if diff := cmp.Diff(
 				c.want,
 				got,
@@ -336,7 +337,7 @@ func TestRemove(t *testing.T) {
 				c.want,
 				c.bvh,
 				cmp.Comparer(util.Equal),
-				cmp.AllowUnexported(BVH{}),
+				cmp.AllowUnexported(BVH{}, sync.RWMutex{}, sync.Mutex{}),
 			); diff != "" {
 				t.Errorf("Remove() mismatch (-want +got):\n%v", diff)
 			}
@@ -411,7 +412,7 @@ func TestInsert(t *testing.T) {
 				c.want,
 				c.bvh,
 				cmp.Comparer(util.Equal),
-				cmp.AllowUnexported(BVH{}),
+				cmp.AllowUnexported(BVH{}, sync.RWMutex{}, sync.Mutex{}),
 				cmpopts.IgnoreFields(BVH{}, "logger"),
 			); diff != "" {
 				t.Errorf("Insert() mismatch (-want +got):\n%v", diff)
