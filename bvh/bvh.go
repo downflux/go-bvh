@@ -53,6 +53,17 @@ func (bvh *BVH) updateNodeCache() {
 	}
 }
 
+func (bvh *BVH) IDs() []id.ID {
+	bvh.l.RLock()
+	defer bvh.l.RUnlock()
+
+	ids := make([]id.ID, 0, len(bvh.lookup))
+	for x := range bvh.lookup {
+		ids = append(ids, x)
+	}
+	return ids
+}
+
 // Insert adds a new AABB bounding box into the BVH tree. The input AABB may be
 // larger than the actual object if e.g. the object is not a rectangle, or to
 // account for movement updates.

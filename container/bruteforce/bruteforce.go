@@ -18,6 +18,14 @@ type L map[id.ID]hyperrectangle.R
 
 func New() L { return L(map[id.ID]hyperrectangle.R{}) }
 
+func (l L) IDs() []id.ID {
+	ids := make([]id.ID, len(l))
+	for x := range l {
+		ids = append(ids, x)
+	}
+	return ids
+}
+
 func (l L) Insert(x id.ID, aabb hyperrectangle.R) error {
 	if _, ok := l[x]; ok {
 		return fmt.Errorf("cannot insert a node with duplicate ID %v", x)

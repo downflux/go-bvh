@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
 	"os"
 	"path"
 	"testing"
 
-	"github.com/downflux/go-bvh/bvh"
 	"github.com/downflux/go-bvh/perf/generator"
 	"github.com/downflux/go-geometry/nd/vector"
 )
@@ -38,7 +36,7 @@ func l(d string, fn string) *log.Logger {
 	return log.New(f, "", log.Lshortfile)
 }
 
-func BenchmarkNew(b *testing.B) {
+func BenchmarkInsert(b *testing.B) {
 	type config struct {
 		name string
 		n    int
@@ -51,7 +49,7 @@ func BenchmarkNew(b *testing.B) {
 		for _, k := range suite.K() {
 			for _, size := range suite.LeafSize() {
 				configs = append(configs, config{
-					name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
+					name: fmt.Sprintf("Real/K=%v/N=%v/LeafSize=%v", k, n, size),
 					n:    n,
 					k:    k,
 					size: size,
@@ -61,15 +59,18 @@ func BenchmarkNew(b *testing.B) {
 	}
 
 	for _, c := range configs {
-		b.Run(c.name, func(b *testing.B) {
+		t := generator.BVH(c.n, c.k, c.size)
+		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
+			fs := generator.Generate(generator.O{
+				IDs:    t.IDs(),
+				Insert: 1,
+				K:      c.k,
+			}, b.N)
+
 			for i := 0; i < b.N; i++ {
-				generator.New(generator.O{
-					Insert: 1,
-					K:      c.k,
-					N:      c.n,
-					Size:   c.size,
-					Logger: l(*logd, fmt.Sprintf("new-%v-%v-%v-%v", c.k, c.n, c.size, rand.Intn(10000))),
-				}).Apply()
+				if err := fs[i](t); err != nil {
+					b.Errorf("Insert() = %v, want = nil", err)
+				}
 			}
 		})
 	}
@@ -78,7 +79,7 @@ func BenchmarkNew(b *testing.B) {
 func BenchmarkBroadPhase(b *testing.B) {
 	type config struct {
 		name string
-		bvh  *bvh.BVH
+		n    int
 		k    vector.D
 		f    float64
 		size uint
@@ -89,18 +90,12 @@ func BenchmarkBroadPhase(b *testing.B) {
 		for _, k := range suite.K() {
 			for _, f := range suite.F() {
 				for _, size := range suite.LeafSize() {
-					l := generator.New(generator.O{
-						Insert: 1,
-						K:      k,
-						N:      n,
-						Size:   size,
-						Logger: l(*logd, fmt.Sprintf("broadphase-%v-%v-%v-%v", k, n, f, size)),
-					})
 					configs = append(configs, config{
 						name: fmt.Sprintf("K=%v/N=%v/F=%v/LeafSize=%v", k, n, f, size),
-						bvh:  l.Apply(),
+						n:    n,
 						k:    k,
 						f:    f,
+						size: size,
 					})
 				}
 			}
@@ -108,9 +103,10 @@ func BenchmarkBroadPhase(b *testing.B) {
 	}
 
 	for _, c := range configs {
-		b.Run(c.name, func(b *testing.B) {
+		t := generator.BVH(c.n, c.k, c.size)
+		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				c.bvh.BroadPhase(RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k))
+				t.BroadPhase(RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k))
 			}
 		})
 	}

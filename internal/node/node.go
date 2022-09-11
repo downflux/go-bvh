@@ -69,7 +69,7 @@ type O struct {
 	Data map[id.ID]hyperrectangle.R
 
 	// Size represents how many objects may be added to a leaf node before
-	// the node splits.
+	// the node splits. This is a mandatory argument.
 	Size uint
 
 	// K is the dimension of the AABBs contained in the leaves. This is a
@@ -100,11 +100,14 @@ type N struct {
 }
 
 func New(o O) *N {
-	if uint(len(o.Data)) > o.Size {
-		panic(fmt.Sprintf("cannot create node with data exceeding size %v", o.Size))
+	if o.Size == 0 {
+		panic("cannot create a node with 0 leaf size")
 	}
 	if o.K == 0 {
 		panic("cannot create a 0-dimensional AABB node")
+	}
+	if uint(len(o.Data)) > o.Size {
+		panic(fmt.Sprintf("cannot create node with data exceeding size %v", o.Size))
 	}
 
 	// If the user does not specify an ID, automatically allocate one to
