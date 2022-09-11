@@ -1,9 +1,8 @@
 // Package singlepass is a faster way to select insertion node candidates. This
-// is the method used in the dyntree implementation (github.com/imVexed/dyntree)
-// as well as the reference Box2D implementation (github.com/erincatto/box2d).
-// This differs from the Catto 2019 slides, which recommends using a priority
-// queue -- while this may give us overall a better quality tree, the branch and
-// bound method is rather slow.
+// is the method used in the reference Box2D implementation
+// (github.com/erincatto/box2d).  This differs from the Catto 2019 slides, which
+// recommends using a priority queue -- while this may give us overall a better
+// quality tree, the branch and bound method is rather slow.
 package singlepass
 
 import (
@@ -13,41 +12,35 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
+func direct(n *node.N, aabb hyperrectangle.R) float64 {
+	return hyperrectangle.SA(bhr.Union(n.AABB(), aabb))
+}
+
 // Execute finds a sibling node at which the input AABB should be inserted. In
-// the case that the ndoe is a leaf node, the caller should try to insert
+// the case that the node is a leaf node, the caller should try to insert
 // directly into the node first (i.e. if the leaf has LeafSize > 1).
 func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	if n.IsLeaf() {
 		return n
 	}
 
-	c := 2 * hyperrectangle.SA(bhr.Union(n.AABB(), aabb))
+	h := direct(n, aabb)
+	c := 2 * h
 
-	inherited := 2 * (hyperrectangle.SA(bhr.Union(n.AABB(), aabb)) - hyperrectangle.SA(n.AABB()))
-	l := inherited
-	r := inherited
+	inherited := 2 * (h - hyperrectangle.SA(n.AABB()))
+	l := inherited + direct(n.Left(), aabb)
+	r := inherited + direct(n.Right(), aabb)
 
-	if n.Left().IsLeaf() {
-		l += hyperrectangle.SA(bhr.Union(n.Left().AABB(), aabb))
-	} else {
-		l += hyperrectangle.SA(bhr.Union(n.Left().AABB(), aabb)) - hyperrectangle.SA(n.Left().AABB())
+	// Calculate the lower-bound heuristics for the current node -- here, we
+	// assume that the minimum heuristic is if the object is merged directly
+	// into the child.
+	if !n.Left().IsLeaf() {
+		l -= hyperrectangle.SA(n.Left().AABB())
 	}
-	if n.Right().IsLeaf() {
-		l += hyperrectangle.SA(bhr.Union(n.Right().AABB(), aabb))
-	} else {
-		l += hyperrectangle.SA(bhr.Union(n.Right().AABB(), aabb)) - hyperrectangle.SA(n.Right().AABB())
+	if !n.Right().IsLeaf() {
+		r -= hyperrectangle.SA(n.Right().AABB())
 	}
 
-	/*
-		// Calculate the lower-bound heuristics for the current node -- here, we
-		// assume that the minimum heuristic is if the object is merged directly
-		// into the child.
-		l := hyperrectangle.SA(bhr.Union(n.Left().AABB(), aabb)) + hyperrectangle.SA(n.Right().AABB())
-		r := hyperrectangle.SA(bhr.Union(n.Right().AABB(), aabb)) + hyperrectangle.SA(n.Left().AABB())
-
-		// Calculate the cost of adding a new leaf node at the current node.
-		c := hyperrectangle.SA(n.AABB()) + hyperrectangle.SA(aabb)
-	*/
 	if c < l && c < r {
 		return n
 	}
