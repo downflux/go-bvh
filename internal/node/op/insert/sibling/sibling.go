@@ -1,9 +1,9 @@
-// Package singlepass is a faster way to select insertion node candidates. This
+// Package sibling is a faster way to select insertion node candidates. This
 // is the method used in the reference Box2D implementation
 // (github.com/erincatto/box2d).  This differs from the Catto 2019 slides, which
 // recommends using a priority queue -- while this may give us overall a better
 // quality tree, the branch and bound method is rather slow.
-package singlepass
+package sibling
 
 import (
 	"github.com/downflux/go-bvh/internal/node"

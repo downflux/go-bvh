@@ -1,4 +1,4 @@
-package singlepass
+package sibling
 
 import (
 	"testing"

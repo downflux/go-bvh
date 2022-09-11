@@ -4,11 +4,10 @@ import (
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
+	"github.com/downflux/go-bvh/internal/node/op/insert/sibling"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
 	"github.com/downflux/go-bvh/internal/node/op/rotate"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
-
-	sibling "github.com/downflux/go-bvh/internal/node/op/insert/sibling/singlepass"
 )
 
 // Execute adds a new node with the given data into the tree. The returned node
