@@ -30,10 +30,12 @@ func TestExecute(t *testing.T) {
 					101: util.N{},
 				},
 				Root: 101,
+				Size: 1,
 			})
 			m := node.New(node.O{
 				Nodes: root.Cache(),
 				Data:  map[id.ID]hyperrectangle.R{2: util.Interval(101, 200)},
+				Size:  1,
 			})
 
 			return config{
@@ -51,6 +53,7 @@ func TestExecute(t *testing.T) {
 						102: util.N{Parent: 100},
 					},
 					Root: 100,
+					Size: 1,
 				}),
 			}
 		}(),
@@ -69,10 +72,12 @@ func TestExecute(t *testing.T) {
 					102: util.N{Parent: 100},           // C
 				},
 				Root: 100,
+				Size: 1,
 			})
 			m := node.New(node.O{
 				Nodes: root.Cache(),
 				Data:  map[id.ID]hyperrectangle.R{3: util.Interval(201, 300)},
+				Size:  1,
 			})
 
 			return config{
@@ -98,6 +103,7 @@ func TestExecute(t *testing.T) {
 						104: util.N{Parent: 102},                        // E
 					},
 					Root: 100,
+					Size: 1,
 				}).Right(),
 			}
 		}(),

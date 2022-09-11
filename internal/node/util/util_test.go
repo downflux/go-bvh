@@ -5,11 +5,158 @@ import (
 
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
+	"github.com/downflux/go-geometry/epsilon"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
 
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
+
+func TestCost(t *testing.T) {
+	type config struct {
+		name string
+		n    *node.N
+		want float64
+	}
+
+	configs := []config{
+		{
+			name: "Leaf",
+			n: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {
+						1: *hyperrectangle.New(
+							[]float64{0, 0},
+							[]float64{10, 10},
+						),
+					},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: 40,
+		},
+		{
+			name: "Recursive",
+			n: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {
+						1: *hyperrectangle.New(
+							[]float64{0, 0},
+							[]float64{10, 10},
+						),
+					},
+					103: {
+						2: *hyperrectangle.New(
+							[]float64{11, 11},
+							[]float64{20, 20},
+						),
+					},
+					104: {
+						3: *hyperrectangle.New(
+							[]float64{21, 21},
+							[]float64{30, 30},
+						),
+					},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Left: 101, Right: 102},
+					101: N{Parent: 100},
+					102: N{Left: 103, Right: 104},
+					103: N{Parent: 102},
+					104: N{Parent: 102},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: 120 + 40 + 76 + 36 + 36,
+		},
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			if got := Cost(c.n); !epsilon.Within(c.want, got) {
+				t.Errorf("Cost() = %v, want = %v", got, c.want)
+			}
+		})
+	}
+}
+
+func TestMaxImbalance(t *testing.T) {
+	type config struct {
+		name string
+		n    *node.N
+		want uint
+	}
+
+	configs := []config{
+		{
+			name: "Leaf",
+			n: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					100: {1: Interval(0, 100)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: 0,
+		},
+		{
+			name: "Recursive",
+			n: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					103: {2: Interval(101, 200)},
+					104: {3: Interval(201, 300)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Left: 101, Right: 102},
+					101: N{Parent: 100},
+					102: N{Left: 103, Right: 104},
+					103: N{Parent: 102},
+					104: N{Parent: 102},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: 1,
+		},
+		{
+			name: "Recursive/Commutative",
+			n: New(T{
+				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
+					101: {1: Interval(0, 100)},
+					103: {2: Interval(101, 200)},
+					104: {3: Interval(201, 300)},
+				},
+				Nodes: map[nid.ID]N{
+					100: N{Right: 101, Left: 102},
+					101: N{Parent: 100},
+					102: N{Left: 103, Right: 104},
+					103: N{Parent: 102},
+					104: N{Parent: 102},
+				},
+				Root: 100,
+				Size: 1,
+			}),
+			want: 1,
+		},
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			if got := MaxImbalance(c.n); got != c.want {
+				t.Errorf("MaxImbalance() = %v, want = %v", got, c.want)
+			}
+		})
+	}
+}
 
 func TestEqual(t *testing.T) {
 	type config struct {
@@ -36,6 +183,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -48,6 +196,7 @@ func TestEqual(t *testing.T) {
 					102: N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			want: false,
 		},
@@ -61,6 +210,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 2,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -73,6 +223,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 2,
 			}),
 			want: false,
 		},
@@ -86,6 +237,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -95,6 +247,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			want: false,
 		},
@@ -108,6 +261,7 @@ func TestEqual(t *testing.T) {
 					100: N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -117,6 +271,7 @@ func TestEqual(t *testing.T) {
 					1001: N{},
 				},
 				Root: 1001,
+				Size: 1,
 			}),
 			want: true,
 		},
@@ -133,6 +288,7 @@ func TestEqual(t *testing.T) {
 					102: N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -145,6 +301,7 @@ func TestEqual(t *testing.T) {
 					102: N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			want: false,
 		},
@@ -161,6 +318,7 @@ func TestEqual(t *testing.T) {
 					102: N{Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			b: New(T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -173,6 +331,7 @@ func TestEqual(t *testing.T) {
 					1002: N{Parent: 1000},
 				},
 				Root: 1000,
+				Size: 1,
 			}),
 			want: true,
 		},
@@ -205,6 +364,7 @@ func TestNew(t *testing.T) {
 					100: {},
 				},
 				Root: 100,
+				Size: 1,
 			},
 			want: node.New(node.O{
 				Nodes: node.Cache(),
@@ -212,6 +372,7 @@ func TestNew(t *testing.T) {
 				Data: map[id.ID]hyperrectangle.R{
 					1: Interval(0, 100),
 				},
+				Size: 1,
 			}),
 		}, func() config {
 			c := node.Cache()
@@ -220,6 +381,7 @@ func TestNew(t *testing.T) {
 				ID:    100,
 				Left:  101,
 				Right: 102,
+				Size:  1,
 			})
 			node.New(node.O{
 				Nodes:  c,
@@ -228,6 +390,7 @@ func TestNew(t *testing.T) {
 				Data: map[id.ID]hyperrectangle.R{
 					1: Interval(0, 100),
 				},
+				Size: 1,
 			})
 			node.New(node.O{
 				Nodes:  c,
@@ -236,6 +399,7 @@ func TestNew(t *testing.T) {
 				Data: map[id.ID]hyperrectangle.R{
 					2: Interval(101, 200),
 				},
+				Size: 1,
 			})
 
 			return config{
@@ -251,6 +415,7 @@ func TestNew(t *testing.T) {
 						102: {Parent: 100},
 					},
 					Root: 100,
+					Size: 1,
 				},
 				want: r,
 			}

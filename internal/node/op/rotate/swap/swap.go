@@ -1,6 +1,8 @@
 package swap
 
 import (
+	"fmt"
+
 	"github.com/downflux/go-bvh/internal/node"
 )
 
@@ -25,7 +27,7 @@ func Execute(n *node.N, m *node.N) {
 		panic("cannot swap an empty node")
 	}
 	if n.Root() != m.Root() {
-		panic("cannot swap nodes of disjoint trees")
+		panic(fmt.Sprintf("cannot swap nodes of disjoint trees: %v, %v", n.Root().ID(), m.Root().ID()))
 	}
 	if isAncestor(n, m) || isAncestor(m, n) {
 		panic("cannot swap a node with its ancestor")
@@ -52,7 +54,4 @@ func Execute(n *node.N, m *node.N) {
 
 	n.SetParent(q)
 	m.SetParent(p)
-
-	p.InvalidateAABBCache()
-	q.InvalidateAABBCache()
 }

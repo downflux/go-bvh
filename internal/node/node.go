@@ -5,8 +5,10 @@ package node
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/downflux/go-bvh/id"
+	"github.com/downflux/go-bvh/internal/node/stack"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
@@ -64,6 +66,10 @@ type O struct {
 	// some physical buffer space to reduce the amount of tree mutations
 	// that occur, per Catto 2019.
 	Data map[id.ID]hyperrectangle.R
+
+	// Size represents how many objects may be added to a leaf node before
+	// the node splits.
+	Size uint
 }
 
 type N struct {
@@ -75,12 +81,20 @@ type N struct {
 	parent nid.ID
 
 	data map[id.ID]hyperrectangle.R
+	size uint
 
 	aabbCacheIsValid bool
 	aabbCache        hyperrectangle.R
+
+	heightCacheIsValid bool
+	heightCache        uint
 }
 
 func New(o O) *N {
+	if uint(len(o.Data)) > o.Size {
+		panic(fmt.Sprintf("cannot create node with data exceeding size %v", o.Size))
+	}
+
 	// If the user does not specify an ID, automatically allocate one to
 	// use.
 	id := o.ID
@@ -95,6 +109,7 @@ func New(o O) *N {
 		right:  o.Right,
 		parent: o.Parent,
 		data:   o.Data,
+		size:   o.Size,
 	}
 
 	if o.Nodes.lookup[n.ID()] != nil {
@@ -119,9 +134,12 @@ func (n *N) Insert(id id.ID, aabb hyperrectangle.R) {
 	if _, ok := n.data[id]; ok {
 		panic(fmt.Sprintf("cannot insert an existing object ID %v", id))
 	}
+	if n.IsFull() {
+		panic(fmt.Sprintf("cannot insert into a full leaf node"))
+	}
 
 	n.data[id] = aabb
-	n.InvalidateAABBCache()
+	n.invalidateAABBCache()
 }
 
 func (n *N) Remove(id id.ID) {
@@ -130,22 +148,31 @@ func (n *N) Remove(id id.ID) {
 	}
 
 	delete(n.data, id)
-	n.InvalidateAABBCache()
+	n.invalidateAABBCache()
 }
 
 // Return the list of entities in this node.
-func (n *N) Data() []id.ID {
-	data := make([]id.ID, 0, len(n.data))
-	for k := range n.data {
-		data = append(data, k)
+//
+// N.B.: This data is the original copy stored in the node -- the caller must
+// not mutate this. We are returning the original data because the caller is the
+// library itself, and to save on an extra memory allocation.
+func (n *N) Data() map[id.ID]hyperrectangle.R { return n.data }
+
+func (n *N) Cache() *C  { return n.nodes }
+func (n *N) Size() uint { return n.size }
+
+func (n *N) invalidateHeightCache() {
+	if !n.heightCacheIsValid {
+		return
 	}
-	return data
+	n.heightCacheIsValid = false
+	if !n.IsRoot() {
+		n.Parent().invalidateHeightCache()
+	}
 }
 
-func (n *N) Cache() *C { return n.nodes }
-
-func (n *N) InvalidateAABBCache() {
-	// Since InvalidateAABBCache is called recursively up towards the root,
+func (n *N) invalidateAABBCache() {
+	// Since invalidateAABBCache is called recursively up towards the root,
 	// and AABB is calculated towards the leaf, if the cache is invalid at
 	// some node, we are guaranteed all nodes above the current node are
 	// also marked with an invalid cache. Skipping the tree iteration here
@@ -157,7 +184,7 @@ func (n *N) InvalidateAABBCache() {
 
 	n.aabbCacheIsValid = false
 	if !n.IsRoot() {
-		n.Parent().InvalidateAABBCache()
+		n.Parent().invalidateAABBCache()
 	}
 }
 
@@ -168,13 +195,23 @@ func (n *N) Left() *N   { return n.nodes.lookup[n.left] }
 func (n *N) Right() *N  { return n.nodes.lookup[n.right] }
 func (n *N) Parent() *N { return n.nodes.lookup[n.parent] }
 
-func (n *N) SetLeft(m *N)  { n.left = m.ID() }
-func (n *N) SetRight(m *N) { n.right = m.ID() }
+func (n *N) SetLeft(m *N) {
+	n.left = m.ID()
+	n.invalidateHeightCache()
+	n.invalidateAABBCache()
+}
+func (n *N) SetRight(m *N) {
+	n.right = m.ID()
+	n.invalidateHeightCache()
+	n.invalidateAABBCache()
+}
 func (n *N) SetParent(m *N) {
 	// We may be attempting to set the node as the new root.
 	var id nid.ID
 	if m != nil {
 		id = m.ID()
+		n.invalidateHeightCache()
+		n.invalidateAABBCache()
 	}
 	n.parent = id
 }
@@ -192,30 +229,46 @@ func (n *N) Root() *N {
 // Further refinement should be done by the caller to check if the objects
 // actually collide.
 func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
-	ids := make([]id.ID, 0, 128)
-	open := make([]*N, 0, 128)
-	open = append(open, n)
+	open := stack.New(make([]*N, 0, 128))
+	open.Push(n)
 
-	var m *N
-	for len(open) > 0 {
-		m, open = open[len(open)-1], open[:len(open)-1]
-		if !m.IsLeaf() && !bhr.Disjoint(q, n.AABB()) {
-			open = append(open, m.Left(), m.Right())
-		}
+	ids := stack.New(make([]id.ID, 0, 128))
+
+	for m, ok := open.Pop(); ok; m, ok = open.Pop() {
 		if m.IsLeaf() {
 			for id, h := range m.data {
 				if !bhr.Disjoint(q, h) {
-					ids = append(ids, id)
+					ids.Push(id)
 				}
 			}
+		} else {
+			open.Push(m.Left())
+			open.Push(m.Right())
 		}
 	}
-	return ids
+
+	return ids.Data()
 }
 
-func (n *N) IsLeaf() bool  { return n.left.IsZero() && n.right.IsZero() }
+func (n *N) IsLeaf() bool  { return n.Left() == nil && n.Right() == nil }
 func (n *N) IsRoot() bool  { return n.Parent() == nil }
+func (n *N) IsFull() bool  { return n.IsLeaf() && uint(len(n.data)) >= n.Size() }
 func (n *N) IsEmpty() bool { return n.IsLeaf() && len(n.data) == 0 }
+
+func (n *N) Height() uint {
+	if n.heightCacheIsValid {
+		return n.heightCache
+	}
+
+	n.heightCacheIsValid = true
+	if n.IsLeaf() {
+		n.heightCache = 1
+	} else {
+		n.heightCache = 1 + uint(math.Max(float64(n.Left().Height()), float64(n.Right().Height())))
+	}
+	return n.heightCache
+}
+
 func (n *N) AABB() hyperrectangle.R {
 	if n.aabbCacheIsValid {
 		return n.aabbCache

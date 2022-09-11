@@ -30,6 +30,7 @@ func TestExecute(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			}),
 			want: nil,
 		},
@@ -49,6 +50,7 @@ func TestExecute(t *testing.T) {
 					102: util.N{Parent: 100},           // C
 				},
 				Root: 100,
+				Size: 1,
 			}).Right(), // C
 			want: util.New(util.T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -58,6 +60,7 @@ func TestExecute(t *testing.T) {
 					101: util.N{},
 				},
 				Root: 101,
+				Size: 1,
 			}), // B
 		},
 		{
@@ -81,6 +84,7 @@ func TestExecute(t *testing.T) {
 					104: util.N{Parent: 102},                        // G
 				},
 				Root: 100,
+				Size: 1,
 			}).Right().Right(), // G
 			//   A
 			//  / \
@@ -96,6 +100,7 @@ func TestExecute(t *testing.T) {
 					103: {Parent: 100},
 				},
 				Root: 100,
+				Size: 1,
 			}).Right(), // F
 		},
 		{
@@ -119,6 +124,7 @@ func TestExecute(t *testing.T) {
 					104: util.N{Parent: 102},                        // G
 				},
 				Root: 100,
+				Size: 1,
 			}).Right(), // C
 			// B
 			want: util.New(util.T{
@@ -129,6 +135,7 @@ func TestExecute(t *testing.T) {
 					101: {},
 				},
 				Root: 101,
+				Size: 1,
 			}), // B
 		},
 	}

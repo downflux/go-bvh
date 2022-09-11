@@ -1,12 +1,16 @@
 package bvh
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/downflux/go-bvh/container/bruteforce"
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/util"
+	"github.com/downflux/go-bvh/perf"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
@@ -33,12 +37,14 @@ func TestUpdate(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			bvh := &BVH{
 				lookup: map[id.ID]*node.N{
 					1: root,
 				},
 				root: root,
+				size: 1,
 			}
 			return config{
 				name: "NoUpdate",
@@ -58,12 +64,14 @@ func TestUpdate(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			bvh := &BVH{
 				lookup: map[id.ID]*node.N{
 					1: root,
 				},
 				root: root,
+				size: 1,
 			}
 			return config{
 				name: "DNE",
@@ -83,6 +91,7 @@ func TestUpdate(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			want := util.New(util.T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -92,6 +101,7 @@ func TestUpdate(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 
 			return config{
@@ -101,6 +111,7 @@ func TestUpdate(t *testing.T) {
 						1: root,
 					},
 					root: root,
+					size: 1,
 				},
 				id:   1,
 				q:    util.Interval(101, 200),
@@ -110,6 +121,7 @@ func TestUpdate(t *testing.T) {
 						1: want,
 					},
 					root: want,
+					size: 1,
 				},
 			}
 		}(),
@@ -125,6 +137,55 @@ func TestUpdate(t *testing.T) {
 				cmp.AllowUnexported(BVH{}),
 			); diff != "" {
 				t.Errorf("Update() mismatch (-want +got):\n%v", diff)
+			}
+		})
+	}
+}
+
+func TestBroadPhaseConformance(t *testing.T) {
+	type config struct {
+		name string
+		n    int
+		k    vector.D
+		size uint
+	}
+
+	var configs []config
+	for _, k := range perf.PerfTestSize(perf.SizeUnit).K() {
+		for _, n := range perf.PerfTestSize(perf.SizeUnit).N() {
+			for _, size := range perf.PerfTestSize(perf.SizeUnit).LeafSize() {
+				configs = append(configs, config{
+					name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
+					k:    k,
+					n:    n,
+					size: size,
+				})
+			}
+		}
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			data := map[id.ID]hyperrectangle.R{}
+			for i := 0; i < c.n; i++ {
+				data[id.ID(i+1)] = perf.RR(0, 500, c.k)
+			}
+			bvh := New(O{Size: c.size})
+			bf := bruteforce.New()
+
+			for x, aabb := range data {
+				bvh.Insert(x, aabb)
+				bf.Insert(x, aabb)
+			}
+
+			q := perf.RR(0, 500, c.k)
+			got := BroadPhase(bvh, q)
+			want := bf.BroadPhase(q)
+			if diff := cmp.Diff(
+				want, got,
+				cmpopts.SortSlices(func(a, b id.ID) bool { return a < b }),
+			); diff != "" {
+				t.Errorf("BroadPhase() mismatch (-want +got):\n%v", diff)
 			}
 		})
 	}
@@ -148,6 +209,7 @@ func TestBroadPhase(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "PartialMatch",
@@ -156,6 +218,7 @@ func TestBroadPhase(t *testing.T) {
 						1: root,
 					},
 					root: root,
+					size: 1,
 				},
 				q:    util.Interval(1, 2),
 				want: []id.ID{1},
@@ -170,6 +233,7 @@ func TestBroadPhase(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			return config{
 				name: "NoMatch",
@@ -178,6 +242,7 @@ func TestBroadPhase(t *testing.T) {
 						1: root,
 					},
 					root: root,
+					size: 1,
 				},
 				q:    util.Interval(101, 102),
 				want: []id.ID{},
@@ -217,12 +282,14 @@ func TestRemove(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			bvh := &BVH{
 				lookup: map[id.ID]*node.N{
 					1: root,
 				},
 				root: root,
+				size: 1,
 			}
 			return config{
 				name: "Trivial",
@@ -231,6 +298,7 @@ func TestRemove(t *testing.T) {
 				want: &BVH{
 					lookup: map[id.ID]*node.N{},
 					root:   nil,
+					size:   1,
 				},
 			}
 		}(),
@@ -243,12 +311,14 @@ func TestRemove(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			bvh := &BVH{
 				lookup: map[id.ID]*node.N{
 					1: root,
 				},
 				root: root,
+				size: 1,
 			}
 			return config{
 				name: "DNE",
@@ -293,14 +363,16 @@ func TestInsert(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			want := &BVH{
 				lookup: map[id.ID]*node.N{1: root},
 				root:   root,
+				size:   1,
 			}
 			return config{
 				name: "NilRoot",
-				bvh:  New(),
+				bvh:  New(O{Size: 1}),
 				id:   1,
 				aabb: util.Interval(0, 100),
 				want: want,
@@ -315,10 +387,12 @@ func TestInsert(t *testing.T) {
 					100: util.N{},
 				},
 				Root: 100,
+				Size: 1,
 			})
 			want := &BVH{
 				lookup: map[id.ID]*node.N{1: root},
 				root:   root,
+				size:   1,
 			}
 			return config{
 				name: "DuplicateID",
@@ -338,6 +412,7 @@ func TestInsert(t *testing.T) {
 				c.bvh,
 				cmp.Comparer(util.Equal),
 				cmp.AllowUnexported(BVH{}),
+				cmpopts.IgnoreFields(BVH{}, "logger"),
 			); diff != "" {
 				t.Errorf("Insert() mismatch (-want +got):\n%v", diff)
 			}
