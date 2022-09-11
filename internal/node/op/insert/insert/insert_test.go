@@ -36,6 +36,7 @@ func TestExecute(t *testing.T) {
 				Nodes: root.Cache(),
 				Data:  map[id.ID]hyperrectangle.R{2: util.Interval(101, 200)},
 				Size:  1,
+				K:     1,
 			})
 
 			return config{
@@ -78,6 +79,7 @@ func TestExecute(t *testing.T) {
 				Nodes: root.Cache(),
 				Data:  map[id.ID]hyperrectangle.R{3: util.Interval(201, 300)},
 				Size:  1,
+				K:     1,
 			})
 
 			return config{

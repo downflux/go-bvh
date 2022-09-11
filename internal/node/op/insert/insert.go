@@ -21,6 +21,7 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 				x: aabb,
 			},
 			Size: size,
+			K:    aabb.Min().Dimension(),
 		})
 	}
 	c := root.Cache()
@@ -51,6 +52,7 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 				x: aabb,
 			},
 			Size: size,
+			K:    s.K(),
 		})
 	}
 

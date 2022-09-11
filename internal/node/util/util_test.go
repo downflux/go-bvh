@@ -373,6 +373,7 @@ func TestNew(t *testing.T) {
 					1: Interval(0, 100),
 				},
 				Size: 1,
+				K:    1,
 			}),
 		}, func() config {
 			c := node.Cache()
@@ -382,6 +383,7 @@ func TestNew(t *testing.T) {
 				Left:  101,
 				Right: 102,
 				Size:  1,
+				K:     1,
 			})
 			node.New(node.O{
 				Nodes:  c,
@@ -391,6 +393,7 @@ func TestNew(t *testing.T) {
 					1: Interval(0, 100),
 				},
 				Size: 1,
+				K:    1,
 			})
 			node.New(node.O{
 				Nodes:  c,
@@ -400,6 +403,7 @@ func TestNew(t *testing.T) {
 					2: Interval(101, 200),
 				},
 				Size: 1,
+				K:    1,
 			})
 
 			return config{
