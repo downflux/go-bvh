@@ -3,10 +3,8 @@ package perf
 import (
 	"flag"
 	"fmt"
-	"log"
 	"math"
 	"os"
-	"path"
 	"testing"
 
 	"github.com/downflux/go-bvh/perf/generator"
@@ -23,17 +21,6 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 
 	os.Exit(m.Run())
-}
-
-func l(d string, fn string) *log.Logger {
-	if d == "" {
-		return nil
-	}
-	f, err := os.OpenFile(path.Join(d, fmt.Sprintf("%v.log", fn)), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		panic(fmt.Sprintf("could not create logger: %v", err))
-	}
-	return log.New(f, "", log.Lshortfile)
 }
 
 func BenchmarkInsert(b *testing.B) {
@@ -75,6 +62,11 @@ func BenchmarkInsert(b *testing.B) {
 					b.Errorf("Insert() = %v, want = nil", err)
 				}
 			}
+
+			m := t.Report()
+			b.ReportMetric(float64(m.Height), "depth")
+			b.ReportMetric(float64(m.MaxImbalance), "imbalance")
+			b.ReportMetric(m.Cost, "cost")
 		})
 	}
 }
