@@ -110,7 +110,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 	for _, c := range configs {
 		b.Run(c.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				bvh.BroadPhase(c.bvh, RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k))
+				c.bvh.BroadPhase(RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k))
 			}
 		})
 	}
