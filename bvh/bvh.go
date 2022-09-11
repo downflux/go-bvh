@@ -46,15 +46,7 @@ func (bvh *BVH) Insert(x id.ID, aabb hyperrectangle.R) error {
 		return fmt.Errorf("cannot insert a node with duplicate ID %v", x)
 	}
 
-	if bvh.logger != nil {
-		bvh.logger.Printf("inserting rectangle ID: %v, AABB: %v", x, aabb)
-	}
-
 	n := insert.Execute(bvh.root, bvh.size, x, aabb)
-
-	if bvh.logger != nil {
-		bvh.logger.Printf("inserted rectangle into node NID: %v", n.ID())
-	}
 
 	// We may have split the leaf node, in which case some data may have
 	// shifted.
@@ -62,6 +54,7 @@ func (bvh *BVH) Insert(x id.ID, aabb hyperrectangle.R) error {
 		bvh.lookup[k] = n
 	}
 	bvh.root = n.Root()
+
 	if bvh.logger != nil {
 		bvh.logger.Printf(
 			"tree root NID: %v, Len: %v, H: %v, Imbalance: %v",
@@ -70,7 +63,6 @@ func (bvh *BVH) Insert(x id.ID, aabb hyperrectangle.R) error {
 			bvh.root.Height(),
 			util.MaxImbalance(bvh.root),
 		)
-		util.Log(bvh.logger, bvh.root)
 	}
 
 	return nil
