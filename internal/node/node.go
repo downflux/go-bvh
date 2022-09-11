@@ -10,6 +10,7 @@ import (
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node/stack"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 	nid "github.com/downflux/go-bvh/internal/node/id"
@@ -70,6 +71,10 @@ type O struct {
 	// Size represents how many objects may be added to a leaf node before
 	// the node splits.
 	Size uint
+
+	// K is the dimension of the AABBs contained in the leaves. This is a
+	// mandatory argument.
+	K vector.D
 }
 
 type N struct {
@@ -84,7 +89,11 @@ type N struct {
 	size uint
 
 	aabbCacheIsValid bool
-	aabbCache        hyperrectangle.R
+	// aabbCache represents the cached value of the node AABB which encloses
+	// the children. If aabbCache is directly after construction, it must be
+	// set with the correct AABB-dimensionality, as the cache update
+	// functions treats this cache as a buffer.
+	aabbCache hyperrectangle.R
 
 	heightCacheIsValid bool
 	heightCache        uint
@@ -93,6 +102,9 @@ type N struct {
 func New(o O) *N {
 	if uint(len(o.Data)) > o.Size {
 		panic(fmt.Sprintf("cannot create node with data exceeding size %v", o.Size))
+	}
+	if o.K == 0 {
+		panic("cannot create a 0-dimensional AABB node")
 	}
 
 	// If the user does not specify an ID, automatically allocate one to
@@ -110,6 +122,10 @@ func New(o O) *N {
 		parent: o.Parent,
 		data:   o.Data,
 		size:   o.Size,
+		aabbCache: *hyperrectangle.New(
+			make([]float64, o.K),
+			make([]float64, o.K),
+		),
 	}
 
 	if o.Nodes.lookup[n.ID()] != nil {
@@ -158,8 +174,9 @@ func (n *N) Remove(id id.ID) {
 // library itself, and to save on an extra memory allocation.
 func (n *N) Data() map[id.ID]hyperrectangle.R { return n.data }
 
-func (n *N) Cache() *C  { return n.nodes }
-func (n *N) Size() uint { return n.size }
+func (n *N) Cache() *C   { return n.nodes }
+func (n *N) Size() uint  { return n.size }
+func (n *N) K() vector.D { return n.aabbCache.Min().Dimension() }
 
 func (n *N) invalidateHeightCache() {
 	if !n.heightCacheIsValid {
@@ -283,9 +300,9 @@ func (n *N) AABB() hyperrectangle.R {
 		for _, aabb := range n.data {
 			rs = append(rs, aabb)
 		}
-		n.aabbCache = bhr.AABB(rs)
+		bhr.AABBBuf(rs, n.aabbCache)
 	} else {
-		n.aabbCache = bhr.Union(n.Left().AABB(), n.Right().AABB())
+		bhr.UnionBuf(n.Left().AABB(), n.Right().AABB(), n.aabbCache)
 	}
 
 	return n.aabbCache

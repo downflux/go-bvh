@@ -38,6 +38,7 @@ func Execute(n *node.N, m *node.N) *node.N {
 		Left:   m.ID(),
 		Right:  n.ID(),
 		Parent: aid,
+		K:      n.K(),
 	})
 
 	if !n.IsRoot() {

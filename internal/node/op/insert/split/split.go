@@ -80,5 +80,6 @@ func Execute(n *node.N, p P) *node.N {
 		Nodes: n.Cache(),
 		Data:  b,
 		Size:  n.Size(),
+		K:     n.K(),
 	})
 }

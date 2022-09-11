@@ -30,6 +30,7 @@ func TestSet(t *testing.T) {
 				ID:    100,
 				Right: 101,
 				// Left is unset.
+				K: 1,
 			})
 			New(O{
 				Nodes:  c,
@@ -39,6 +40,7 @@ func TestSet(t *testing.T) {
 					1: *hyperrectangle.New([]float64{0}, []float64{25}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			m := New(O{
 				Nodes:  c,
@@ -47,6 +49,7 @@ func TestSet(t *testing.T) {
 				Left:   103,
 				Right:  104,
 				Size:   1,
+				K:      1,
 			})
 			New(O{
 				Nodes:  c,
@@ -56,6 +59,7 @@ func TestSet(t *testing.T) {
 					2: *hyperrectangle.New([]float64{26}, []float64{50}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			New(O{
 				Nodes:  c,
@@ -65,6 +69,7 @@ func TestSet(t *testing.T) {
 					3: *hyperrectangle.New([]float64{51}, []float64{75}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			n.SetLeft(m)
 			return config{
@@ -83,6 +88,7 @@ func TestSet(t *testing.T) {
 				ID:    100,
 				// Right is unset.
 				Left: 101,
+				K:    1,
 			})
 			New(O{
 				Nodes:  c,
@@ -92,6 +98,7 @@ func TestSet(t *testing.T) {
 					1: *hyperrectangle.New([]float64{0}, []float64{25}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			m := New(O{
 				Nodes:  c,
@@ -100,6 +107,7 @@ func TestSet(t *testing.T) {
 				Left:   103,
 				Right:  104,
 				Size:   1,
+				K:      1,
 			})
 			New(O{
 				Nodes:  c,
@@ -109,6 +117,7 @@ func TestSet(t *testing.T) {
 					2: *hyperrectangle.New([]float64{26}, []float64{50}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			New(O{
 				Nodes:  c,
@@ -118,6 +127,7 @@ func TestSet(t *testing.T) {
 					3: *hyperrectangle.New([]float64{51}, []float64{75}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			n.SetRight(m)
 			return config{
@@ -136,6 +146,7 @@ func TestSet(t *testing.T) {
 				ID:    100,
 				Left:  101,
 				Right: 102,
+				K:     1,
 			})
 			New(O{
 				Nodes:  c,
@@ -145,6 +156,7 @@ func TestSet(t *testing.T) {
 					1: *hyperrectangle.New([]float64{0}, []float64{25}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			n := New(O{
 				Nodes: c,
@@ -153,6 +165,7 @@ func TestSet(t *testing.T) {
 				Left:  103,
 				Right: 104,
 				Size:  1,
+				K:     1,
 			})
 			New(O{
 				Nodes:  c,
@@ -162,6 +175,7 @@ func TestSet(t *testing.T) {
 					2: *hyperrectangle.New([]float64{26}, []float64{50}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			New(O{
 				Nodes:  c,
@@ -171,6 +185,7 @@ func TestSet(t *testing.T) {
 					3: *hyperrectangle.New([]float64{51}, []float64{75}),
 				},
 				Size: 1,
+				K:    1,
 			})
 			n.SetParent(m)
 			return config{
@@ -221,6 +236,7 @@ func TestBroadPhase(t *testing.T) {
 				Left:  101,
 				Right: 102,
 				Size:  2,
+				K:     1,
 			})
 			New(O{
 				Nodes:  c,
@@ -231,6 +247,7 @@ func TestBroadPhase(t *testing.T) {
 					2: *hyperrectangle.New([]float64{25}, []float64{49}),
 				},
 				Size: 2,
+				K:    1,
 			})
 			New(O{
 				Nodes:  c,
@@ -241,6 +258,7 @@ func TestBroadPhase(t *testing.T) {
 					4: *hyperrectangle.New([]float64{75}, []float64{99}),
 				},
 				Size: 2,
+				K:    1,
 			})
 
 			return config{
@@ -259,6 +277,7 @@ func TestBroadPhase(t *testing.T) {
 					2: *hyperrectangle.New([]float64{0}, []float64{50}),
 				},
 				Size: 2,
+				K:    1,
 			}),
 			q:    *hyperrectangle.New([]float64{1}, []float64{99}),
 			want: []id.ID{1, 2},
@@ -272,6 +291,7 @@ func TestBroadPhase(t *testing.T) {
 					2: *hyperrectangle.New([]float64{0}, []float64{50}),
 				},
 				Size: 2,
+				K:    1,
 			}),
 			q:    *hyperrectangle.New([]float64{100.1}, []float64{100.2}),
 			want: []id.ID{},

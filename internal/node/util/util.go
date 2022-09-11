@@ -32,7 +32,20 @@ type N struct {
 	Parent nid.ID
 }
 
+func k(data map[nid.ID]map[id.ID]hyperrectangle.R) vector.D {
+	for _, leaf := range data {
+		for _, aabb := range leaf {
+			return aabb.Min().Dimension()
+		}
+	}
+	return 0
+}
+
 func New(t T) *node.N {
+	if len(t.Data) == 0 {
+		panic("cannot create a root node with no data")
+	}
+
 	c := node.Cache()
 
 	var r *node.N
@@ -47,6 +60,7 @@ func New(t T) *node.N {
 
 			Data: t.Data[id],
 			Size: t.Size,
+			K:    k(t.Data),
 		})
 		if m.ID() == t.Root {
 			r = m
