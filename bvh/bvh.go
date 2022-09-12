@@ -7,9 +7,9 @@ import (
 
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-bvh/internal/node/op/insert"
 	"github.com/downflux/go-bvh/internal/node/op/remove"
+	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
@@ -21,9 +21,11 @@ type O struct {
 }
 
 type M struct {
-	Height       uint
-	MaxImbalance uint
-	Cost         float64
+	Height         uint
+	MaxImbalance   uint
+	SAH            float64
+	BalancePenalty float64
+	OverlapPenalty float64
 }
 
 // BVH is an AABB-backed bounded volume hierarchy. This struct does not store
@@ -76,9 +78,11 @@ func (bvh *BVH) Report() M {
 	defer bvh.l.RUnlock()
 
 	return M{
-		Height:       bvh.root.Height(),
-		MaxImbalance: util.MaxImbalance(bvh.root),
-		Cost:         util.Cost(bvh.root),
+		Height:         bvh.root.Height(),
+		MaxImbalance:   util.MaxImbalance(bvh.root),
+		SAH:            util.SAH(bvh.root),
+		BalancePenalty: util.BalancePenalty(bvh.root),
+		OverlapPenalty: util.OverlapPenalty(bvh.root),
 	}
 }
 
