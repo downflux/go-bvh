@@ -5,7 +5,6 @@ import (
 
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-geometry/epsilon"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
 
