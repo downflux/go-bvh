@@ -4,6 +4,5 @@ go 1.19
 
 require (
 	github.com/downflux/go-geometry v0.12.0
-	github.com/downflux/go-pq v0.1.4
 	github.com/google/go-cmp v0.5.9
 )
