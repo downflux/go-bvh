@@ -4,12 +4,25 @@ import (
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
-	// sibling "github.com/downflux/go-bvh/internal/node/op/insert/sibling/greedy"
 	"github.com/downflux/go-bvh/internal/node/op/insert/sibling"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
 	"github.com/downflux/go-bvh/internal/node/op/rotate"
 	"github.com/downflux/go-bvh/internal/node/op/rotate/rotation/balance"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+)
+
+var (
+	// FindSibling is a function which returns the nearest node for a given
+	// AABB insertion candidate.
+	FindSibling = sibling.Execute
+
+	// RotateTree is a function which attempts to rebalance the tree after
+	// an insertion.
+	//
+	// N.B.: If the sibling function is the greedy sibling search function,
+	// we should skip tree rotation -- this is unncessary and severely
+	// impacts the insertion time metric.
+	RotateTree = func(n *node.N) *node.N { return rotate.Execute(n, balance.Generate) }
 )
 
 // Execute adds a new node with the given data into the tree. The returned node
@@ -30,7 +43,7 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 	// m is the newly-created leaf node containing the input data.
 	var m *node.N
 
-	s := sibling.Execute(root, aabb)
+	s := FindSibling(root, aabb)
 	// If a leaf is returned, we should attempt to insert the object into
 	// this leaf if possible -- the reasoning here is that the overall
 	// heuristic for inserting into a leaf is lower than creating a new
@@ -65,7 +78,7 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 
 	// m is now linked to the correct parent; we need to balance the tree.
 	if !m.IsRoot() {
-		rotate.Execute(m.Parent(), balance.Generate)
+		RotateTree(m.Parent())
 	}
 
 	return m

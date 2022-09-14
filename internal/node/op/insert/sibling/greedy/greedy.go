@@ -28,6 +28,11 @@ type candidate struct {
 	ci float64
 }
 
+// RotateTree generates a tree rotation function matching the tree insertion
+// signature for rotating a tree. Note that for this sibling candidate, we do
+// not attempt to rotate the tree after node insertion.
+func RotateTree(n *node.N) *node.N { return n }
+
 func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	q := pq.New[candidate](0, pq.PMax)
 	q.Push(candidate{n: n, ci: 0}, 1/epsilon)
