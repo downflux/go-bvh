@@ -11,6 +11,8 @@ import (
 	"github.com/downflux/go-bvh/container"
 	"github.com/downflux/go-bvh/perf/generator"
 	"github.com/downflux/go-geometry/nd/vector"
+
+	bhru "github.com/downflux/go-bvh/hyperrectangle/util"
 )
 
 var (
@@ -113,7 +115,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 	}
 
 	for _, c := range configs {
-		q := RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k)
+		q := bhru.RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k)
 
 		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
