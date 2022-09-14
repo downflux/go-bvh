@@ -26,6 +26,7 @@ type M struct {
 	SAH            float64
 	BalancePenalty float64
 	OverlapPenalty float64
+	LeafSize       float64
 }
 
 // BVH is an AABB-backed bounded volume hierarchy. This struct does not store
@@ -83,6 +84,7 @@ func (bvh *BVH) Report() M {
 		SAH:            util.SAH(bvh.root),
 		BalancePenalty: util.BalancePenalty(bvh.root),
 		OverlapPenalty: util.OverlapPenalty(bvh.root),
+		LeafSize:       util.AverageSize(bvh.root),
 	}
 }
 

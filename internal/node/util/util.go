@@ -1,7 +1,6 @@
 package util
 
 import (
-	"log"
 	"math"
 
 	"github.com/downflux/go-bvh/id"
@@ -142,6 +141,22 @@ func BalancePenalty(n *node.N) float64 {
 	return p
 }
 
+func AverageSize(n *node.N) float64 {
+	var sizes []float64
+	PreOrder(n, func(n *node.N) {
+		if n.IsLeaf() {
+			sizes = append(sizes, float64(len(n.Data())))
+		}
+	})
+
+	var sum float64
+	for _, s := range sizes {
+		sum += s
+	}
+
+	return sum / float64(len(sizes))
+}
+
 func Equal(a *node.N, b *node.N) bool {
 	if a == nil && b == nil {
 		return true
@@ -182,37 +197,4 @@ func PreOrder(n *node.N, f func(n *node.N)) {
 		PreOrder(n.Left(), f)
 		PreOrder(n.Right(), f)
 	}
-}
-
-func Log(l *log.Logger, n *node.N) {
-	PreOrder(n, func(n *node.N) {
-		l.Printf(
-			"node NID: %v, L: %v, R: %v, P: %v, Data: %v\n",
-			n.ID(),
-			func() nid.ID {
-				if !n.IsLeaf() {
-					return n.Left().ID()
-				}
-				return 0
-			}(),
-			func() nid.ID {
-				if !n.IsLeaf() {
-					return n.Right().ID()
-				}
-				return 0
-			}(),
-			func() nid.ID {
-				if !n.IsRoot() {
-					return n.Parent().ID()
-				}
-				return 0
-			}(),
-			func() map[id.ID]hyperrectangle.R {
-				if n.IsLeaf() {
-					return n.Data()
-				}
-				return nil
-			}(),
-		)
-	})
 }
