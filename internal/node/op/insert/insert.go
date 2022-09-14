@@ -6,8 +6,12 @@ import (
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-bvh/internal/node/op/insert/sibling"
+	"github.com/downflux/go-bvh/internal/node/op/rotate"
+	"github.com/downflux/go-bvh/internal/node/op/rotate/rotation/balance"
 
-	sibling "github.com/downflux/go-bvh/internal/node/op/insert/sibling/greedy"
+
+	// sibling "github.com/downflux/go-bvh/internal/node/op/insert/sibling/greedy"
 )
 
 var (
@@ -22,8 +26,8 @@ var (
 	// In the case this is swapped with the Box2D sibling search function,
 	// we should also rotate the tree after insertion, i.e.
 	//
-	// RotateTree = func(n *node.N) *node.N { return rotate.Execute(n, balance.Generate) }
-	RotateTree = sibling.RotateTree
+	// RotateTree = sibling.RotateTree
+	RotateTree = func(n *node.N) *node.N { return rotate.Execute(n, balance.Generate) }
 )
 
 // Execute adds a new node with the given data into the tree. The returned node
