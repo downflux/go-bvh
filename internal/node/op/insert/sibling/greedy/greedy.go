@@ -24,13 +24,13 @@ func inherited(n *node.N, aabb hyperrectangle.R) float64 {
 }
 
 type candidate struct {
-	n *node.N
+	n  *node.N
 	ci float64
 }
 
 func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	q := pq.New[candidate](0, pq.PMax)
-	q.Push(candidate{n: n, ci: 0}, 1 / epsilon)
+	q.Push(candidate{n: n, ci: 0}, 1/epsilon)
 
 	var opt *node.N
 	h := math.Inf(0)
@@ -50,8 +50,8 @@ func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 
 		ci := c - heuristic.H(v.n.AABB())
 		if !v.n.IsLeaf() && ci+heuristic.H(aabb) < h {
-			q.Push(candidate{n: v.n.Left(), ci: ci}, 1 / (ci + epsilon))
-			q.Push(candidate{n: v.n.Right(), ci: ci}, 1 / (ci + epsilon))
+			q.Push(candidate{n: v.n.Left(), ci: ci}, 1/(ci+epsilon))
+			q.Push(candidate{n: v.n.Right(), ci: ci}, 1/(ci+epsilon))
 		}
 	}
 	return opt
