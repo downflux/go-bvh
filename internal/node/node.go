@@ -262,8 +262,12 @@ func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
 				}
 			}
 		} else {
-			open.Push(m.Left())
-			open.Push(m.Right())
+			if !bhr.Disjoint(q, m.Left().AABB()) {
+				open.Push(m.Left())
+			}
+			if !bhr.Disjoint(q, m.Right().AABB()) {
+				open.Push(m.Right())
+			}
 		}
 	}
 
