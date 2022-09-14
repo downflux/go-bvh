@@ -51,11 +51,13 @@ func BenchmarkInsert(b *testing.B) {
 			K:      c.k,
 		}, c.n))
 		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
+			b.StopTimer()
 			fs := generator.Generate(generator.O{
 				IDs:    t.IDs(),
 				Insert: 1,
 				K:      c.k,
 			}, b.N)
+			b.StartTimer()
 
 			for i := 0; i < b.N; i++ {
 				if err := fs[i](t); err != nil {
@@ -110,7 +112,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 		q := RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k)
 
 		if c.size == 1 {
-			b.Run(fmt.Sprintf("BruteForce/%v", c.name), func(b *testing.B) {
+			b.Run(fmt.Sprintf("BruteForce/K=%v/N=%v/F=%v", c.k, c.n, c.f), func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					bf.BroadPhase(q)
 				}
