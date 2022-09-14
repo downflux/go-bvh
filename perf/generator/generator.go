@@ -13,6 +13,7 @@ import (
 )
 
 type M func(c container.C) error
+type G func(k vector.D, n int) []M
 
 type O struct {
 	// IDs is current list of objects in the BVH -- this is used for
@@ -54,7 +55,15 @@ func BF(ms []M) bruteforce.L {
 	return l
 }
 
-func Generate(o O, n int) []M {
+func InsertShuffledTiles(ids []id.ID, k vector.D, n int) []M {
+	return generate(O{
+		IDs:    ids,
+		Insert: 1,
+		K:      k,
+	}, n)
+}
+
+func generate(o O, n int) []M {
 	runtime.MemProfileRate = 0
 	defer func() { runtime.MemProfileRate = 512 * 1024 }()
 
