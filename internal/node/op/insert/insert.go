@@ -4,11 +4,10 @@ import (
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
-	"github.com/downflux/go-bvh/internal/node/op/insert/sibling"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
-	"github.com/downflux/go-bvh/internal/node/op/rotate"
-	"github.com/downflux/go-bvh/internal/node/op/rotate/rotation/balance"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+
+	sibling "github.com/downflux/go-bvh/internal/node/op/insert/sibling/greedy"
 )
 
 var (
@@ -17,12 +16,14 @@ var (
 	FindSibling = sibling.Execute
 
 	// RotateTree is a function which attempts to rebalance the tree after
-	// an insertion.
+	// an insertion. Note this is a no-op in the case of the greedy sibling
+	// search.
 	//
-	// N.B.: If the sibling function is the greedy sibling search function,
-	// we should skip tree rotation -- this is unncessary and severely
-	// impacts the insertion time metric.
-	RotateTree = func(n *node.N) *node.N { return rotate.Execute(n, balance.Generate) }
+	// In the case this is swapped with the Box2D sibling search function,
+	// we should also rotate the tree after insertion, i.e.
+	//
+	// RotateTree = func(n *node.N) *node.N { return rotate.Execute(n, balance.Generate) }
+	RotateTree = sibling.RotateTree
 )
 
 // Execute adds a new node with the given data into the tree. The returned node

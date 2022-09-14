@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"math"
 	"math/rand"
 	"runtime"
 
@@ -55,42 +56,57 @@ func BF(ms []M) bruteforce.L {
 	return l
 }
 
-func InsertShuffledTiles(ids []id.ID, k vector.D, n int) []M {
-	return generate(O{
-		IDs:    ids,
-		Insert: 1,
-		K:      k,
-	}, n)
+// grid generates a complete K-dimensional grid.
+func grid(min, max int, k vector.D) []vector.V {
+	if k == 1 {
+		var vs []vector.V
+		for i := min; i < max; i++ {
+			vs = append(vs, []float64{float64(i)})
+		}
+		return vs
+	}
+
+	var vs []vector.V
+	for _, j := range grid(min, max, k-1) {
+		for i := min; i < max; i++ {
+			v := []float64{float64(i)}
+			v = append(v, j...)
+			vs = append(vs, v)
+		}
+	}
+	return vs
 }
 
-func generate(o O, n int) []M {
+// InsertRandom generates a K-dimensional grid and returns a 20% dense grid
+// of inserts.
+//
+// We generate this grid by first generating a complete grid of unit tiles, and
+// then shuffling them in-place. We use the first N values from this list.
+func InsertRandom(ids []id.ID, k vector.D, n int) []M {
 	runtime.MemProfileRate = 0
 	defer func() { runtime.MemProfileRate = 512 * 1024 }()
 
-	ids := map[id.ID]bool{}
-	for _, x := range o.IDs {
-		ids[x] = true
+	for i := 0; i < n; i++ {
+	}
+	xs := map[id.ID]bool{}
+	for _, x := range ids {
+		xs[x] = true
 	}
 
-	tiles := make([]int, 0, n)
-	for i := 0; i < n; i++ {
-		tiles = append(tiles, i)
-	}
+	tiles := grid(0, int(math.Pow(5*float64(n), 1.0/float64(k))), k)
 	rand.Shuffle(len(tiles), func(i, j int) { tiles[i], tiles[j] = tiles[j], tiles[i] })
 
 	fs := make([]M, 0, n)
+	// Only use the first n tiles.
 	for i := 0; i < n; i++ {
-		x := allocateID(ids)
-		ids[x] = true
+		x := allocateID(xs)
+		xs[x] = true
 
-		vmin := make([]float64, o.K)
-		vmax := make([]float64, o.K)
-		for k := vector.D(0); k < o.K; k++ {
-			vmax[k] = 1
+		vmin := tiles[i]
+		vmax := make([]float64, k)
+		for i := vector.D(0); i < k; i++ {
+			vmax[i] = vmin[i] + 1
 		}
-		vmin[0] = float64(tiles[i])
-		vmax[0] = float64(tiles[i]) + 1
-
 		fs = append(fs,
 			func(c container.C) error {
 				return c.Insert(x, *hyperrectangle.New(vmin, vmax))
@@ -98,4 +114,5 @@ func generate(o O, n int) []M {
 		)
 	}
 	return fs
+
 }

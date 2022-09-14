@@ -39,7 +39,7 @@ func (s *PerfTestSize) Set(v string) error {
 func (s PerfTestSize) N() []int {
 	return map[PerfTestSize][]int{
 		SizeLarge: []int{1e3, 1e4, 1e5},
-		SizeSmall: []int{1e3, 1e4, 1e5},
+		SizeSmall: []int{1e3, 1e4},
 		SizeUnit:  []int{1e3},
 	}[s]
 }
@@ -54,8 +54,8 @@ func (s PerfTestSize) F() []float64 {
 
 func (s PerfTestSize) LeafSize() []uint {
 	return map[PerfTestSize][]uint{
-		SizeLarge: []uint{1, 16, 256, 1024},
-		SizeSmall: []uint{1, 4, 16, 64},
+		SizeLarge: []uint{1, 2, 4, 8, 16, 32, 64},
+		SizeSmall: []uint{1, 4, 16},
 		SizeUnit:  []uint{1, 2},
 	}[s]
 }

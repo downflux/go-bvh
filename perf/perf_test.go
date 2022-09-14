@@ -10,9 +10,8 @@ import (
 	"github.com/downflux/go-bvh/bvh"
 	"github.com/downflux/go-bvh/container"
 	"github.com/downflux/go-bvh/perf/generator"
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
-
-	bhru "github.com/downflux/go-bvh/hyperrectangle/util"
 )
 
 var (
@@ -42,18 +41,21 @@ func BenchmarkInsert(b *testing.B) {
 	for _, n := range suite.N() {
 		for _, k := range suite.K() {
 			for _, size := range suite.LeafSize() {
-				t := generator.BVH(size, generator.InsertShuffledTiles(nil, k, n))
-				configs = append(configs, config{
-					name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
-					t:    t,
-					n:    n,
-					k:    k,
-					size: size,
+				configs = append(configs, func() config {
+					t := generator.BVH(size, generator.InsertRandom(nil, k, n))
+					return config{
+						name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
+						t:    t,
+						n:    n,
+						k:    k,
+						size: size,
 
-					load: func(k vector.D, n int) []generator.M {
-						return generator.InsertShuffledTiles(t.IDs(), k, n)
-					},
-				})
+						load: func(k vector.D, n int) []generator.M {
+							return generator.InsertRandom(t.IDs(), k, n)
+						},
+					}
+				}(),
+				)
 			}
 		}
 	}
@@ -93,7 +95,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 	for _, n := range suite.N() {
 		for _, k := range suite.K() {
 			for _, f := range suite.F() {
-				ms := generator.InsertShuffledTiles(nil, k, n)
+				ms := generator.InsertRandom(nil, k, n)
 				configs = append(configs, config{
 					name: fmt.Sprintf("BruteForce/K=%v/N=%v/F=%v", k, n, f),
 					t:    generator.BF(ms),
@@ -115,9 +117,17 @@ func BenchmarkBroadPhase(b *testing.B) {
 	}
 
 	for _, c := range configs {
-		q := bhru.RR(0, 500*math.Pow(c.f, 1./float64(c.k)), c.k)
 
 		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
+			b.StopTimer()
+			vmin := make([]float64, c.k)
+			vmax := make([]float64, c.k)
+			for i := vector.D(0); i < c.k; i++ {
+				vmax[i] = math.Pow(5*float64(c.n)*c.f, 1./float64(c.k))
+			}
+			q := *hyperrectangle.New(vmin, vmax)
+			b.StartTimer()
+
 			for i := 0; i < b.N; i++ {
 				c.t.BroadPhase(q)
 			}
