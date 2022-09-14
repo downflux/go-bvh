@@ -69,6 +69,7 @@ func BenchmarkInsert(b *testing.B) {
 			b.ReportMetric(m.SAH, "SAH")
 			b.ReportMetric(m.BalancePenalty, "BP")
 			b.ReportMetric(m.OverlapPenalty, "OP")
+			b.ReportMetric(m.LeafSize, "size")
 		})
 	}
 }
