@@ -66,11 +66,7 @@ func BenchmarkInsert(b *testing.B) {
 			}
 
 			m := t.Report()
-			b.ReportMetric(float64(m.Height), "depth")
-			b.ReportMetric(float64(m.MaxImbalance), "imbalance")
 			b.ReportMetric(m.SAH, "SAH")
-			b.ReportMetric(m.BalancePenalty, "BP")
-			b.ReportMetric(m.OverlapPenalty, "OP")
 			b.ReportMetric(m.LeafSize, "size")
 		})
 	}
