@@ -129,6 +129,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 						n:    n,
 						k:    k,
 						f:    f,
+						size: size,
 					})
 				}
 			}
@@ -136,7 +137,6 @@ func BenchmarkBroadPhase(b *testing.B) {
 	}
 
 	for _, c := range configs {
-
 		b.Run(c.name, func(b *testing.B) {
 			b.StopTimer()
 			vmin := make([]float64, c.k)
