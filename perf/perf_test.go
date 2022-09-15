@@ -28,11 +28,10 @@ func TestMain(m *testing.M) {
 
 func BenchmarkInsert(b *testing.B) {
 	type config struct {
-		t    *bvh.BVH
+		t    container.C
 		name string
 		n    int
 		k    vector.D
-		size uint
 
 		load generator.G
 	}
@@ -40,15 +39,28 @@ func BenchmarkInsert(b *testing.B) {
 	var configs []config
 	for _, n := range suite.N() {
 		for _, k := range suite.K() {
+			configs = append(configs, func() config {
+				t := generator.BY(generator.InsertRandom(nil, k, n))
+				return config{
+					name: fmt.Sprintf("briannoyama/K=%v/N=%v", k, n),
+					t:    t,
+					n:    n,
+					k:    k,
+
+					load: func(k vector.D, n int) []generator.M {
+						return generator.InsertRandom(t.IDs(), k, n)
+					},
+				}
+			}(),
+			)
 			for _, size := range suite.LeafSize() {
 				configs = append(configs, func() config {
 					t := generator.BVH(size, generator.InsertRandom(nil, k, n))
 					return config{
-						name: fmt.Sprintf("K=%v/N=%v/LeafSize=%v", k, n, size),
+						name: fmt.Sprintf("BVH/K=%v/N=%v/LeafSize=%v", k, n, size),
 						t:    t,
 						n:    n,
 						k:    k,
-						size: size,
 
 						load: func(k vector.D, n int) []generator.M {
 							return generator.InsertRandom(t.IDs(), k, n)
@@ -61,7 +73,7 @@ func BenchmarkInsert(b *testing.B) {
 	}
 
 	for _, c := range configs {
-		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
+		b.Run(c.name, func(b *testing.B) {
 			b.StopTimer()
 			fs := c.load(c.k, b.N)
 			b.StartTimer()
@@ -71,12 +83,13 @@ func BenchmarkInsert(b *testing.B) {
 					b.Errorf("Insert() = %v, want = nil", err)
 				}
 			}
-
-			b.StopTimer()
-			m := c.t.Report()
-			b.ReportMetric(m.SAH, "SAH")
-			b.ReportMetric(m.LeafSize, "size")
-			b.StartTimer()
+			if bvh, ok := c.t.(*bvh.BVH); ok {
+				b.StopTimer()
+				m := bvh.Report()
+				b.ReportMetric(m.SAH, "SAH")
+				b.ReportMetric(m.LeafSize, "size")
+				b.StartTimer()
+			}
 		})
 	}
 }
@@ -102,6 +115,12 @@ func BenchmarkBroadPhase(b *testing.B) {
 					n:    n,
 					k:    k,
 					f:    f,
+				}, config{
+					name: fmt.Sprintf("bryannoyama/K=%v/N=%v/F=%v", k, n, f),
+					t:    generator.BY(ms),
+					n:    n,
+					k:    k,
+					f:    f,
 				})
 				for _, size := range suite.LeafSize() {
 					configs = append(configs, config{
@@ -118,7 +137,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 
 	for _, c := range configs {
 
-		b.Run(fmt.Sprintf("Real/%v", c.name), func(b *testing.B) {
+		b.Run(c.name, func(b *testing.B) {
 			b.StopTimer()
 			vmin := make([]float64, c.k)
 			vmax := make([]float64, c.k)

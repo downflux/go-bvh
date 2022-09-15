@@ -62,8 +62,8 @@ func (s PerfTestSize) LeafSize() []uint {
 
 func (s PerfTestSize) K() []vector.D {
 	return map[PerfTestSize][]vector.D{
-		SizeLarge: []vector.D{2, 3, 10},
-		SizeSmall: []vector.D{2},
-		SizeUnit:  []vector.D{2},
+		SizeLarge: []vector.D{3},
+		SizeSmall: []vector.D{3},
+		SizeUnit:  []vector.D{3},
 	}[s]
 }
