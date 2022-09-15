@@ -1,7 +1,6 @@
 package util
 
 import (
-	"log"
 	"math"
 
 	"github.com/downflux/go-bvh/id"
@@ -12,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
+	bhr "github.com/downflux/go-bvh/hyperrectangle"
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
@@ -84,12 +84,77 @@ func MaxImbalance(n *node.N) uint {
 	))
 }
 
-// Cost returns the total tree heuristic.
-func Cost(n *node.N) float64 {
-	if n.IsLeaf() {
-		return heuristic.H(n.AABB())
+// SAH returns the surface area heuristic as defined in Macdonald and Booth
+// 1990.
+//
+// The total heuristic is comprised of three separate components -- the cost of
+// the internal nodes, the cost of the leaves, and the cost of testing for
+// intersections. We use track these via ci, cl, and co respectively.
+//
+// Per Aila et al., a "normal" SAH value is around 100.
+func SAH(n *node.N) float64 {
+	var ci, cl, co float64
+	PreOrder(n, func(n *node.N) {
+		if !n.IsLeaf() {
+			ci += heuristic.H(n.AABB())
+		} else {
+			cl += heuristic.H(n.AABB())
+			co += heuristic.H(n.AABB()) * float64(len(n.Data()))
+		}
+	})
+	return (1.2*ci + 1.0*cl + 0*co) / heuristic.H(n.Root().AABB())
+}
+
+// OverlapPenalty generates a heuristic for checking how many nodes in the tree
+// have overlapping children, and as such, will require additional node
+// expansions.
+//
+// A lower value is better.
+func OverlapPenalty(n *node.N) float64 {
+	var p float64
+	PreOrder(n, func(n *node.N) {
+		if !n.IsLeaf() && !bhr.Disjoint(n.Left().AABB(), n.Right().AABB()) {
+			p += float64(n.Height()) * float64(n.Height())
+		}
+	})
+	return math.Sqrt(p)
+}
+
+// BalancePenalty checks for how balanced the tree is.
+//
+// A lower value is better.
+func BalancePenalty(n *node.N) float64 {
+	depth := n.Height()
+	layers := make([]int, n.Height())
+	PreOrder(n, func(n *node.N) {
+		layers[depth-n.Height()] += 1
+	})
+
+	var p float64
+	for d, count := range layers {
+		n := math.Pow(2.0, float64(d))
+		// A perfect binary tree will have 2 ** d nodes per layer. We
+		// penalize a tree if its total node count at this layer strays
+		// from the ideal.
+		p += math.Abs((n - float64(count))) / n
 	}
-	return heuristic.H(n.AABB()) + Cost(n.Left()) + Cost(n.Right())
+	return p
+}
+
+func AverageSize(n *node.N) float64 {
+	var sizes []float64
+	PreOrder(n, func(n *node.N) {
+		if n.IsLeaf() {
+			sizes = append(sizes, float64(len(n.Data())))
+		}
+	})
+
+	var sum float64
+	for _, s := range sizes {
+		sum += s
+	}
+
+	return sum / float64(len(sizes))
 }
 
 func Equal(a *node.N, b *node.N) bool {
@@ -132,37 +197,4 @@ func PreOrder(n *node.N, f func(n *node.N)) {
 		PreOrder(n.Left(), f)
 		PreOrder(n.Right(), f)
 	}
-}
-
-func Log(l *log.Logger, n *node.N) {
-	PreOrder(n, func(n *node.N) {
-		l.Printf(
-			"node NID: %v, L: %v, R: %v, P: %v, Data: %v\n",
-			n.ID(),
-			func() nid.ID {
-				if !n.IsLeaf() {
-					return n.Left().ID()
-				}
-				return 0
-			}(),
-			func() nid.ID {
-				if !n.IsLeaf() {
-					return n.Right().ID()
-				}
-				return 0
-			}(),
-			func() nid.ID {
-				if !n.IsRoot() {
-					return n.Parent().ID()
-				}
-				return 0
-			}(),
-			func() map[id.ID]hyperrectangle.R {
-				if n.IsLeaf() {
-					return n.Data()
-				}
-				return nil
-			}(),
-		)
-	})
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/op/insert"
 	"github.com/downflux/go-bvh/internal/node/op/remove"
+	"github.com/downflux/go-bvh/internal/node/util"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
@@ -17,6 +18,15 @@ import (
 type O struct {
 	Size   uint
 	Logger *log.Logger
+}
+
+type M struct {
+	Height         uint
+	MaxImbalance   uint
+	SAH            float64
+	BalancePenalty float64
+	OverlapPenalty float64
+	LeafSize       float64
 }
 
 // BVH is an AABB-backed bounded volume hierarchy. This struct does not store
@@ -62,6 +72,20 @@ func (bvh *BVH) IDs() []id.ID {
 		ids = append(ids, x)
 	}
 	return ids
+}
+
+func (bvh *BVH) Report() M {
+	bvh.l.RLock()
+	defer bvh.l.RUnlock()
+
+	return M{
+		Height:         bvh.root.Height(),
+		MaxImbalance:   util.MaxImbalance(bvh.root),
+		SAH:            util.SAH(bvh.root),
+		BalancePenalty: util.BalancePenalty(bvh.root),
+		OverlapPenalty: util.OverlapPenalty(bvh.root),
+		LeafSize:       util.AverageSize(bvh.root),
+	}
 }
 
 // Insert adds a new AABB bounding box into the BVH tree. The input AABB may be

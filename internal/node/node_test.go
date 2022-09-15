@@ -30,7 +30,8 @@ func TestSet(t *testing.T) {
 				ID:    100,
 				Right: 101,
 				// Left is unset.
-				K: 1,
+				Size: 1,
+				K:    1,
 			})
 			New(O{
 				Nodes:  c,
@@ -88,6 +89,7 @@ func TestSet(t *testing.T) {
 				ID:    100,
 				// Right is unset.
 				Left: 101,
+				Size: 1,
 				K:    1,
 			})
 			New(O{
@@ -146,6 +148,7 @@ func TestSet(t *testing.T) {
 				ID:    100,
 				Left:  101,
 				Right: 102,
+				Size:  1,
 				K:     1,
 			})
 			New(O{

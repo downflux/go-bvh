@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
+	bhru "github.com/downflux/go-bvh/hyperrectangle/util"
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
@@ -169,7 +170,7 @@ func TestBroadPhaseConformance(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			data := map[id.ID]hyperrectangle.R{}
 			for i := 0; i < c.n; i++ {
-				data[id.ID(i+1)] = perf.RR(0, 500, c.k)
+				data[id.ID(i+1)] = bhru.RR(0, 500, c.k)
 			}
 			bvh := New(O{Size: c.size})
 			bf := bruteforce.New()
@@ -179,7 +180,7 @@ func TestBroadPhaseConformance(t *testing.T) {
 				bf.Insert(x, aabb)
 			}
 
-			q := perf.RR(0, 500, c.k)
+			q := bhru.RR(0, 500, c.k)
 			got := bvh.BroadPhase(q)
 			want := bf.BroadPhase(q)
 			if diff := cmp.Diff(

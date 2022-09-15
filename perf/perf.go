@@ -2,10 +2,7 @@ package perf
 
 import (
 	"fmt"
-	"math"
-	"math/rand"
 
-	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 )
 
@@ -57,38 +54,16 @@ func (s PerfTestSize) F() []float64 {
 
 func (s PerfTestSize) LeafSize() []uint {
 	return map[PerfTestSize][]uint{
-		SizeLarge: []uint{1, 16, 256, 1024},
-		SizeSmall: []uint{1, 16, 256},
+		SizeLarge: []uint{1, 2, 4, 8, 16, 32, 64},
+		SizeSmall: []uint{1, 4, 16},
 		SizeUnit:  []uint{1, 2},
 	}[s]
 }
 
 func (s PerfTestSize) K() []vector.D {
 	return map[PerfTestSize][]vector.D{
-		SizeLarge: []vector.D{2, 3, 10},
-		SizeSmall: []vector.D{2, 3},
-		SizeUnit:  []vector.D{2},
+		SizeLarge: []vector.D{3},
+		SizeSmall: []vector.D{3},
+		SizeUnit:  []vector.D{3},
 	}[s]
-}
-
-func RN(min, max float64) float64 { return rand.Float64()*(max-min) + min }
-func RV(min, max float64, k vector.D) vector.V {
-	vs := []float64{}
-	for i := vector.D(0); i < k; i++ {
-		vs = append(vs, RN(min, max))
-	}
-	return vector.V(vs)
-}
-func RR(min, max float64, k vector.D) hyperrectangle.R {
-	a := RV(min, max, k)
-	b := RV(min, max, k)
-
-	vmin := make([]float64, k)
-	vmax := make([]float64, k)
-
-	for i := vector.D(0); i < k; i++ {
-		vmin[i] = math.Min(a[i], b[i])
-		vmax[i] = math.Max(a[i], b[i])
-	}
-	return *hyperrectangle.New(vmin, vmax)
 }
