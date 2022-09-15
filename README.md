@@ -20,3 +20,4 @@ go tool cover -html=coverage.out
 1. MacDonald, J.D., and Kellogg Booth. "Heuristics for Tay Tracing Using Space Subdivision." https://graphicsinterface.org/wp-content/uploads/gi1989-22.pdf. 1990.
 1. Aila, et al. "On Quality Metrics of Bounding Volume Hierarchies." https://users.aalto.fi/~ailat1/publications/aila2013hpg_paper.pdf. 2013.
 1. Bittner, et al. "Fast Insertion-Based Optimization of Bounding Volume Hierarchies." https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.714.7132. 2013.
+1. Kopta, et al. "Fast, Effective BVH Updates for Animated Scenes." https://hwrt.cs.utah.edu/papers/hwrt_rotations.pdf. 2012.
