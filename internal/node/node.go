@@ -286,7 +286,7 @@ func (n *N) Height() uint {
 
 	n.heightCacheIsValid = true
 	if n.IsLeaf() {
-		n.heightCache = 1
+		n.heightCache = 0
 	} else {
 		n.heightCache = 1 + uint(math.Max(float64(n.Left().Height()), float64(n.Right().Height())))
 	}
