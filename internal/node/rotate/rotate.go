@@ -14,6 +14,71 @@ import (
 	"github.com/downflux/go-bvh/internal/node/op/rotate/swap"
 )
 
+// Rebalance will look a node z and its parent x, and conditionally swap an
+// unbalanced child of z with the sibling of z. That is, given
+//
+//	  x
+//	 / \
+//	a   z
+//	   / \
+//	  b   c
+//
+// Rebalance will do a swap(a, b) or swap(a, c), depending on the subtree
+// heights.
+//
+// Note that we are treating the BVH here as an AVL tree; that is, we assume the
+// tree was previously balanced, and we only need to do the toation here due to
+// a single insert or delete operation, and therefore, the maximum imbalance
+// possible between sibling nodes (e.g. a and z) is two.
+//
+// Further note that the rebalance operation is simplified because a BVH tree
+// is invariant under sibling swaps --
+//
+//	  A
+//	 / \
+//	B   C
+//
+// and
+//
+//	  A
+//	 / \
+//	C   B
+//
+// Behave exactly the same, since the only property we care about in the query
+// operation is on AABB intersections, and does not rely on the order between B
+// and C, as is the case in e.g. a binary search tree.
+//
+// In an AVL tree where in-order traversal behavior needs to be preserved and
+// WLOG z is the right child of x, we will need to apply the standard L or RL on
+// x, depending on if the c or b is heavier, respectively.
+//
+// The returned node is the parent node.
+func Rebalance(x *node.N, z *node.N) *node.N {
+	if x.IsLeaf() {
+		panic(fmt.Sprintf("parent node %v cannot be a leaf", x.ID()))
+	}
+	if z.IsRoot() {
+		panic(fmt.Sprintf("child node %v cannot be the root node", z.ID()))
+	}
+	if z.Parent() != x || (x.Left() != z && x.Right() != z) {
+		panic(fmt.Sprintf("%v is not a parent of %v", x.ID(), z.ID()))
+	}
+	if z.IsLeaf() {
+		return x
+	}
+
+	var m *node.N
+	if z == x.Left() {
+		m = x.Right()
+	} else {
+		m = x.Left()
+	}
+
+	if m.Height() < z.Height()+2 {
+
+	}
+}
+
 func RebalanceHeight(n *node.N) *node.N {
 	if n.IsRoot() {
 		return n
@@ -28,20 +93,20 @@ func RebalanceHeight(n *node.N) *node.N {
 		// Handle the case of the n-subtree mutation being the result of
 		// an insert operation.
 		if p.Right().Height() > n.Height()+1 {
-			return r(p)
+			return r(p, n)
 		}
 		// Handle the case of the n-subtree mutation being the result of
 		// a remove operation.
 		if p.Right().Height()+1 < n.Height() {
-			return l(p)
+			return l(p, n)
 		}
 	}
 	if n == p.Right() {
 		if p.Left().Height() > n.Height()+1 {
-			return l(p)
+			return l(p, n)
 		}
 		if p.Left().Height()+1 > n.Height() {
-			return r(p)
+			return r(p, n)
 		}
 	}
 	return n
