@@ -14,23 +14,19 @@ import (
 //
 // N.B.: The reference Box2D implementation rotates a subtree from
 //
-//	 A
-//	/ \
-//
-// B   C
-//
+//	  A
 //	 / \
-//	F   G
+//	B   C
+//	   / \
+//	  F   G
 //
 // to
 //
-//	 C
-//	/ \
-//
-// F   A
-//
+//	  C
 //	 / \
-//	B   G
+//	F   A
+//	   / \
+//	  B   G
 //
 // Where in the unrotated tree, the following conditions are met --
 //
@@ -39,13 +35,11 @@ import (
 //
 // Note that since both A and C are internal nodes, this is identical to
 //
-//	 A
-//	/ \
-//
-// F   C
-//
+//	  A
 //	 / \
-//	B   G
+//	F   C
+//	   / \
+//	  B   G
 //
 // We will instead use this latter rotation notation going forward to keep
 // consistent with the swap operation as described in the Catto 2019 slides.

@@ -125,7 +125,7 @@ func OverlapPenalty(n *node.N) float64 {
 // A lower value is better.
 func BalancePenalty(n *node.N) float64 {
 	depth := n.Height()
-	layers := make([]int, n.Height())
+	layers := make([]int, n.Height()+1)
 	PreOrder(n, func(n *node.N) {
 		layers[depth-n.Height()] += 1
 	})
