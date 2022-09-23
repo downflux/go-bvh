@@ -14,17 +14,17 @@ import (
 	"github.com/downflux/go-bvh/internal/node/op/rotate/swap"
 )
 
-// Rebalance will look a node z and its parent x, and conditionally swap an
-// unbalanced child of z with the sibling of z. That is, given
+// Rebalance will look a node y and its ancestors z and x, and conditionally swap an
+// with the a node from the opposite subtree. That is, given
 //
 //	  x
 //	 / \
 //	a   z
 //	   / \
-//	  b   c
+//	  b   y
 //
-// Rebalance will do a swap(a, b) or swap(a, c), depending on the subtree
-// heights.
+// Rebalance may do a swap of a and y, depending on the subtree heights of a and
+// y.
 //
 // Note that we are treating the BVH here as an AVL tree; that is, we assume the
 // tree was previously balanced, and we only need to do the toation here due to
@@ -53,32 +53,34 @@ import (
 // x, depending on if the c or b is heavier, respectively.
 //
 // The returned node is the parent node of the input.
-func Rebalance(z *node.N) *node.N {
-	if z == nil {
+//
+// See the briannoyama implementation for more details.
+func Rebalance(y *node.N) *node.N {
+	if y == nil {
 		panic("cannot rebalance an empty node")
 	}
 
-	if z.IsRoot() {
+	if y.IsRoot() {
 		return nil
 	}
-	if z.IsLeaf() {
-		return z.Parent()
+	if y.Parent().IsRoot() {
+		return y.Parent()
+	}
+	if y.IsLeaf() {
+		return y.Parent()
 	}
 
+	z := y.Parent()
 	x := z.Parent()
 	a := map[bool]*node.N{
 		true:  x.Right(),
 		false: x.Left(),
 	}[z == x.Left()]
 
-	if z.Height() > a.Height()+1 {
-		c := map[bool]*node.N{
-			true:  z.Left(),
-			false: z.Right(),
-		}[z.Left().Height() > z.Right().Height()]
-		swap.Execute(z, c)
+	if y.Height() > a.Height() {
+		swap.Execute(a, y)
 	}
-	return x
+	return z
 }
 
 // l is a left rotate operation on the right child of x.
