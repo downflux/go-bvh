@@ -34,93 +34,51 @@ import (
 // Further note that the rebalance operation is simplified because a BVH tree
 // is invariant under sibling swaps --
 //
-//	  A
+//	  x
 //	 / \
-//	B   C
+//	a   z
 //
 // and
 //
-//	  A
+//	  x
 //	 / \
-//	C   B
+//	z   a
 //
 // Behave exactly the same, since the only property we care about in the query
-// operation is on AABB intersections, and does not rely on the order between B
-// and C, as is the case in e.g. a binary search tree.
+// operation is on AABB intersections, and does not rely on the order between z
+// and a, as is the case in e.g. a binary search tree.
 //
 // In an AVL tree where in-order traversal behavior needs to be preserved and
 // WLOG z is the right child of x, we will need to apply the standard L or RL on
 // x, depending on if the c or b is heavier, respectively.
 //
-// The returned node is the parent node.
-func Rebalance(x *node.N, z *node.N) *node.N {
-	if x.IsLeaf() {
-		panic(fmt.Sprintf("parent node %v cannot be a leaf", x.ID()))
+// The returned node is the parent node of the input.
+func Rebalance(z *node.N) *node.N {
+	if z == nil {
+		panic("cannot rebalance an empty node")
 	}
+
 	if z.IsRoot() {
-		panic(fmt.Sprintf("child node %v cannot be the root node", z.ID()))
-	}
-	if z.Parent() != x || (x.Left() != z && x.Right() != z) {
-		panic(fmt.Sprintf("%v is not a parent of %v", x.ID(), z.ID()))
+		return nil
 	}
 	if z.IsLeaf() {
-		return x
+		return z.Parent()
 	}
 
-	var m *node.N
-	if z == x.Left() {
-		m = x.Right()
-	} else {
-		m = x.Left()
-	}
+	x := z.Parent()
+	a := map[bool]*node.N{
+		true:  x.Right(),
+		false: x.Left(),
+	}[z == x.Left()]
 
-	if m.Height() < z.Height()+2 {
-
+	if z.Height() > a.Height()+1 {
+		c := map[bool]*node.N{
+			true:  z.Left(),
+			false: z.Right(),
+		}[z.Left().Height() > z.Right().Height()]
+		swap.Execute(z, c)
 	}
-}
-
-func RebalanceHeight(n *node.N) *node.N {
-	if n.IsRoot() {
-		return n
-	}
-
-	// Check the relative heights between n and its sibling -- if the height
-	// is too imbalanced, rotate the tree accordingly such that the
-	// p-subtree is better balanced. This is the (single-)node rebalance
-	// step for a self-balancing binary tree.
-	p := n.Parent()
-	if n == p.Left() {
-		// Handle the case of the n-subtree mutation being the result of
-		// an insert operation.
-		if p.Right().Height() > n.Height()+1 {
-			return r(p, n)
-		}
-		// Handle the case of the n-subtree mutation being the result of
-		// a remove operation.
-		if p.Right().Height()+1 < n.Height() {
-			return l(p, n)
-		}
-	}
-	if n == p.Right() {
-		if p.Left().Height() > n.Height()+1 {
-			return l(p, n)
-		}
-		if p.Left().Height()+1 > n.Height() {
-			return r(p, n)
-		}
-	}
-	return n
-}
-
-func rotate(p *node.N, n *node.N) *node.N {
-	if n.IsRoot() || n.Parent() != p || (p.Left() != n) && (p.Right() != n) {
-		panic("invalid parent / child node relationship")
-	}
-
-	if p.Right() == n {
-		return l(p)
-	}
-	return r(p)
+	return x
 }
 
 // l is a left rotate operation on the right child of x.
