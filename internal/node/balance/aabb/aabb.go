@@ -37,42 +37,10 @@
 package aabb
 
 import (
-	"math"
-
+	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-geometry/nd/hyperrectangle"
-
-	bhr "github.com/downflux/go-bvh/hyperrectangle"
+	"github.com/downflux/go-bvh/internal/node/balance/aabb/candidate"
 )
-
-var (
-	_ ni = &node.N{}
-	_ ni = p{}
-)
-
-type ni interface {
-	AABB() hyperrectangle.R
-	Height() uint
-}
-
-func balanced(a, b ni) bool { return math.Abs(float64(a.Height())-float64(b.Height())) < 2 }
-
-// p is a pseudo-node.
-type p struct {
-	l, r *node.N
-}
-
-func (p p) AABB() hyperrectangle.R { return bhr.Union(p.l.AABB(), p.r.AABB()) }
-func (p p) Height() uint           { return uint(math.Max(float64(p.l.Height()), float64(p.r.Height()))) + 1 }
-
-type candidate struct {
-	b, c        ni
-	src, target *node.N
-}
-
-func (c candidate) Check(h float64) bool {
-	return balanced(b, c)
-}
 
 type R struct {
 	Src    *node.N
@@ -81,14 +49,11 @@ type R struct {
 
 type t struct {
 	b, c, d, e, f, g *node.N
-
-	// bh is the height of the b node. We pre-calculate these for convenience.
-	bh, ch, dh, eh, fh, gh float64
 }
 
-// generate returns a set of valid swaps on a subtree which fulfills the AVL
-// balance guarantee.
-func generate(n *node.N) []R {
+// generate returns a set of candidate swaps. These candidates may both
+// unbalance and decrease the quality of the BVH.
+func generate(n *node.N) []candidate.C {
 	if n.IsLeaf() {
 		return nil
 	}
@@ -96,82 +61,86 @@ func generate(n *node.N) []R {
 	subtree := &t{
 		b: n.Left(),
 		c: n.Right(),
-
-		bh: float64(n.Left().Height()),
-		ch: float64(n.Right().Height()),
 	}
 	if !n.Left().IsLeaf() {
 		subtree.d = n.Left().Left()
 		subtree.e = n.Left().Right()
-
-		subtree.dh = float64(subtree.d.Height())
-		subtree.eh = float64(subtree.e.Height())
 	}
 	if !n.Right().IsLeaf() {
 		subtree.f = n.Right().Left()
 		subtree.g = n.Right().Right()
-
-		subtree.fh = float64(subtree.f.Height())
-		subtree.gh = float64(subtree.g.Height())
 	}
 
-	rs := make([]R, 0, 8)
+	candidates := make([]candidate.C, 0, 8)
 
 	if !subtree.c.IsLeaf() {
-		// Simulate the B -> F rotation. In this case, C's  height (and
-		// AABB) may change, as its new children will be B and G. We
-		// need to ensure A is still balanced to fulfill the AVL
-		// guarantees -- that is,
-		//
-		//   |Height(A.L) - Height(A.R)| < 2
-		if l, r := subtree.fh, math.Max(subtree.bh, subtree.gh)+1; math.Abs(l-r) < 2 {
-			rs = append(rs, R{
-				Src:    subtree.b,
-				Target: subtree.f,
-			})
-		}
-		if l, r := subtree.gh, math.Max(subtree.bh, subtree.fh)+1; math.Abs(l-r) < 2 {
-			rs = append(rs, R{
-				Src:    subtree.b,
-				Target: subtree.g,
-			})
-		}
-	}
+		candidates = append(candidates, candidate.C{
+			B: subtree.f,
+			C: candidate.P{L: subtree.b, R: subtree.g},
 
+			Src:    subtree.b,
+			Target: subtree.f,
+		}, candidate.C{
+			B: subtree.g,
+			C: candidate.P{L: subtree.b, R: subtree.f},
+
+			Src:    subtree.b,
+			Target: subtree.g,
+		})
+	}
 	if !subtree.b.IsLeaf() {
-		if l, r := math.Max(subtree.ch, subtree.eh)+1, subtree.dh; math.Abs(l-r) < 2 {
-			rs = append(rs, R{
-				Src:    subtree.c,
-				Target: subtree.d,
-			})
-		}
-		if l, r := math.Max(subtree.ch, subtree.dh)+1, subtree.eh; math.Abs(l-r) < 2 {
-			rs = append(rs, R{
-				Src:    subtree.c,
-				Target: subtree.e,
-			})
-		}
+		candidates = append(candidates, candidate.C{
+			B: candidate.P{L: subtree.c, R: subtree.e},
+			C: subtree.d,
+
+			Src:    subtree.c,
+			Target: subtree.d,
+		}, candidate.C{
+			B: candidate.P{L: subtree.d, R: subtree.c},
+			C: subtree.e,
+
+			Src:    subtree.c,
+			Target: subtree.e,
+		})
 	}
 
 	if !subtree.b.IsLeaf() && !subtree.c.IsLeaf() {
-		// By similar logic as above, simulate the potential balance
-		// changes to B and C if we were to swap the leaves directly.
-		//
-		// For a D -> F swap, the children of B will be F and E, and the
-		// children of C will be D and G.
-		if l, r := math.Max(subtree.fh, subtree.eh), math.Max(subtree.dh, subtree.gh); math.Abs(l-r) < 2 {
-			rs = append(rs, R{
-				Src:    subtree.d,
-				Target: subtree.f,
-			})
-		}
-		if l, r := math.Max(subtree.gh, subtree.eh), math.Max(subtree.fh, subtree.dh); math.Abs(l-r) < 2 {
-			rs = append(rs, R{
-				Src:    subtree.d,
-				Target: subtree.g,
-			})
+		candidates = append(candidates, candidate.C{
+			B: candidate.P{L: subtree.f, R: subtree.e},
+			C: candidate.P{L: subtree.d, R: subtree.g},
+
+			Src:    subtree.d,
+			Target: subtree.f,
+		}, candidate.C{
+			B: candidate.P{L: subtree.g, R: subtree.e},
+			C: candidate.P{L: subtree.f, R: subtree.d},
+
+			Src:    subtree.d,
+			Target: subtree.g,
+		})
+	}
+
+	return candidates
+}
+
+func Query(n *node.N) R {
+	if n.IsLeaf() {
+		return R{}
+	}
+
+	var rotation R
+	h := heuristic.H(n.Left().AABB()) + heuristic.H(n.Right().AABB())
+
+	candidates := generate(n)
+	for _, c := range candidates {
+		if g := heuristic.H(c.B.AABB()) + heuristic.H(c.C.AABB()); c.Balanced() && g < h {
+			rotation = R{
+				Src:    c.Src,
+				Target: c.Target,
+			}
+			h = g
 		}
 	}
 
-	return rs
+	return rotation
 }
