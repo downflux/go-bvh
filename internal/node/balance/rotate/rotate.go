@@ -12,7 +12,7 @@ import (
 	"github.com/downflux/go-bvh/internal/node/op/rotate/swap"
 )
 
-// Rebalance will look a node y and its ancestors z and x, and conditionally swap an
+// Execute will look a node y and its ancestors z and x, and conditionally swap an
 // with the a node from the opposite subtree. That is, given
 //
 //	  x
@@ -21,7 +21,7 @@ import (
 //	   / \
 //	  b   y
 //
-// Rebalance may do a swap of a and y, depending on the subtree heights of a and
+// Execute may do a swap of a and y, depending on the subtree heights of a and
 // y.
 //
 // Note that we are treating the BVH here as an AVL tree; that is, we assume the
@@ -50,33 +50,36 @@ import (
 // WLOG z is the right child of x, we will need to apply the standard L or RL on
 // x, depending on if the c or b is heavier, respectively.
 //
-// The returned node is the parent node of the input.
+// The returned node is the input node.
 //
 // See the briannoyama implementation for more details.
-func Rebalance(y *node.N) *node.N {
-	if y == nil {
+func Execute(x *node.N) *node.N {
+	if x == nil {
 		panic("cannot rebalance an empty node")
 	}
 
-	if y.IsRoot() {
-		return nil
-	}
-	if y.Parent().IsRoot() {
-		return y.Parent()
-	}
-	if y.IsLeaf() {
-		return y.Parent()
+	if x.IsLeaf() {
+		return x
 	}
 
-	z := y.Parent()
-	x := z.Parent()
-	a := map[bool]*node.N{
-		true:  x.Right(),
-		false: x.Left(),
-	}[z == x.Left()]
-
-	if y.Height() > a.Height() {
-		swap.Execute(a, y)
+	var b, f *node.N
+	// If x.Left() is leaf, then its height is minimal, and therefore we
+	// implicitly know x.Left() is an internal node here.
+	if x.Left().Height() > x.Right().Height() {
+		if x.Left().Left().Height() > x.Left().Right().Height() {
+			b, f = x.Left().Left(), x.Right()
+		} else if x.Left().Right().Height() > x.Left().Left().Height() {
+			b, f = x.Left().Right(), x.Right()
+		}
+	} else if x.Right().Height() > x.Left().Height() {
+		if x.Right().Left().Height() > x.Right().Right().Height() {
+			b, f = x.Right().Left(), x.Left()
+		} else if x.Right().Right().Height() > x.Right().Left().Height() {
+			b, f = x.Right().Right(), x.Left()
+		}
 	}
-	return z
+	if b != nil && f != nil {
+		swap.Execute(b, f)
+	}
+	return x
 }

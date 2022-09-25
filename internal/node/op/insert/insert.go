@@ -5,10 +5,10 @@ import (
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/balance"
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
-	"github.com/downflux/go-bvh/internal/node/op/insert/sibling"
+	// "github.com/downflux/go-bvh/internal/node/op/insert/sibling"
+	sibling "github.com/downflux/go-bvh/internal/node/op/insert/sibling/greedy"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
-	// sibling "github.com/downflux/go-bvh/internal/node/op/insert/sibling/greedy"
 )
 
 var (
@@ -30,7 +30,6 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 			K:    aabb.Min().Dimension(),
 		})
 	}
-	c := root.Cache()
 
 	// m is the newly-created leaf node containing the input data.
 	var m *node.N
@@ -53,7 +52,7 @@ func Execute(root *node.N, size uint, x id.ID, aabb hyperrectangle.R) *node.N {
 		m.Insert(x, aabb)
 	} else {
 		m = node.New(node.O{
-			Nodes: c,
+			Nodes: root.Cache(),
 			Data: map[id.ID]hyperrectangle.R{
 				x: aabb,
 			},

@@ -12,7 +12,7 @@ import (
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
-func TestRebalance(t *testing.T) {
+func TestExecute(t *testing.T) {
 	type config struct {
 		name string
 		z    *node.N
@@ -20,9 +20,8 @@ func TestRebalance(t *testing.T) {
 	}
 
 	configs := []config{
-		{
-			name: "Root",
-			z: util.New(util.T{
+		func() config {
+			root := util.New(util.T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
 					100: {1: util.Interval(0, 100)},
 				},
@@ -31,9 +30,13 @@ func TestRebalance(t *testing.T) {
 				},
 				Root: 100,
 				Size: 1,
-			}),
-			want: nil,
-		},
+			})
+			return config{
+				name: "Root",
+				z:    root,
+				want: root,
+			}
+		}(),
 		func() config {
 			root := util.New(util.T{
 				Data: map[nid.ID]map[id.ID]hyperrectangle.R{
@@ -50,7 +53,7 @@ func TestRebalance(t *testing.T) {
 			})
 			return config{
 				name: "Leaf",
-				z:    root.Left(),
+				z:    root,
 				want: root,
 			}
 		}(),
@@ -89,8 +92,8 @@ func TestRebalance(t *testing.T) {
 			})
 			return config{
 				name: "NoSwap/ZLeft/YLeft",
-				z:    root.Left().Left(),
-				want: want.Left(),
+				z:    root,
+				want: want,
 			}
 		}(),
 		func() config {
@@ -128,8 +131,8 @@ func TestRebalance(t *testing.T) {
 			})
 			return config{
 				name: "NoSwap/ZRight/YRight",
-				z:    root.Right().Right(),
-				want: want.Right(),
+				z:    root,
+				want: want,
 			}
 		}(),
 		func() config {
@@ -184,15 +187,15 @@ func TestRebalance(t *testing.T) {
 			})
 			return config{
 				name: "Swap/ZRight/YRight",
-				z:    root.Right().Right(), // E
-				want: want.Right(),
+				z:    root,
+				want: want,
 			}
 		}(),
 	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := Rebalance(c.z)
+			got := Execute(c.z)
 			if diff := cmp.Diff(c.want, got, cmp.Comparer(util.Equal)); diff != "" {
 				t.Errorf("Rebalance() mismatch (-want +got):\n%v", diff)
 			}
