@@ -16,22 +16,12 @@ import (
 
 const epsilon = 1e-20
 
-func inherited(n *node.N, aabb hyperrectangle.R) float64 {
-	if n.IsRoot() {
-		return 0
-	}
-	return inherited(n.Parent(), aabb) + heuristic.H(bhr.Union(n.AABB(), aabb)) - heuristic.H(n.AABB())
-}
-
 type candidate struct {
-	n  *node.N
+	n *node.N
+
+	// ci is the cached inherited cost, starting from the root.
 	ci float64
 }
-
-// RotateTree generates a tree rotation function matching the tree insertion
-// signature for rotating a tree. Note that for this sibling candidate, we do
-// not attempt to rotate the tree after node insertion.
-func RotateTree(n *node.N) *node.N { return n }
 
 func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	q := pq.New[candidate](0, pq.PMax)
@@ -40,13 +30,19 @@ func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	var opt *node.N
 	h := math.Inf(0)
 
+	buf := *hyperrectangle.New(
+		make([]float64, aabb.Min().Dimension()),
+		make([]float64, aabb.Min().Dimension()),
+	)
+
 	for q.Len() > 0 {
 		v, _ := q.Pop()
 		if v.ci+heuristic.H(aabb) >= h {
 			break
 		}
 
-		cd := heuristic.H(bhr.Union(v.n.AABB(), aabb))
+		bhr.UnionBuf(v.n.AABB(), aabb, buf)
+		cd := heuristic.H(buf)
 		c := v.ci + cd
 		if c < h {
 			h = c
