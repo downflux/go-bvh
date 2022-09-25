@@ -7,7 +7,7 @@ import (
 	"github.com/downflux/go-geometry/nd/vector"
 )
 
-const size = 128
+const size = 4
 
 func AABB(rs []hyperrectangle.R) hyperrectangle.R {
 	if len(rs) == 0 {
@@ -51,7 +51,7 @@ func AABBBuf(rs []hyperrectangle.R, buf hyperrectangle.R) {
 	copy(buf.Min(), rs[0].Min())
 	copy(buf.Max(), rs[0].Max())
 
-	for _, r := range rs {
+	for _, r := range rs[1:] {
 		UnionBuf(r, buf, buf)
 	}
 }
