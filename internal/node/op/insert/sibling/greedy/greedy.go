@@ -24,8 +24,8 @@ type candidate struct {
 }
 
 func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
-	q := pq.New[candidate](0, pq.PMax)
-	q.Push(candidate{n: n, ci: 0}, 1/epsilon)
+	q := pq.New[*node.N](0, pq.PMin)
+	q.Push(n, 0)
 
 	var opt *node.N
 	h := math.Inf(0)
@@ -36,23 +36,23 @@ func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	)
 
 	for q.Len() > 0 {
-		v, _ := q.Pop()
-		if v.ci+heuristic.H(aabb) >= h {
+		m, ci := q.Pop()
+		if ci+heuristic.H(aabb) >= h {
 			break
 		}
 
-		bhr.UnionBuf(v.n.AABB(), aabb, buf)
+		bhr.UnionBuf(m.AABB(), aabb, buf)
 		cd := heuristic.H(buf)
-		c := v.ci + cd
+		c := ci + cd
 		if c < h {
 			h = c
-			opt = v.n
+			opt = m
 		}
 
-		ci := c - heuristic.H(v.n.AABB())
-		if !v.n.IsLeaf() && ci+heuristic.H(aabb) < h {
-			q.Push(candidate{n: v.n.Left(), ci: ci}, 1/(ci+epsilon))
-			q.Push(candidate{n: v.n.Right(), ci: ci}, 1/(ci+epsilon))
+		ci = c - heuristic.H(m.AABB())
+		if !m.IsLeaf() && ci+heuristic.H(aabb) < h {
+			q.Push(m.Left(), ci)
+			q.Push(m.Right(), ci)
 		}
 	}
 	return opt
