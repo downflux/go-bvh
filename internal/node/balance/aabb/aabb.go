@@ -124,6 +124,10 @@ func generate(n *node.N) []candidate.C {
 }
 
 func Query(n *node.N) R {
+	if n == nil {
+		panic("cannot query an empty node")
+	}
+
 	if n.IsLeaf() {
 		return R{}
 	}

@@ -8,10 +8,16 @@ import (
 )
 
 func Execute(n *node.N) *node.N {
-	p := rotate.Rebalance(n)
-	r := aabb.Query(p)
-	swap.Execute(r.Src, r.Target)
+	rotate.Rebalance(n)
+	if n.IsRoot() {
+		return n
+	}
 
+	p := n.Parent()
+	r := aabb.Query(p)
+	if r != (aabb.R{}) {
+		swap.Execute(r.Src, r.Target)
+	}
 	if p.IsRoot() {
 		return n
 	}
