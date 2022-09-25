@@ -18,10 +18,15 @@ type I interface {
 type P struct {
 	L *node.N
 	R *node.N
+
+	Buf hyperrectangle.R
 }
 
-func (p P) Height() uint           { return uint(math.Max(float64(p.L.Height()), float64(p.R.Height()))) + 1 }
-func (p P) AABB() hyperrectangle.R { return bhr.Union(p.L.AABB(), p.R.AABB()) }
+func (p P) Height() uint { return uint(math.Max(float64(p.L.Height()), float64(p.R.Height()))) + 1 }
+func (p P) AABB() hyperrectangle.R {
+	bhr.UnionBuf(p.L.AABB(), p.R.AABB(), p.Buf)
+	return p.Buf
+}
 
 // C is a candidate for swapping nodes in the subtree. The B and C nodes here
 // may be pseudo-nodes -- that is, what a node will look like assuming the swap

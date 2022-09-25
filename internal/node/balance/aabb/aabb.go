@@ -40,6 +40,7 @@ import (
 	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-bvh/internal/node/balance/aabb/candidate"
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
 )
 
 type R struct {
@@ -71,18 +72,22 @@ func generate(n *node.N) []candidate.C {
 		subtree.g = n.Right().Right()
 	}
 
+	buf := *hyperrectangle.New(
+		make([]float64, n.AABB().Min().Dimension()),
+		make([]float64, n.AABB().Min().Dimension()),
+	)
 	candidates := make([]candidate.C, 0, 8)
 
 	if !subtree.c.IsLeaf() {
 		candidates = append(candidates, candidate.C{
 			B: subtree.f,
-			C: candidate.P{L: subtree.b, R: subtree.g},
+			C: candidate.P{L: subtree.b, R: subtree.g, Buf: buf},
 
 			Src:    subtree.b,
 			Target: subtree.f,
 		}, candidate.C{
 			B: subtree.g,
-			C: candidate.P{L: subtree.b, R: subtree.f},
+			C: candidate.P{L: subtree.b, R: subtree.f, Buf: buf},
 
 			Src:    subtree.b,
 			Target: subtree.g,
@@ -90,13 +95,13 @@ func generate(n *node.N) []candidate.C {
 	}
 	if !subtree.b.IsLeaf() {
 		candidates = append(candidates, candidate.C{
-			B: candidate.P{L: subtree.c, R: subtree.e},
+			B: candidate.P{L: subtree.c, R: subtree.e, Buf: buf},
 			C: subtree.d,
 
 			Src:    subtree.c,
 			Target: subtree.d,
 		}, candidate.C{
-			B: candidate.P{L: subtree.d, R: subtree.c},
+			B: candidate.P{L: subtree.d, R: subtree.c, Buf: buf},
 			C: subtree.e,
 
 			Src:    subtree.c,
@@ -106,14 +111,14 @@ func generate(n *node.N) []candidate.C {
 
 	if !subtree.b.IsLeaf() && !subtree.c.IsLeaf() {
 		candidates = append(candidates, candidate.C{
-			B: candidate.P{L: subtree.f, R: subtree.e},
-			C: candidate.P{L: subtree.d, R: subtree.g},
+			B: candidate.P{L: subtree.f, R: subtree.e, Buf: buf},
+			C: candidate.P{L: subtree.d, R: subtree.g, Buf: buf},
 
 			Src:    subtree.d,
 			Target: subtree.f,
 		}, candidate.C{
-			B: candidate.P{L: subtree.g, R: subtree.e},
-			C: candidate.P{L: subtree.f, R: subtree.d},
+			B: candidate.P{L: subtree.g, R: subtree.e, Buf: buf},
+			C: candidate.P{L: subtree.f, R: subtree.d, Buf: buf},
 
 			Src:    subtree.d,
 			Target: subtree.g,
