@@ -33,7 +33,7 @@ func TestInsert(t *testing.T) {
 			if got := c.c.Insert(c.t); got != c.want {
 				t.Errorf("Insert() = %v, want = %v", got, c.want)
 			}
-			if got := c.c.Get(c.want); got != c.t {
+			if got, _ := c.c.Get(c.want); got != c.t {
 				t.Errorf("Get() = %v, want = %v", got, c.t)
 			}
 		})

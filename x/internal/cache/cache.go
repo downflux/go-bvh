@@ -1,9 +1,5 @@
 package cache
 
-import (
-	"fmt"
-)
-
 type ID int
 
 type C[T any] struct {
@@ -18,12 +14,13 @@ func New[T any]() *C[T] {
 	}
 }
 
-func (c *C[T]) Get(x ID) T {
+func (c *C[T]) Get(x ID) (T, bool) {
 	if int(x) >= len(c.cache) || c.freed[x] {
-		panic(fmt.Sprintf("invalid cache ID %v", x))
+		var blank T
+		return blank, false
 	}
 
-	return c.cache[x]
+	return c.cache[x], true
 }
 
 func (c *C[T]) Insert(t T) ID {
@@ -39,12 +36,14 @@ func (c *C[T]) Insert(t T) ID {
 	return ID(len(c.cache) - 1)
 }
 
-func (c *C[T]) Remove(x ID) {
+func (c *C[T]) Remove(x ID) bool {
 	if int(x) >= len(c.cache) || c.freed[x] {
-		panic(fmt.Sprintf("invalid cache ID %v", x))
+		return false
 	}
 
 	var blank T
 	c.cache[x] = blank
 	c.freed[x] = true
+
+	return true
 }
