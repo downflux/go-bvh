@@ -39,7 +39,7 @@ package aabb
 import (
 	"github.com/downflux/go-bvh/internal/heuristic"
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-bvh/internal/node/balance/aabb/candidate"
+	"github.com/downflux/go-bvh/internal/node/op/rotate/balance/aabb/candidate"
 )
 
 type R struct {

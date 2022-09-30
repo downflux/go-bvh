@@ -2,8 +2,8 @@ package balance
 
 import (
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-bvh/internal/node/balance/aabb"
-	"github.com/downflux/go-bvh/internal/node/balance/rotate"
+	"github.com/downflux/go-bvh/internal/node/op/rotate/balance/aabb"
+	"github.com/downflux/go-bvh/internal/node/op/rotate/balance/rotate"
 	"github.com/downflux/go-bvh/internal/node/op/rotate/swap"
 )
 

@@ -3,10 +3,10 @@ package insert
 import (
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-bvh/internal/node/balance"
 	"github.com/downflux/go-bvh/internal/node/op/insert/insert"
 	"github.com/downflux/go-bvh/internal/node/op/insert/sibling/greedy"
 	"github.com/downflux/go-bvh/internal/node/op/insert/split"
+	"github.com/downflux/go-bvh/internal/node/op/rotate/balance"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 )
 
