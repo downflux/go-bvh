@@ -32,7 +32,7 @@ func New(c *cache.C[*N], o O) *N {
 func (n *N) ID() cache.ID { return n.id }
 
 func (n *N) IsRoot(c *cache.C[*N]) bool { return n.Parent(c) == nil }
-func (n *N) IsLeaf(c *cache.C[*N]) bool { return n.Left() == nil || n.Right() == nil }
+func (n *N) IsLeaf(c *cache.C[*N]) bool { return n.Left(c) == nil || n.Right(c) == nil }
 
 func (n *N) Parent(c *cache.C[*N]) *N {
 	m, ok := c.Get(n.parent)
