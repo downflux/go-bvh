@@ -1,14 +1,26 @@
 package node
 
 import (
+	"fmt"
+
 	"github.com/downflux/go-bvh/x/internal/cache"
 )
 
+type Branch int
+
+func (b Branch) IsValid() bool {
+	return b == BranchLeft || b == BranchRight
+}
+
+const (
+	BranchLeft Branch = iota
+	BranchRight
+)
+
 type N struct {
-	id     cache.ID
-	parent cache.ID
-	left   cache.ID
-	right  cache.ID
+	id       cache.ID
+	parent   cache.ID
+	children [2]cache.ID
 }
 
 type O struct {
@@ -19,9 +31,8 @@ type O struct {
 
 func New(c *cache.C[*N], o O) *N {
 	n := &N{
-		parent: o.Parent,
-		left:   o.Left,
-		right:  o.Right,
+		parent:   o.Parent,
+		children: [2]cache.ID{o.Left, o.Right},
 	}
 	x := c.Insert(n)
 
@@ -43,8 +54,20 @@ func (n *N) Parent(c *cache.C[*N]) *N {
 	return m
 }
 
-func (n *N) Left(c *cache.C[*N]) *N {
-	m, ok := c.Get(n.left)
+// Child is a convenience function for programatic tree explorations -- instead
+// of calling
+//
+//	n.Left(c)
+//
+// we can instead call
+//
+//	n.Child[c, BranchLeft]
+func (n *N) Child(c *cache.C[*N], b Branch) *N {
+	if !b.IsValid() {
+		panic(fmt.Sprintf("invalid branch option %v", b))
+	}
+
+	m, ok := c.Get(n.children[b])
 	if !ok {
 		return nil
 	}
@@ -52,11 +75,5 @@ func (n *N) Left(c *cache.C[*N]) *N {
 	return m
 }
 
-func (n *N) Right(c *cache.C[*N]) *N {
-	m, ok := c.Get(n.right)
-	if !ok {
-		return nil
-	}
-
-	return m
-}
+func (n *N) Left(c *cache.C[*N]) *N  { return n.Child(c, BranchLeft) }
+func (n *N) Right(c *cache.C[*N]) *N { return n.Child(c, BranchRight) }
