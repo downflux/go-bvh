@@ -12,6 +12,14 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
+type S struct {
+	N *node.N
+
+	// B is the branch from the parent which will result in accessing this
+	// node. This value is set to BranchInvalid for the root node.
+	B node.Branch
+}
+
 type T struct {
 	nodes *cache.C[*node.N]
 	root  *node.N

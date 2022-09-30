@@ -8,6 +8,7 @@ import (
 
 type Branch int
 
+func (b Branch) Sibling() Branch { return b ^ 1 }
 func (b Branch) IsValid() bool {
 	return b == BranchLeft || b == BranchRight
 }
@@ -75,5 +76,5 @@ func (n *N) Child(c *cache.C[*N], b Branch) *N {
 	return m
 }
 
-func (n *N) Left(c *cache.C[*N]) *N  { return n.Child(c, BranchLeft) }
-func (n *N) Right(c *cache.C[*N]) *N { return n.Child(c, BranchRight) }
+func (n *N) Left(c *cache.C[*N]) *N              { return n.Child(c, BranchLeft) }
+func (n *N) Right(c *cache.C[*N]) *N             { return n.Child(c, BranchRight) }
