@@ -16,6 +16,8 @@ func (b Branch) IsValid() bool {
 const (
 	BranchLeft Branch = iota
 	BranchRight
+
+	BranchInvalid
 )
 
 type N struct {
@@ -55,6 +57,16 @@ func (n *N) Parent(c *cache.C[*N]) *N {
 	return m
 }
 
+func (n *N) Branch(child cache.ID) Branch {
+	if n.children[BranchLeft] == child {
+		return BranchLeft
+	}
+	if n.children[BranchRight] == child {
+		return BranchRight
+	}
+	return BranchInvalid
+}
+
 // Child is a convenience function for programatic tree explorations -- instead
 // of calling
 //
@@ -76,5 +88,5 @@ func (n *N) Child(c *cache.C[*N], b Branch) *N {
 	return m
 }
 
-func (n *N) Left(c *cache.C[*N]) *N              { return n.Child(c, BranchLeft) }
-func (n *N) Right(c *cache.C[*N]) *N             { return n.Child(c, BranchRight) }
+func (n *N) Left(c *cache.C[*N]) *N  { return n.Child(c, BranchLeft) }
+func (n *N) Right(c *cache.C[*N]) *N { return n.Child(c, BranchRight) }

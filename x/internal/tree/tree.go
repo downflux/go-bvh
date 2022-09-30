@@ -37,6 +37,35 @@ type T struct {
 	k    vector.D
 }
 
+// Path returns a path to the specified node. We assume that the input node is
+// valid -- that is, it exists in the tree cache and its root matches the tree
+// root.
+func (t *T) Path(n *node.N) []S {
+	s := make([]S, 0, 16)
+
+	for p := n; !p.IsRoot(t.nodes); p = n.Parent(t.nodes) {
+		s = append(s, S{
+			N: n,
+			B: p.Branch(n.ID()),
+		})
+		n = p
+	}
+	s = append(s, S{
+		N: t.root,
+		B: node.BranchInvalid,
+	})
+
+	// Ensure root node is the first element.
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+
+	return s
+}
+
+// Height returns the subtree height. We assume the input node is valid.
+//
+// Leaf nodes have a height of 0.
 func (t *T) Height(n *node.N) int {
 	x := n.ID()
 
@@ -49,12 +78,18 @@ func (t *T) Height(n *node.N) int {
 	if n.IsLeaf(t.nodes) {
 		t.heightCache[x] = 0
 	} else {
-		t.heightCache[x] = 1 + t.Height(n.Left(t.nodes)) + t.Height(n.Right(t.nodes))
+		h := t.Height(n.Left(t.nodes))
+		if g := t.Height(n.Right(t.nodes)); g > h {
+			h = g
+		}
+		t.heightCache[x] = 1 + g
 	}
 
 	return t.heightCache[x]
 }
 
+// AABB returns the bounding box of the subtree. We assume the input node is
+// valid.
 func (t *T) AABB(n *node.N) hyperrectangle.R {
 	x := n.ID()
 
