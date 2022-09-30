@@ -77,7 +77,7 @@ func TestSet(t *testing.T) {
 				name: "SetLeft",
 				n:    n,
 				want: result{
-					height: 3,
+					height: 2,
 					aabb:   *hyperrectangle.New([]float64{0}, []float64{75}),
 				},
 			}
@@ -136,7 +136,7 @@ func TestSet(t *testing.T) {
 				name: "SetRight",
 				n:    n,
 				want: result{
-					height: 3,
+					height: 2,
 					aabb:   *hyperrectangle.New([]float64{0}, []float64{75}),
 				},
 			}
@@ -195,7 +195,7 @@ func TestSet(t *testing.T) {
 				name: "SetParent",
 				n:    m,
 				want: result{
-					height: 3,
+					height: 2,
 					aabb:   *hyperrectangle.New([]float64{0}, []float64{75}),
 				},
 			}
