@@ -14,6 +14,8 @@ func New[T any]() *C[T] {
 	}
 }
 
+func (c *C[T]) Len() int { return len(c.cache) - len(c.freed) }
+
 func (c *C[T]) Get(x ID) (T, bool) {
 	if int(x) >= len(c.cache) || c.freed[x] {
 		var blank T
