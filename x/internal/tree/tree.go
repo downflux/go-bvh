@@ -12,14 +12,6 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
-type S struct {
-	N *node.N
-
-	// B is the branch from the parent which will result in accessing this
-	// node. This value is set to BranchInvalid for the root node.
-	B node.Branch
-}
-
 type T struct {
 	nodes *cache.C[*node.N]
 	root  *node.N
@@ -35,32 +27,6 @@ type T struct {
 
 	size int
 	k    vector.D
-}
-
-// Path returns a path to the specified node. We assume that the input node is
-// valid -- that is, it exists in the tree cache and its root matches the tree
-// root.
-func (t *T) Path(n *node.N) []S {
-	s := make([]S, 0, 16)
-
-	for p := n; !p.IsRoot(t.nodes); p = n.Parent(t.nodes) {
-		s = append(s, S{
-			N: n,
-			B: p.Branch(n.ID()),
-		})
-		n = p
-	}
-	s = append(s, S{
-		N: t.root,
-		B: node.BranchInvalid,
-	})
-
-	// Ensure root node is the first element.
-	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-		s[i], s[j] = s[j], s[i]
-	}
-
-	return s
 }
 
 // Height returns the subtree height. We assume the input node is valid.
@@ -82,7 +48,7 @@ func (t *T) Height(n *node.N) int {
 		if g := t.Height(n.Right(t.nodes)); g > h {
 			h = g
 		}
-		t.heightCache[x] = 1 + g
+		t.heightCache[x] = 1 + h
 	}
 
 	return t.heightCache[x]
