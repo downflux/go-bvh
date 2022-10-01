@@ -12,6 +12,11 @@ import (
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
+type AABBCache struct {
+	cache        map[cache.ID]hyperrectangle.R
+	cacheIsValid map[cache.ID]bool
+}
+
 type T struct {
 	nodes *cache.C[*node.N]
 	root  *node.N
@@ -29,9 +34,29 @@ type T struct {
 	k    vector.D
 }
 
+func (t *T) Node(x cache.ID) *node.N {
+	n, ok := t.nodes.Get(x)
+	if !ok {
+		panic(fmt.Sprintf("cannot get non-existent node %v", x))
+	}
+
+	return n
+}
+
 func (t *T) Insert(x id.ID, aabb hyperrectangle.R) {
 	if _, ok := t.dataLookup[x]; ok {
 		panic(fmt.Sprintf("cannot insert duplicate node %v", x))
+	}
+
+	t.dataLookup[x] = aabb
+
+	if t.root == nil {
+		m := node.New(t.nodes, node.O{
+			Parent: cache.IDInvalid,
+			Left:   cache.IDInvalid,
+			Right:  cache.IDInvalid,
+		})
+		t.leafLookup[m.ID()] = append(t.leafLookup[m.ID()], x)
 	}
 
 	panic("unimplemented")
@@ -57,7 +82,7 @@ func (t *T) Height(n *node.N) int {
 
 	t.heightCacheIsValid[x] = true
 
-	if n.IsLeaf(t.nodes) {
+	if n.IsLeaf() {
 		t.heightCache[x] = 0
 	} else {
 		h := t.Height(n.Left(t.nodes))
@@ -81,7 +106,7 @@ func (t *T) AABB(n *node.N) hyperrectangle.R {
 
 	t.aabbCacheIsValid[x] = true
 
-	if n.IsLeaf(t.nodes) {
+	if n.IsLeaf() {
 		if len(t.leafLookup[x]) == 0 {
 			panic(fmt.Sprintf("AABB is not defined for an empty leaf node %v", x))
 		}

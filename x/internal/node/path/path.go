@@ -20,7 +20,7 @@ func (p P) N(c *cache.C[*node.N]) *node.N { return p.P.Child(c, p.B) }
 // Next returns the next iterator.
 func (p P) Next(c *cache.C[*node.N]) P {
 	n := p.N(c)
-	if n.IsRoot(c) {
+	if n.IsRoot() {
 		panic("iterating past end of sequence")
 	}
 
