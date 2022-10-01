@@ -29,6 +29,22 @@ type T struct {
 	k    vector.D
 }
 
+func (t *T) Insert(x id.ID, aabb hyperrectangle.R) {
+	if _, ok := t.dataLookup[x]; ok {
+		panic(fmt.Sprintf("cannot insert duplicate node %v", x))
+	}
+
+	panic("unimplemented")
+}
+
+func (t *T) Remove(x id.ID) {
+	if _, ok := t.dataLookup[x]; !ok {
+		panic(fmt.Sprintf("cannot remove non-existent node %v", x))
+	}
+
+	panic("unimplemented")
+}
+
 // Height returns the subtree height. We assume the input node is valid.
 //
 // Leaf nodes have a height of 0.
