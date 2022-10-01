@@ -6,9 +6,7 @@ const (
 
 type ID int
 
-func (x ID) IsValid() bool {
-	return x > IDInvalid
-}
+func (x ID) IsValid() bool { return x > IDInvalid }
 
 type C[T any] struct {
 	cache []T
