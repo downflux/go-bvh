@@ -1,6 +1,14 @@
 package cache
 
+const (
+	IDInvalid ID = -1
+)
+
 type ID int
+
+func (x ID) IsValid() bool {
+	return x > IDInvalid
+}
 
 type C[T any] struct {
 	cache []T
@@ -17,7 +25,7 @@ func New[T any]() *C[T] {
 func (c *C[T]) Len() int { return len(c.cache) - len(c.freed) }
 
 func (c *C[T]) Get(x ID) (T, bool) {
-	if int(x) >= len(c.cache) || c.freed[x] {
+	if !x.IsValid() || int(x) >= len(c.cache) || c.freed[x] {
 		var blank T
 		return blank, false
 	}
@@ -39,7 +47,7 @@ func (c *C[T]) Insert(t T) ID {
 }
 
 func (c *C[T]) Remove(x ID) bool {
-	if int(x) >= len(c.cache) || c.freed[x] {
+	if !x.IsValid() || int(x) >= len(c.cache) || c.freed[x] {
 		return false
 	}
 
