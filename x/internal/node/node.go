@@ -6,6 +6,7 @@ import (
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 
 	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
@@ -39,6 +40,33 @@ type N struct {
 	aabbCacheIsValid bool
 }
 
+// Equal is a debug-only function to check if two subtrees are equal.
+//
+// We are assuming the leaves map is identical.
+func Equal(n *N, m *N) bool {
+	if n.id != m.id {
+		return false
+	}
+
+	if n.parent != m.parent {
+		return false
+	}
+
+	if n.IsLeaf() != m.IsLeaf() {
+		return false
+	}
+
+	if n.IsLeaf() {
+		return true
+	}
+
+	if n.roNodes != m.roNodes {
+		return false
+	}
+
+	return Equal(n.Left(), m.Left()) && Equal(n.Right(), m.Right())
+}
+
 type O struct {
 	Nodes  *cache.C[*N]
 	Leaves map[cache.ID]map[id.ID]hyperrectangle.R
@@ -46,6 +74,8 @@ type O struct {
 	Parent cache.ID
 	Left   cache.ID
 	Right  cache.ID
+
+	K vector.D
 }
 
 func New(o O) *N {
@@ -55,6 +85,11 @@ func New(o O) *N {
 
 		parent:   o.Parent,
 		children: [2]cache.ID{o.Left, o.Right},
+
+		aabbCache: *hyperrectangle.New(
+			vector.V(make([]float64, o.K)),
+			vector.V(make([]float64, o.K)),
+		),
 	}
 	x := o.Nodes.Insert(n)
 
