@@ -1,8 +1,17 @@
 package cache
 
+var (
+	_ RO[bool] = &C[bool]{}
+)
+
 const (
 	IDInvalid ID = -1
 )
+
+type RO[T any] interface {
+	Len() int
+	Get(x ID) (T, bool)
+}
 
 type ID int
 

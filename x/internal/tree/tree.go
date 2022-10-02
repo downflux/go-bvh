@@ -9,9 +9,9 @@ import (
 )
 
 type T struct {
-	nodes *cache.C[*node.N]
+	nodes  *cache.C[*node.N]
 	leaves map[cache.ID]map[id.ID]hyperrectangle.R
-	root  *node.N
+	root   *node.N
 
 	size int
 	k    vector.D
@@ -20,7 +20,7 @@ type T struct {
 func (t *T) Insert(x id.ID, aabb hyperrectangle.R) {
 	if t.root == nil {
 		t.root = node.New(node.O{
-			Nodes: t.nodes,
+			Nodes:  t.nodes,
 			Leaves: t.leaves,
 
 			Parent: cache.IDInvalid,
@@ -37,4 +37,3 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) {
 
 	panic("unimplemented")
 }
-

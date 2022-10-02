@@ -29,7 +29,7 @@ type N struct {
 	parent   cache.ID
 	children [2]cache.ID
 
-	roNodes  *cache.C[*N]
+	roNodes  cache.RO[*N]
 	roLeaves map[cache.ID]map[id.ID]hyperrectangle.R
 
 	heightCache        int
