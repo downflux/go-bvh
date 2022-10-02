@@ -1,15 +1,11 @@
 package tree
 
 import (
-	"fmt"
-
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
-
-	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
 type T struct {
@@ -32,7 +28,7 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) {
 			Right:  cache.IDInvalid,
 		})
 
-		t.data[t.root.ID()] = map[id.ID]hyperrectangle.R{
+		t.leaves[t.root.ID()] = map[id.ID]hyperrectangle.R{
 			x: aabb,
 		}
 

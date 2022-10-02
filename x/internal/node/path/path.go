@@ -1,7 +1,6 @@
 package path
 
 import (
-	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/node"
 )
 
@@ -15,16 +14,16 @@ type P struct {
 }
 
 // N returns the actual node tracked by the current iterator.
-func (p P) N(c *cache.C[*node.N]) *node.N { return p.P.Child(c, p.B) }
+func (p P) N() *node.N { return p.P.Child(p.B) }
 
 // Next returns the next iterator.
-func (p P) Next(c *cache.C[*node.N]) P {
-	n := p.N(c)
+func (p P) Next() P {
+	n := p.N()
 	if n.IsRoot() {
 		panic("iterating past end of sequence")
 	}
 
-	q := n.Parent(c)
+	q := n.Parent()
 	return P{
 		P: q,
 		B: q.Branch(n.ID()),
