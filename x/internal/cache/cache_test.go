@@ -1,10 +1,20 @@
 package cache
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+func TestDelete(t *testing.T) {
+	c := New()
+	x := c.Insert(0, 0, 0)
+	c.DeleteOrDie(x)
+	if _, ok := c.Get(x); ok {
+		t.Errorf("Get() = %v, want = %v", ok, false)
+	}
+}
 
 func TestInsert(t *testing.T) {
 	type config struct {
@@ -21,10 +31,11 @@ func TestInsert(t *testing.T) {
 			l:    100,
 			r:    101,
 			want: &N{
-				id:     0,
-				Parent: -1,
-				Left:   100,
-				Right:  101,
+				isValid: true,
+				id:      0,
+				Parent:  -1,
+				Left:    100,
+				Right:   101,
 			},
 		},
 		func() config {
@@ -37,10 +48,11 @@ func TestInsert(t *testing.T) {
 				l:    102,
 				r:    103,
 				want: &N{
-					id:     1,
-					Parent: -1,
-					Left:   102,
-					Right:  103,
+					isValid: true,
+					id:      1,
+					Parent:  -1,
+					Left:    102,
+					Right:   103,
 				},
 			}
 		}(),
@@ -54,10 +66,11 @@ func TestInsert(t *testing.T) {
 				l:    102,
 				r:    103,
 				want: &N{
-					id:     0,
-					Parent: -1,
-					Left:   102,
-					Right:  103,
+					isValid: true,
+					id:      0,
+					Parent:  -1,
+					Left:    102,
+					Right:   103,
 				},
 			}
 		}(),
@@ -74,32 +87,32 @@ func TestInsert(t *testing.T) {
 }
 
 func BenchmarkInsert(b *testing.B) {
-	const batch = 1000
+	const batch = 1e4
 
-	b.Run("Sequential", func(b *testing.B) {
+	b.Run(fmt.Sprintf("Sequential/Batch=%v", batch), func(b *testing.B) {
 		b.StopTimer()
-		c := New()
+		cache := New()
 		b.StartTimer()
 
 		for i := 0; i < b.N; i++ {
 			for j := 0; j < batch; j++ {
-				c.Insert(0, 0, 0)
+				cache.Insert(0, 0, 0)
 			}
 		}
 	})
-	b.Run("Freed", func(b *testing.B) {
+	b.Run(fmt.Sprintf("Freed/Batch=%v", batch), func(b *testing.B) {
 		b.StopTimer()
-		c := New()
+		cache := New()
 		b.StartTimer()
 
 		for i := 0; i < b.N; i++ {
 			for j := 0; j < batch; j++ {
-				c.Insert(0, 0, 0)
+				cache.Insert(0, 0, 0)
 			}
 
 			b.StopTimer()
 			for j := 0; j < batch; j++ {
-				c.Delete(ID(j))
+				cache.Delete(ID(j))
 			}
 			b.StartTimer()
 		}

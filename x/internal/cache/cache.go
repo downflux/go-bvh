@@ -6,13 +6,13 @@ import (
 
 type C struct {
 	data  []*N
-	freed map[ID]bool
+	freed []ID
 }
 
 func New() *C {
 	return &C{
 		data:  make([]*N, 0, 128),
-		freed: map[ID]bool{},
+		freed: make([]ID, 0, 128),
 	}
 }
 
@@ -20,11 +20,7 @@ func (c *C) Insert(p, l, r ID) ID {
 	var x ID
 	// Reuse a node if available -- this avoids additional allocs.
 	if len(c.freed) > 0 {
-		for i := range c.freed {
-			delete(c.freed, i)
-			x = ID(i)
-			break
-		}
+		x, c.freed = c.freed[len(c.freed)-1], c.freed[:len(c.freed)-1]
 	} else {
 		c.data = append(c.data, nil)
 		x = ID(len(c.data) - 1)
@@ -35,11 +31,12 @@ func (c *C) Insert(p, l, r ID) ID {
 
 // Get returns a node data struct.
 func (c *C) Get(x ID) (*N, bool) {
-	if !x.IsValid() || int(x) >= len(c.data) || c.freed[x] {
+	if !x.IsValid() || int(x) >= len(c.data) {
 		return nil, false
 	}
 
-	return c.data[x], true
+	n := c.data[x]
+	return n, n.isAllocated()
 }
 
 func (c *C) GetOrDie(x ID) *N {
@@ -52,12 +49,16 @@ func (c *C) GetOrDie(x ID) *N {
 
 // Delete returns a given node to the available pool.
 func (c *C) Delete(x ID) bool {
-	if !x.IsValid() || int(x) >= len(c.data) || c.freed[x] {
+	if !x.IsValid() || int(x) >= len(c.data) {
+		return false
+	}
+	if !c.data[x].isAllocated() {
 		return false
 	}
 
 	c.data[x].free()
-	c.freed[x] = true
+	c.freed = append(c.freed, x)
+
 	return true
 }
 
