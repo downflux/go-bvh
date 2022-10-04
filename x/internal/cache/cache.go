@@ -36,7 +36,7 @@ func (c *C) Get(x ID) (*N, bool) {
 	}
 
 	n := c.data[x]
-	return n, n.isAllocated()
+	return n, n.IsAllocated()
 }
 
 func (c *C) GetOrDie(x ID) *N {
@@ -52,7 +52,7 @@ func (c *C) Delete(x ID) bool {
 	if !x.IsValid() || int(x) >= len(c.data) {
 		return false
 	}
-	if !c.data[x].isAllocated() {
+	if !c.data[x].IsAllocated() {
 		return false
 	}
 
