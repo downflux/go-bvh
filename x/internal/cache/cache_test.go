@@ -1,0 +1,108 @@
+package cache
+
+import (
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+)
+
+func TestInsert(t *testing.T) {
+	type config struct {
+		name    string
+		c       *C
+		p, l, r ID
+		want    *N
+	}
+	configs := []config{
+		{
+			name: "Empty",
+			c:    New(),
+			p:    -1,
+			l:    100,
+			r:    101,
+			want: &N{
+				id:     0,
+				Parent: -1,
+				Left:   100,
+				Right:  101,
+			},
+		},
+		func() config {
+			c := New()
+			c.Insert(-1, 100, 101)
+			return config{
+				name: "AfterInsert",
+				c:    c,
+				p:    -1,
+				l:    102,
+				r:    103,
+				want: &N{
+					id:     1,
+					Parent: -1,
+					Left:   102,
+					Right:  103,
+				},
+			}
+		}(),
+		func() config {
+			c := New()
+			c.DeleteOrDie(c.Insert(-1, 100, 101))
+			return config{
+				name: "AfterFree",
+				c:    c,
+				p:    -1,
+				l:    102,
+				r:    103,
+				want: &N{
+					id:     0,
+					Parent: -1,
+					Left:   102,
+					Right:  103,
+				},
+			}
+		}(),
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			got := c.c.GetOrDie(c.c.Insert(c.p, c.l, c.r))
+			if diff := cmp.Diff(c.want, got, cmp.AllowUnexported(N{})); diff != "" {
+				t.Errorf("GetOrDie() mismatch(-want +got):\n%v", diff)
+			}
+		})
+	}
+}
+
+func BenchmarkInsert(b *testing.B) {
+	const batch = 1000
+
+	b.Run("Sequential", func(b *testing.B) {
+		b.StopTimer()
+		c := New()
+		b.StartTimer()
+
+		for i := 0; i < b.N; i++ {
+			for j := 0; j < batch; j++ {
+				c.Insert(0, 0, 0)
+			}
+		}
+	})
+	b.Run("Freed", func(b *testing.B) {
+		b.StopTimer()
+		c := New()
+		b.StartTimer()
+
+		for i := 0; i < b.N; i++ {
+			for j := 0; j < batch; j++ {
+				c.Insert(0, 0, 0)
+			}
+
+			b.StopTimer()
+			for j := 0; j < batch; j++ {
+				c.Delete(ID(j))
+			}
+			b.StartTimer()
+		}
+	})
+
+}
