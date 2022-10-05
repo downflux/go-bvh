@@ -14,14 +14,19 @@ type N struct {
 }
 
 func New(c *cache.C, x cache.ID) *N {
-	n := &N{
-		cache:  c,
-		id:     x,
-		parent: cache.IDInvalid,
-		branch: BInvalid,
-	}
-	cn := c.GetOrDie(x)
-	if p, ok := c.Get(cn.Parent()); ok {
+	n := &N{}
+	n.load(c, x)
+	return n
+}
+
+func (n *N) load(c *cache.C, x cache.ID) {
+	n.cache = c
+	n.id = x
+	n.parent = cache.IDInvalid
+	n.branch = BInvalid
+
+	cn := n.cache.GetOrDie(x)
+	if p, ok := n.cache.Get(cn.Parent()); ok {
 		n.parent = p.ID()
 		if x == p.Left() {
 			n.branch = BLeft
@@ -29,15 +34,6 @@ func New(c *cache.C, x cache.ID) *N {
 			n.branch = BRight
 		}
 	}
-
-	// Ensure either the node is a leaf or both children are valid.
-	_, cl := c.Get(cn.Left())
-	_, cr := c.Get(cn.Right())
-	if cl != cr {
-		panic(fmt.Sprintf("invalid node %v: dangling child node", x))
-	}
-
-	return n
 }
 
 func (n *N) Branch() B    { return n.branch }
@@ -51,10 +47,32 @@ func (n *N) IsRoot() bool {
 func (n *N) IsLeaf() bool {
 	l := n.Left()
 	if (l == nil) != (n.Right() == nil) {
-		panic(fmt.Sprintf("invalid node %v: dangling child", n.ID()))
+		panic(fmt.Sprintf("invalid node %v: dangling child", n.id))
 	}
 	return l == nil
 }
+
+func (n *N) IterParent() *N {
+	n.load(n.cache, n.cache.GetOrDie(n.id).Parent())
+	return n
+}
+
+func (n *N) IterChild(b B) *N {
+	if !b.IsValid() {
+		panic(fmt.Sprintf("cannot iterate on invalid branch %v", b))
+	}
+	var x cache.ID
+	if b == BLeft {
+		x = n.cache.GetOrDie(n.id).Left()
+	} else {
+		x = n.cache.GetOrDie(n.id).Right()
+	}
+	n.load(n.cache, x)
+	return n
+}
+
+func (n *N) IterLeft() *N  { return n.IterChild(BLeft) }
+func (n *N) IterRight() *N { return n.IterChild(BRight) }
 
 func (n *N) Parent() *N {
 	x := n.cache.GetOrDie(n.id).Parent()
