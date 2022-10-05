@@ -1,5 +1,12 @@
 package cache
 
+const (
+	idSelf int = iota
+	idParent
+	idLeft
+	idRight
+)
+
 // N is a pure data struct representing a BVH tree node. This data struct is
 // modified externally.
 type N struct {
@@ -7,12 +14,7 @@ type N struct {
 	// current node is used in the tree or not.
 	isAllocated bool
 
-	// id is not mutable by any package other than cache.
-	id ID
-
-	parent ID
-	left   ID
-	right  ID
+	ids [4]ID
 }
 
 func (n *N) allocateOrLoad(x ID, parent ID, left ID, right ID) *N {
@@ -21,10 +23,10 @@ func (n *N) allocateOrLoad(x ID, parent ID, left ID, right ID) *N {
 	}
 	n.isAllocated = true
 
-	n.id = x
-	n.parent = parent
-	n.left = left
-	n.right = right
+	n.ids[idSelf] = x
+	n.ids[idParent] = parent
+	n.ids[idLeft] = left
+	n.ids[idRight] = right
 	return n
 }
 
@@ -33,8 +35,8 @@ func (n *N) free() {
 }
 
 func (n *N) IsAllocated() bool { return n.isAllocated }
-func (n *N) ID() ID            { return n.id }
+func (n *N) ID() ID            { return n.ids[idSelf] }
 
-func (n *N) Parent() ID { return n.parent }
-func (n *N) Left() ID   { return n.left }
-func (n *N) Right() ID  { return n.right }
+func (n *N) Parent() ID { return n.ids[idParent] }
+func (n *N) Left() ID   { return n.ids[idLeft] }
+func (n *N) Right() ID  { return n.ids[idRight] }

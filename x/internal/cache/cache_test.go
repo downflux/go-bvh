@@ -32,10 +32,7 @@ func TestInsert(t *testing.T) {
 			r:    101,
 			want: &N{
 				isAllocated: true,
-				id:          0,
-				parent:      -1,
-				left:        100,
-				right:       101,
+				ids:         [4]ID{0, -1, 100, 101},
 			},
 		},
 		func() config {
@@ -49,10 +46,7 @@ func TestInsert(t *testing.T) {
 				r:    103,
 				want: &N{
 					isAllocated: true,
-					id:          1,
-					parent:      -1,
-					left:        102,
-					right:       103,
+					ids:         [4]ID{1, -1, 102, 103},
 				},
 			}
 		}(),
@@ -67,10 +61,7 @@ func TestInsert(t *testing.T) {
 				r:    103,
 				want: &N{
 					isAllocated: true,
-					id:          0,
-					parent:      -1,
-					left:        102,
-					right:       103,
+					ids:         [4]ID{0, -1, 102, 103},
 				},
 			}
 		}(),

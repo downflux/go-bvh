@@ -52,11 +52,12 @@ func (c *C) Delete(x ID) bool {
 	if !x.IsValid() || int(x) >= len(c.data) {
 		return false
 	}
-	if !c.data[x].IsAllocated() {
+	n := c.data[x]
+	if !n.IsAllocated() {
 		return false
 	}
 
-	c.data[x].free()
+	n.free()
 	c.freed = append(c.freed, x)
 
 	return true
