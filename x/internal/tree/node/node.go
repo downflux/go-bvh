@@ -1,6 +1,8 @@
 package node
 
 import (
+	"fmt"
+
 	"github.com/downflux/go-bvh/x/internal/cache"
 )
 
@@ -18,8 +20,8 @@ func New(c *cache.C, x cache.ID) *N {
 		parent: cache.IDInvalid,
 		branch: BInvalid,
 	}
-	if p, ok := c.Get(
-		c.GetOrDie(x).Parent()); ok {
+	cn := c.GetOrDie(x)
+	if p, ok := c.Get(cn.Parent()); ok {
 		n.parent = p.ID()
 		if x == p.Left() {
 			n.branch = BLeft
@@ -27,13 +29,32 @@ func New(c *cache.C, x cache.ID) *N {
 			n.branch = BRight
 		}
 	}
+
+	// Ensure either the node is a leaf or both children are valid.
+	_, cl := c.Get(cn.Left())
+	_, cr := c.Get(cn.Right())
+	if cl != cr {
+		panic(fmt.Sprintf("invalid node %v: dangling child node", x))
+	}
+
 	return n
 }
 
-func (n *N) Branch() B { return n.branch }
+func (n *N) Branch() B    { return n.branch }
+func (n *N) ID() cache.ID { return n.id }
 
-func (n *N) IsRoot() bool { return n.parent.IsValid() }
-func (n *N) IsLeaf() bool { return n.Left() == nil }
+func (n *N) IsRoot() bool {
+	_, ok := n.cache.Get(n.parent)
+	return !ok
+}
+
+func (n *N) IsLeaf() bool {
+	l := n.Left()
+	if (l == nil) != (n.Right() == nil) {
+		panic(fmt.Sprintf("invalid node %v: dangling child", n.ID()))
+	}
+	return l == nil
+}
 
 func (n *N) Parent() *N {
 	x := n.cache.GetOrDie(n.id).Parent()

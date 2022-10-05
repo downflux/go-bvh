@@ -40,3 +40,7 @@ func (n *N) ID() ID            { return n.ids[idSelf] }
 func (n *N) Parent() ID { return n.ids[idParent] }
 func (n *N) Left() ID   { return n.ids[idLeft] }
 func (n *N) Right() ID  { return n.ids[idRight] }
+
+func (n *N) SetParent(x ID) { n.ids[idParent] = x }
+func (n *N) SetLeft(x ID)   { n.ids[idLeft] = x }
+func (n *N) SetRight(x ID)  { n.ids[idRight] = x }

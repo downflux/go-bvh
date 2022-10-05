@@ -9,7 +9,7 @@ import (
 
 func TestDelete(t *testing.T) {
 	c := New()
-	x := c.Insert(0, 0, 0)
+	x := c.Insert(-1, -1, -1)
 	c.DeleteOrDie(x)
 	if _, ok := c.Get(x); ok {
 		t.Errorf("Get() = %v, want = %v", ok, false)
@@ -87,7 +87,7 @@ func BenchmarkInsert(b *testing.B) {
 
 		for i := 0; i < b.N; i++ {
 			for j := 0; j < batch; j++ {
-				cache.Insert(0, 0, 0)
+				cache.Insert(-1, -1, -1)
 			}
 		}
 	})
@@ -98,7 +98,7 @@ func BenchmarkInsert(b *testing.B) {
 
 		for i := 0; i < b.N; i++ {
 			for j := 0; j < batch; j++ {
-				cache.Insert(0, 0, 0)
+				cache.Insert(-1, -1, -1)
 			}
 
 			b.StopTimer()
