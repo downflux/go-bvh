@@ -18,12 +18,15 @@ import (
 //
 //	  m
 //	 / \
-//	C   n
+//	B   n
 //	   / \
-//	  B   C
+//	  A   C
 //
-// N.B.: the order of B and b here do not matter, since our BVH tree is
+// N.B.: the order of A and C here do not matter, since our BVH tree is
 // invariant under child swaps.
+//
+// Note too that this may make the overall tree quality worse -- additonal
+// checks will be necessary to swap B
 //
 // Case: child / child
 //
@@ -35,11 +38,31 @@ import (
 //
 // Case: ancestor / child
 //
-//n
+//    n
+//   / \
+//  A   B
+//     / \
+//    C   m
+//       / \
+//      D   E
 //
+// to
+//
+//    m
+//   / \
+//  D   n
+//     / \
+//    A   B
+//       / \
+//      C   E
 
 func Swap(c *cache.C, from cache.ID, to cache.ID) {
 	n := c.GetOrDie(from)
 	m := c.GetOrDie(to)
+
+	// Handle child / child case.
+	if n.Parent() == m.Parent() {
+		return
+	}
 
 }
