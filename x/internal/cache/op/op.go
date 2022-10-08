@@ -1,68 +1,49 @@
 package op
 
 import (
+	"fmt"
+
 	"github.com/downflux/go-bvh/x/internal/cache"
+	"github.com/downflux/go-bvh/x/internal/tree/node"
 )
 
-// Swap moves two nodes in the same tree.
+func IsAncestor(c *cache.C, n cache.ID, m cache.ID) bool {
+	for p, ok := c.Get(m); !ok; p, ok = c.Get(p.ID()) {
+		if p.ID() == n {
+			return true
+		}
+	}
+	return false
+}
+
+// Swap moves two nodes in the same tree. The two nodes must not be direct
+// ancestors of one another.
 //
-// Case: parent / child
-//
-//	  n
+//	  A
 //	 / \
-//	A   m
+//	n   B
 //	   / \
-//	  B   C
-//
-// Swap(n, m) should generate the following tree
-//
-//	  m
-//	 / \
-//	B   n
-//	   / \
-//	  A   C
-//
-// N.B.: the order of A and C here do not matter, since our BVH tree is
-// invariant under child swaps.
-//
-// Note too that this may make the overall tree quality worse -- additonal
-// checks will be necessary to swap B
-//
-// Case: child / child
-//
-//    A
-//   / \
-//  n   m
-//
-// will be invariant (since it doesn't matter).
-//
-// Case: ancestor / child
-//
-//    n
-//   / \
-//  A   B
-//     / \
-//    C   m
-//       / \
-//      D   E
+//	  m   C
 //
 // to
 //
-//    m
-//   / \
-//  D   n
-//     / \
-//    A   B
-//       / \
-//      C   E
-
+//	  A
+//	 / \
+//	m   B
+//	   / \
+//	  n   C
 func Swap(c *cache.C, from cache.ID, to cache.ID) {
-	n := c.GetOrDie(from)
-	m := c.GetOrDie(to)
-
-	// Handle child / child case.
-	if n.Parent() == m.Parent() {
-		return
+	if IsAncestor(c, from, to) || IsAncestor(c, to, from) {
+		panic(fmt.Sprintf("cannot swap direct ancestor nodes %v and %v", from, to))
 	}
 
+	n, m := node.New(c, from), node.New(c, to)
+	// p and q will always be valid nodes, since n and m can never be the
+	// root node.
+	p, q := n.Parent(), m.Parent()
+
+	c.GetOrDie(n.ID()).SetParent(q.ID())
+	c.GetOrDie(m.ID()).SetParent(p.ID())
+	c.GetOrDie(p.ID()).SetChild(n.Branch(), m.ID())
+	c.GetOrDie(q.ID()).SetChild(m.Branch(), n.ID())
 }

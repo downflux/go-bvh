@@ -1,4 +1,4 @@
-package node
+package cache
 
 import (
 	"testing"

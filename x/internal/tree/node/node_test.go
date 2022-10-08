@@ -29,7 +29,7 @@ func TestNew(t *testing.T) {
 					cache:  c,
 					id:     x,
 					parent: cache.IDInvalid,
-					branch: BInvalid,
+					branch: cache.BInvalid,
 				},
 			}
 		}(),
@@ -46,7 +46,7 @@ func TestNew(t *testing.T) {
 					cache:  c,
 					id:     root.Left(),
 					parent: root.ID(),
-					branch: BLeft,
+					branch: cache.BLeft,
 				},
 			}
 		}(),

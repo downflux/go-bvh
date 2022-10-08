@@ -10,7 +10,7 @@ type N struct {
 	cache  *cache.C
 	id     cache.ID
 	parent cache.ID
-	branch B
+	branch cache.B
 }
 
 func New(c *cache.C, x cache.ID) *N {
@@ -23,21 +23,21 @@ func (n *N) load(c *cache.C, x cache.ID) {
 	n.cache = c
 	n.id = x
 	n.parent = cache.IDInvalid
-	n.branch = BInvalid
+	n.branch = cache.BInvalid
 
 	cn := n.cache.GetOrDie(x)
 	if p, ok := n.cache.Get(cn.Parent()); ok {
 		n.parent = p.ID()
 		if x == p.Left() {
-			n.branch = BLeft
+			n.branch = cache.BLeft
 		} else {
-			n.branch = BRight
+			n.branch = cache.BRight
 		}
 	}
 }
 
-func (n *N) Branch() B    { return n.branch }
-func (n *N) ID() cache.ID { return n.id }
+func (n *N) Branch() cache.B { return n.branch }
+func (n *N) ID() cache.ID    { return n.id }
 
 func (n *N) IsRoot() bool {
 	_, ok := n.cache.Get(n.parent)
@@ -57,22 +57,19 @@ func (n *N) IterParent() *N {
 	return n
 }
 
-func (n *N) IterChild(b B) *N {
+func (n *N) IterChild(b cache.B) *N {
 	if !b.IsValid() {
 		panic(fmt.Sprintf("cannot iterate on invalid branch %v", b))
 	}
-	var x cache.ID
-	if b == BLeft {
-		x = n.cache.GetOrDie(n.id).Left()
-	} else {
-		x = n.cache.GetOrDie(n.id).Right()
-	}
+
+	x := n.cache.GetOrDie(n.id).Child(b)
 	n.load(n.cache, x)
+
 	return n
 }
 
-func (n *N) IterLeft() *N  { return n.IterChild(BLeft) }
-func (n *N) IterRight() *N { return n.IterChild(BRight) }
+func (n *N) IterLeft() *N  { return n.IterChild(cache.BLeft) }
+func (n *N) IterRight() *N { return n.IterChild(cache.BRight) }
 
 func (n *N) Parent() *N {
 	x := n.cache.GetOrDie(n.id).Parent()
@@ -83,22 +80,17 @@ func (n *N) Parent() *N {
 	return New(n.cache, x)
 }
 
-func (n *N) Child(b B) *N {
+func (n *N) Child(b cache.B) *N {
 	if !b.IsValid() {
 		return nil
 	}
-	var x cache.ID
-	if b == BLeft {
-		x = n.cache.GetOrDie(n.id).Left()
-	} else {
-		x = n.cache.GetOrDie(n.id).Right()
-	}
 
+	x := n.cache.GetOrDie(n.id).Child(b)
 	if _, ok := n.cache.Get(x); !ok {
 		return nil
 	}
 	return New(n.cache, x)
 }
 
-func (n *N) Right() *N { return n.Child(BRight) }
-func (n *N) Left() *N  { return n.Child(BLeft) }
+func (n *N) Right() *N { return n.Child(cache.BRight) }
+func (n *N) Left() *N  { return n.Child(cache.BLeft) }
