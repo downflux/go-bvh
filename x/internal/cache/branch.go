@@ -3,10 +3,10 @@ package cache
 type B int
 
 const (
-	BLeft B = iota
+	BInvalid B = iota
+	BLeft
 	BRight
-	BInvalid
 )
 
 func (b B) IsValid() bool { return b == BLeft || b == BRight }
-func (b B) Sibling() B    { return b ^ 1 }
+func (b B) Sibling() B    { return ((b - 1) ^ 1) + 1 }

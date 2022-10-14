@@ -1,12 +1,10 @@
-package op
+package cache
 
 import (
 	"fmt"
-
-	"github.com/downflux/go-bvh/x/internal/cache"
 )
 
-func IsAncestor(c *cache.C, n cache.ID, m cache.ID) bool {
+func IsAncestor(c *C, n ID, m ID) bool {
 	for x := m; x.IsValid(); x = c.GetOrDie(x).Parent() {
 		if x == n {
 			return true
@@ -23,24 +21,7 @@ func IsAncestor(c *cache.C, n cache.ID, m cache.ID) bool {
 //	A   m
 //	   / \
 //	  B   C
-//
-// we unconditionally set this to
-//
-//	  m
-//	 / \
-//	B   n
-//	   / \
-//	  A   C
-//
-// The caller should be aware of this and make further optimizations if e.g. the
-// optimal configuration would have been
-//
-//	  m
-//	 / \
-//	C   n
-//	   / \
-//	  A   B
-func Swap(c *cache.C, from cache.ID, to cache.ID, validate bool) {
+func Swap(c *C, from ID, to ID, validate bool) {
 	// We will call validate only in debugging situations, as this is an
 	// O(log N) check.
 	if validate && (IsAncestor(c, from, to) || IsAncestor(c, to, from)) {
@@ -51,12 +32,20 @@ func Swap(c *cache.C, from cache.ID, to cache.ID, validate bool) {
 	p, _ := c.Get(n.Parent())
 	q, _ := c.Get(m.Parent())
 
-	// Update parent links to the children.
+	var b, d B
 	if p != nil {
-		p.SetChild(p.Branch(n.ID()), m.ID())
+		b = p.Branch(n.ID())
 	}
 	if q != nil {
-		q.SetChild(q.Branch(m.ID()), n.ID())
+		d = q.Branch(m.ID())
+	}
+
+	// Update parent links to the children.
+	if b.IsValid() {
+		p.SetChild(b, m.ID())
+	}
+	if d.IsValid() {
+		q.SetChild(d, n.ID())
 	}
 
 	// Update child links to the parent.
