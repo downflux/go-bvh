@@ -87,8 +87,39 @@ func TestSwap(t *testing.T) {
 			return config{
 				name: "Sibling",
 				c:    c,
-				from: 1, // n,
-				to:   2, // m,
+				from: n,
+				to:   m,
+				want: want,
+			}
+		}(),
+		func() config {
+			c := New()
+			root := c.GetOrDie(c.Insert(-1, -1, -1))
+
+			n := c.Insert(root.ID(), -1, -1)
+			root.SetLeft(n)
+
+			r := c.GetOrDie(c.Insert(root.ID(), -1, -1))
+			root.SetRight(r.ID())
+
+			m := c.Insert(r.ID(), -1, -1)
+			r.SetLeft(m)
+
+			want := &C{
+				freed: []ID{},
+				data: []*N{
+					&N{ids: [4]ID{0, -1, m, r.ID()}, isAllocated: true},
+					&N{ids: [4]ID{n, r.ID(), -1, -1}, isAllocated: true},
+					&N{ids: [4]ID{r.ID(), root.ID(), n, -1}, isAllocated: true},
+					&N{ids: [4]ID{m, root.ID(), -1, -1}, isAllocated: true},
+				},
+			}
+
+			return config{
+				name: "NonAdjacent",
+				c:    c,
+				from: n,
+				to:   m,
 				want: want,
 			}
 		}(),
