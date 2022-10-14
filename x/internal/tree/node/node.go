@@ -28,11 +28,7 @@ func (n *N) load(c *cache.C, x cache.ID) {
 	cn := n.cache.GetOrDie(x)
 	if p, ok := n.cache.Get(cn.Parent()); ok {
 		n.parent = p.ID()
-		if x == p.Left() {
-			n.branch = cache.BLeft
-		} else {
-			n.branch = cache.BRight
-		}
+		n.branch = p.Branch(x)
 	}
 }
 

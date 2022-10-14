@@ -63,6 +63,17 @@ func (n *N) SetChild(b B, x ID) {
 	}
 }
 
+func (n *N) Branch(x ID) B {
+	switch x {
+	case n.ids[idLeft]:
+		return BLeft
+	case n.ids[idRight]:
+		return BRight
+	default:
+		return BInvalid
+	}
+}
+
 func (n *N) Parent() ID { return n.ids[idParent] }
 func (n *N) Left() ID   { return n.Child(BLeft) }
 func (n *N) Right() ID  { return n.Child(BRight) }

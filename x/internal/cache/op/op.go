@@ -4,46 +4,62 @@ import (
 	"fmt"
 
 	"github.com/downflux/go-bvh/x/internal/cache"
-	"github.com/downflux/go-bvh/x/internal/tree/node"
 )
 
 func IsAncestor(c *cache.C, n cache.ID, m cache.ID) bool {
-	for p, ok := c.Get(m); !ok; p, ok = c.Get(p.ID()) {
-		if p.ID() == n {
+	for x := m; x.IsValid(); x = c.GetOrDie(x).Parent() {
+		if x == n {
 			return true
 		}
 	}
 	return false
 }
 
-// Swap moves two nodes in the same tree. The two nodes must not be direct
-// ancestors of one another.
+// Swap moves two nodes in the same tree. This function does not support
+// swapping ancestors, e.g.
 //
-//	  A
+//	  n
 //	 / \
-//	n   B
+//	A   m
 //	   / \
-//	  m   C
+//	  B   C
 //
-// to
+// we unconditionally set this to
 //
-//	  A
+//	  m
 //	 / \
-//	m   B
+//	B   n
 //	   / \
-//	  n   C
-func Swap(c *cache.C, from cache.ID, to cache.ID) {
-	if IsAncestor(c, from, to) || IsAncestor(c, to, from) {
-		panic(fmt.Sprintf("cannot swap direct ancestor nodes %v and %v", from, to))
+//	  A   C
+//
+// The caller should be aware of this and make further optimizations if e.g. the
+// optimal configuration would have been
+//
+//	  m
+//	 / \
+//	C   n
+//	   / \
+//	  A   B
+func Swap(c *cache.C, from cache.ID, to cache.ID, validate bool) {
+	// We will call validate only in debugging situations, as this is an
+	// O(log N) check.
+	if validate && (IsAncestor(c, from, to) || IsAncestor(c, to, from)) {
+		panic(fmt.Sprintf("cannot swap ancestor nodes %v, %v", from, to))
 	}
 
-	n, m := node.New(c, from), node.New(c, to)
-	// p and q will always be valid nodes, since n and m can never be the
-	// root node.
-	p, q := n.Parent(), m.Parent()
+	n, m := c.GetOrDie(from), c.GetOrDie(to)
+	p, _ := c.Get(n.Parent())
+	q, _ := c.Get(m.Parent())
 
-	c.GetOrDie(n.ID()).SetParent(q.ID())
-	c.GetOrDie(m.ID()).SetParent(p.ID())
-	c.GetOrDie(p.ID()).SetChild(n.Branch(), m.ID())
-	c.GetOrDie(q.ID()).SetChild(m.Branch(), n.ID())
+	// Update parent links to the children.
+	if p != nil {
+		p.SetChild(p.Branch(n.ID()), m.ID())
+	}
+	if q != nil {
+		q.SetChild(q.Branch(m.ID()), n.ID())
+	}
+
+	// Update child links to the parent.
+	n.SetParent(q.ID())
+	m.SetParent(p.ID())
 }
