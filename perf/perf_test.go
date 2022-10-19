@@ -39,19 +39,20 @@ func BenchmarkInsert(b *testing.B) {
 	var configs []config
 	for _, n := range suite.N() {
 		for _, k := range suite.K() {
-			configs = append(configs, func() config {
-				t := generator.BY(generator.InsertRandom(nil, k, n))
-				return config{
-					name: fmt.Sprintf("briannoyama/K=%v/N=%v", k, n),
-					t:    t,
-					n:    n,
-					k:    k,
+			configs = append(configs,
+				func() config {
+					t := generator.BY(generator.InsertRandom(nil, k, n))
+					return config{
+						name: fmt.Sprintf("briannoyama/K=%v/N=%v", k, n),
+						t:    t,
+						n:    n,
+						k:    k,
 
-					load: func(k vector.D, n int) []generator.M {
-						return generator.InsertRandom(t.IDs(), k, n)
-					},
-				}
-			}(),
+						load: func(k vector.D, n int) []generator.M {
+							return generator.InsertRandom(t.IDs(), k, n)
+						},
+					}
+				}(),
 			)
 			for _, size := range suite.LeafSize() {
 				configs = append(configs, func() config {
@@ -67,6 +68,19 @@ func BenchmarkInsert(b *testing.B) {
 						},
 					}
 				}(),
+					func() config {
+						t := generator.DC(k, size, generator.InsertRandom(nil, k, n))
+						return config{
+							name: fmt.Sprintf("dhconnelly/K=%v/N=%v/LeafSize=%v", k, n, size),
+							t:    t,
+							n:    n,
+							k:    k,
+
+							load: func(k vector.D, n int) []generator.M {
+								return generator.InsertRandom(t.IDs(), k, n)
+							},
+						}
+					}(),
 				)
 			}
 		}
@@ -126,6 +140,13 @@ func BenchmarkBroadPhase(b *testing.B) {
 					configs = append(configs, config{
 						name: fmt.Sprintf("BVH/K=%v/N=%v/F=%v/LeafSize=%v", k, n, f, size),
 						t:    generator.BVH(size, ms),
+						n:    n,
+						k:    k,
+						f:    f,
+						size: size,
+					}, config{
+						name: fmt.Sprintf("dhconnelly/K=%v/N=%v/F=%v/LeafSize=%v", k, n, f, size),
+						t:    generator.DC(k, size, ms),
 						n:    n,
 						k:    k,
 						f:    f,
