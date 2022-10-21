@@ -95,6 +95,15 @@ func (n *N) IsRoot() bool {
 	return !ok
 }
 
+// IsLeaf returns if the current node has no valid children.
+//
+// N.B.: A valid BVH tree must have either both children be valid, or no valid
+// children (and contain only data). We are not checking the right child here.
+func (n *N) IsLeaf() bool {
+	_, ok := n.cache.Get(n.ids[idLeft])
+	return !ok
+}
+
 // AABB returns the bounding box of the node. This bounding box may be mutated
 // by the caller.
 func (n *N) AABB() hyperrectangle.M { return n.aabbCache }
