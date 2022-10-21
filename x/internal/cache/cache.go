@@ -7,31 +7,37 @@ import (
 )
 
 type C struct {
-	k vector.D
+	k        vector.D
+	leafSize int
 
 	data  []*N
 	freed []ID
 }
 
 type O struct {
-	K vector.D
+	K        vector.D
+	LeafSize int
 }
 
 func New(o O) *C {
 	if o.K <= 0 {
 		panic(fmt.Sprintf("invalid AABB dimension %v", o.K))
 	}
+	if o.LeafSize <= 0 {
+		panic(fmt.Sprintf("invalid node leaf size %v", o.LeafSize))
+	}
+
 	return &C{
-		k: o.K,
+		k:        o.K,
+		leafSize: o.LeafSize,
 
 		data:  make([]*N, 0, 128),
 		freed: make([]ID, 0, 128),
 	}
 }
 
-func (c *C) K() vector.D {
-	return c.k
-}
+func (c *C) K() vector.D   { return c.k }
+func (c *C) LeafSize() int { return c.leafSize }
 
 func (c *C) IsAllocated(x ID) bool {
 	_, ok := c.Get(x)

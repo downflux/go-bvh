@@ -11,7 +11,8 @@ import (
 
 func TestDelete(t *testing.T) {
 	c := New(O{
-		K: 1,
+		K:        1,
+		LeafSize: 1,
 	})
 	x := c.Insert(-1, -1, -1, true)
 	c.DeleteOrDie(x)
@@ -30,7 +31,8 @@ func TestInsert(t *testing.T) {
 	configs := []config{
 		func() config {
 			c := New(O{
-				K: 1,
+				K:        1,
+				LeafSize: 1,
 			})
 			return config{
 				name: "Empty",
@@ -51,7 +53,8 @@ func TestInsert(t *testing.T) {
 		}(),
 		func() config {
 			c := New(O{
-				K: 1,
+				K:        1,
+				LeafSize: 1,
 			})
 			c.Insert(-1, -1, -1, true)
 			return config{
@@ -73,7 +76,8 @@ func TestInsert(t *testing.T) {
 		}(),
 		func() config {
 			c := New(O{
-				K: 1,
+				K:        1,
+				LeafSize: 1,
 			})
 			c.DeleteOrDie(c.Insert(-1, -1, -1, true))
 			return config{
@@ -114,7 +118,8 @@ func BenchmarkInsert(b *testing.B) {
 	b.Run(fmt.Sprintf("Sequential/Batch=%v", batch), func(b *testing.B) {
 		b.StopTimer()
 		cache := New(O{
-			K: 1,
+			K:        1,
+			LeafSize: 1,
 		})
 		b.StartTimer()
 
@@ -127,7 +132,8 @@ func BenchmarkInsert(b *testing.B) {
 	b.Run(fmt.Sprintf("Freed/Batch=%v", batch), func(b *testing.B) {
 		b.StopTimer()
 		cache := New(O{
-			K: 1,
+			K:        1,
+			LeafSize: 1,
 		})
 		b.StartTimer()
 

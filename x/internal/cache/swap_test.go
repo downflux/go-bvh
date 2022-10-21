@@ -3,6 +3,7 @@ package cache
 import (
 	"testing"
 
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
@@ -20,7 +21,8 @@ func TestIsAncestor(t *testing.T) {
 	configs := []config{
 		func() config {
 			c := New(O{
-				K: 1,
+				K:        1,
+				LeafSize: 1,
 			})
 			root := c.GetOrDie(c.Insert(-1, -1, -1, true))
 			n := c.Insert(root.ID(), -1, -1, true)
@@ -38,7 +40,8 @@ func TestIsAncestor(t *testing.T) {
 		}(),
 		func() config {
 			c := New(O{
-				K: 1,
+				K:        1,
+				LeafSize: 1,
 			})
 			root := c.GetOrDie(c.Insert(-1, -1, -1, true))
 			n := c.Insert(root.ID(), -1, -1, true)
@@ -75,7 +78,8 @@ func TestSwap(t *testing.T) {
 	configs := []config{
 		func() config {
 			c := New(O{
-				K: 1,
+				K:        1,
+				LeafSize: 1,
 			})
 			root := c.GetOrDie(c.Insert(-1, -1, -1, true))
 			n := c.Insert(root.ID(), -1, -1, true)
@@ -84,13 +88,32 @@ func TestSwap(t *testing.T) {
 			root.SetRight(m)
 
 			want := &C{
-				k:     1,
-				freed: []ID{},
+				k:        1,
+				leafSize: 1,
+				freed:    []ID{},
 			}
 			want.data = []*N{
-				&N{cache: want, ids: [4]ID{0, -1, 2, 1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
-				&N{cache: want, ids: [4]ID{1, 0, -1, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
-				&N{cache: want, ids: [4]ID{2, 0, -1, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
+				&N{
+					cache:       want,
+					ids:         [4]ID{0, -1, 2, 1},
+					aabbCache:   hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(),
+					isAllocated: true,
+					dataCache:   map[id.ID]bool{},
+				},
+				&N{
+					cache:       want,
+					ids:         [4]ID{1, 0, -1, -1},
+					aabbCache:   hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(),
+					isAllocated: true,
+					dataCache:   map[id.ID]bool{},
+				},
+				&N{
+					cache:       want,
+					ids:         [4]ID{2, 0, -1, -1},
+					aabbCache:   hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(),
+					isAllocated: true,
+					dataCache:   map[id.ID]bool{},
+				},
 			}
 
 			return config{
@@ -103,7 +126,8 @@ func TestSwap(t *testing.T) {
 		}(),
 		func() config {
 			c := New(O{
-				K: 1,
+				K:        1,
+				LeafSize: 1,
 			})
 			root := c.GetOrDie(c.Insert(-1, -1, -1, true))
 
@@ -117,14 +141,39 @@ func TestSwap(t *testing.T) {
 			r.SetLeft(m)
 
 			want := &C{
-				k:     1,
-				freed: []ID{},
+				k:        1,
+				leafSize: 1,
+				freed:    []ID{},
 			}
 			want.data = []*N{
-				&N{cache: want, ids: [4]ID{0, -1, m, r.ID()}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
-				&N{cache: want, ids: [4]ID{n, r.ID(), -1, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
-				&N{cache: want, ids: [4]ID{r.ID(), root.ID(), n, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
-				&N{cache: want, ids: [4]ID{m, root.ID(), -1, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
+				&N{
+					cache:       want,
+					ids:         [4]ID{0, -1, m, r.ID()},
+					aabbCache:   hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(),
+					isAllocated: true,
+					dataCache:   map[id.ID]bool{},
+				},
+				&N{
+					cache:       want,
+					ids:         [4]ID{n, r.ID(), -1, -1},
+					aabbCache:   hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(),
+					isAllocated: true,
+					dataCache:   map[id.ID]bool{},
+				},
+				&N{
+					cache:       want,
+					ids:         [4]ID{r.ID(), root.ID(), n, -1},
+					aabbCache:   hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(),
+					isAllocated: true,
+					dataCache:   map[id.ID]bool{},
+				},
+				&N{
+					cache:       want,
+					ids:         [4]ID{m, root.ID(), -1, -1},
+					aabbCache:   hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(),
+					isAllocated: true,
+					dataCache:   map[id.ID]bool{},
+				},
 			}
 
 			return config{

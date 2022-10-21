@@ -3,6 +3,7 @@ package cache
 import (
 	"fmt"
 
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 )
@@ -27,6 +28,14 @@ func (n *N) Within(m *N) bool {
 	if !hyperrectangle.Within(n.aabbCache.R(), m.aabbCache.R()) {
 		return false
 	}
+	if len(n.dataCache) != len(m.dataCache) {
+		return false
+	}
+	for k, v := range n.dataCache {
+		if m.dataCache[k] != v {
+			return false
+		}
+	}
 
 	return true
 }
@@ -48,6 +57,13 @@ type N struct {
 	// manually by the caller.
 	aabbCache hyperrectangle.M
 
+	// dataCache is a buffer for leaf nodes to track AABB child objects. The
+	// caller is responsible for tracking the actual AABBs, since the
+	// objects may move between nodes during operations.
+	//
+	// N.B.: This cache is manually set by the caller.
+	dataCache map[id.ID]bool
+
 	ids [4]ID
 }
 
@@ -59,6 +75,7 @@ func (n *N) allocateOrLoad(c *C, x ID, parent ID, left ID, right ID) *N {
 				vector.V(make([]float64, c.K())),
 				vector.V(make([]float64, c.K())),
 			).M(),
+			dataCache: make(map[id.ID]bool, c.LeafSize()),
 		}
 		n.ids[idSelf] = x
 	}
@@ -85,10 +102,27 @@ func (n *N) allocateOrLoad(c *C, x ID, parent ID, left ID, right ID) *N {
 
 func (n *N) free() {
 	n.isAllocated = false
+
+	// Since the dataCache represents external data (which may be freed
+	// outside the cache), we should remove all references to that data when
+	// the node is marked invalid.
+	for k := range n.dataCache {
+		delete(n.dataCache, k)
+	}
 }
 
 func (n *N) IsAllocated() bool { return n.isAllocated }
 func (n *N) ID() ID            { return n.ids[idSelf] }
+
+// AABB returns the bounding box of the node. This bounding box may be mutated
+// by the caller.
+func (n *N) AABB() hyperrectangle.M { return n.aabbCache }
+
+// Data returns the list of AABBs contained in this node. The node must be a
+// leaf node.
+//
+// This cache may be mutated by the caller.
+func (n *N) Data() map[id.ID]bool { return n.dataCache }
 
 func (n *N) IsRoot() bool {
 	_, ok := n.cache.Get(n.ids[idParent])
@@ -103,10 +137,6 @@ func (n *N) IsLeaf() bool {
 	_, ok := n.cache.Get(n.ids[idLeft])
 	return !ok
 }
-
-// AABB returns the bounding box of the node. This bounding box may be mutated
-// by the caller.
-func (n *N) AABB() hyperrectangle.M { return n.aabbCache }
 
 func (n *N) Child(b B) *N {
 	if !b.IsValid() {
