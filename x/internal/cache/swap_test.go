@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -87,9 +88,9 @@ func TestSwap(t *testing.T) {
 				freed: []ID{},
 			}
 			want.data = []*N{
-				&N{cache: want, ids: [4]ID{0, -1, 2, 1}, isAllocated: true},
-				&N{cache: want, ids: [4]ID{1, 0, -1, -1}, isAllocated: true},
-				&N{cache: want, ids: [4]ID{2, 0, -1, -1}, isAllocated: true},
+				&N{cache: want, ids: [4]ID{0, -1, 2, 1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
+				&N{cache: want, ids: [4]ID{1, 0, -1, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
+				&N{cache: want, ids: [4]ID{2, 0, -1, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
 			}
 
 			return config{
@@ -120,10 +121,10 @@ func TestSwap(t *testing.T) {
 				freed: []ID{},
 			}
 			want.data = []*N{
-				&N{cache: want, ids: [4]ID{0, -1, m, r.ID()}, isAllocated: true},
-				&N{cache: want, ids: [4]ID{n, r.ID(), -1, -1}, isAllocated: true},
-				&N{cache: want, ids: [4]ID{r.ID(), root.ID(), n, -1}, isAllocated: true},
-				&N{cache: want, ids: [4]ID{m, root.ID(), -1, -1}, isAllocated: true},
+				&N{cache: want, ids: [4]ID{0, -1, m, r.ID()}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
+				&N{cache: want, ids: [4]ID{n, r.ID(), -1, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
+				&N{cache: want, ids: [4]ID{r.ID(), root.ID(), n, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
+				&N{cache: want, ids: [4]ID{m, root.ID(), -1, -1}, aabbCache: hyperrectangle.New(vector.V([]float64{0}), vector.V([]float64{0})).M(), isAllocated: true},
 			}
 
 			return config{

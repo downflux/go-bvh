@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -41,6 +42,10 @@ func TestInsert(t *testing.T) {
 					cache:       c,
 					isAllocated: true,
 					ids:         [4]ID{0, -1, -1, -1},
+					aabbCache: hyperrectangle.New(
+						vector.V([]float64{0}),
+						vector.V([]float64{0}),
+					).M(),
 				},
 			}
 		}(),
@@ -59,6 +64,10 @@ func TestInsert(t *testing.T) {
 					cache:       c,
 					isAllocated: true,
 					ids:         [4]ID{1, -1, -1, -1},
+					aabbCache: hyperrectangle.New(
+						vector.V([]float64{0}),
+						vector.V([]float64{0}),
+					).M(),
 				},
 			}
 		}(),
@@ -77,6 +86,10 @@ func TestInsert(t *testing.T) {
 					cache:       c,
 					isAllocated: true,
 					ids:         [4]ID{0, -1, -1, -1},
+					aabbCache: hyperrectangle.New(
+						vector.V([]float64{0}),
+						vector.V([]float64{0}),
+					).M(),
 				},
 			}
 		}(),
@@ -85,7 +98,7 @@ func TestInsert(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			got := c.c.GetOrDie(c.c.Insert(c.p, c.l, c.r, true))
-			if !DebugEqual(c.want, got) {
+			if !got.Within(c.want) {
 				diff := cmp.Diff(c.want, got, cmp.AllowUnexported(
 					N{}, C{}, hyperrectangle.M{}, hyperrectangle.R{},
 				))

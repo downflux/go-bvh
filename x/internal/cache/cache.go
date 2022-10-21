@@ -7,16 +7,14 @@ import (
 )
 
 type C struct {
-	epsilon float64
-	k       vector.D
+	k vector.D
 
 	data  []*N
 	freed []ID
 }
 
 type O struct {
-	Epsilon float64
-	K       vector.D
+	K vector.D
 }
 
 func New(o O) *C {
@@ -24,8 +22,7 @@ func New(o O) *C {
 		panic(fmt.Sprintf("invalid AABB dimension %v", o.K))
 	}
 	return &C{
-		epsilon: o.Epsilon,
-		k:       o.K,
+		k: o.K,
 
 		data:  make([]*N, 0, 128),
 		freed: make([]ID, 0, 128),
