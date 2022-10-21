@@ -6,8 +6,6 @@ import (
 	"github.com/downflux/go-bvh/container"
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
-
-	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
 var (
@@ -55,7 +53,7 @@ func (l L) Update(x id.ID, q hyperrectangle.R, aabb hyperrectangle.R) error {
 func (l L) BroadPhase(q hyperrectangle.R) []id.ID {
 	ids := make([]id.ID, 0, 128)
 	for x, aabb := range l {
-		if !bhr.Disjoint(q, aabb) {
+		if !hyperrectangle.Disjoint(q, aabb) {
 			ids = append(ids, x)
 		}
 	}

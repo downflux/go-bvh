@@ -257,15 +257,15 @@ func (n *N) BroadPhase(q hyperrectangle.R) []id.ID {
 	for m, ok := open.Pop(); ok; m, ok = open.Pop() {
 		if m.IsLeaf() {
 			for id, h := range m.data {
-				if !bhr.Disjoint(q, h) {
+				if !hyperrectangle.Disjoint(q, h) {
 					ids.Push(id)
 				}
 			}
 		} else {
-			if !bhr.Disjoint(q, m.Left().AABB()) {
+			if !hyperrectangle.Disjoint(q, m.Left().AABB()) {
 				open.Push(m.Left())
 			}
-			if !bhr.Disjoint(q, m.Right().AABB()) {
+			if !hyperrectangle.Disjoint(q, m.Right().AABB()) {
 				open.Push(m.Right())
 			}
 		}
@@ -307,9 +307,10 @@ func (n *N) AABB() hyperrectangle.R {
 		for _, aabb := range n.data {
 			rs = append(rs, aabb)
 		}
-		bhr.AABBBuf(rs, n.aabbCache)
+		bhr.AABBBuf(rs, n.aabbCache.M())
 	} else {
-		bhr.UnionBuf(n.Left().AABB(), n.Right().AABB(), n.aabbCache)
+		n.aabbCache.M().Copy(n.Left().AABB())
+		n.aabbCache.M().Union(n.Right().AABB())
 	}
 
 	return n.aabbCache

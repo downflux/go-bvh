@@ -5,8 +5,6 @@ import (
 
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
-
-	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
 type I interface {
@@ -21,7 +19,7 @@ type P struct {
 }
 
 func (p P) Height() uint           { return uint(math.Max(float64(p.L.Height()), float64(p.R.Height()))) + 1 }
-func (p P) AABB() hyperrectangle.R { return bhr.Union(p.L.AABB(), p.R.AABB()) }
+func (p P) AABB() hyperrectangle.R { return hyperrectangle.Union(p.L.AABB(), p.R.AABB()) }
 
 // C is a candidate for swapping nodes in the subtree. The B and C nodes here
 // may be pseudo-nodes -- that is, what a node will look like assuming the swap

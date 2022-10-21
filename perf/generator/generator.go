@@ -9,6 +9,7 @@ import (
 	"github.com/downflux/go-bvh/container"
 	"github.com/downflux/go-bvh/container/briannoyama"
 	"github.com/downflux/go-bvh/container/bruteforce"
+	"github.com/downflux/go-bvh/container/dhconnelly"
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -31,6 +32,21 @@ func allocateID(ids map[id.ID]bool) id.ID {
 	for ; ids[x]; x = id.ID(rand.Uint64()) {
 	}
 	return x
+}
+
+func DC(k vector.D, size uint, ms []M) *dhconnelly.BVH {
+	runtime.MemProfileRate = 0
+	defer func() { runtime.MemProfileRate = 512 * 1024 }()
+
+	t := dhconnelly.New(dhconnelly.O{
+		K:         k,
+		MinBranch: 1,
+		MaxBranch: int(size),
+	})
+	for _, f := range ms {
+		f(t)
+	}
+	return t
 }
 
 func BY(ms []M) *briannoyama.BVH {

@@ -10,8 +10,6 @@ import (
 	"github.com/downflux/go-bvh/internal/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-pq/pq"
-
-	bhr "github.com/downflux/go-bvh/hyperrectangle"
 )
 
 const epsilon = 1e-20
@@ -30,10 +28,10 @@ func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 	var opt *node.N
 	h := math.Inf(0)
 
-	buf := *hyperrectangle.New(
+	buf := hyperrectangle.New(
 		make([]float64, aabb.Min().Dimension()),
 		make([]float64, aabb.Min().Dimension()),
-	)
+	).M()
 
 	for q.Len() > 0 {
 		m, ci := q.Pop()
@@ -41,8 +39,9 @@ func Execute(n *node.N, aabb hyperrectangle.R) *node.N {
 			break
 		}
 
-		bhr.UnionBuf(m.AABB(), aabb, buf)
-		cd := heuristic.H(buf)
+		buf.Copy(m.AABB())
+		buf.Union(aabb)
+		cd := heuristic.H(buf.R())
 		c := ci + cd
 		if c < h {
 			h = c

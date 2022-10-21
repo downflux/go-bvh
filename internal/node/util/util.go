@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	bhr "github.com/downflux/go-bvh/hyperrectangle"
 	nid "github.com/downflux/go-bvh/internal/node/id"
 )
 
@@ -113,7 +112,7 @@ func SAH(n *node.N) float64 {
 func OverlapPenalty(n *node.N) float64 {
 	var p float64
 	PreOrder(n, func(n *node.N) {
-		if !n.IsLeaf() && !bhr.Disjoint(n.Left().AABB(), n.Right().AABB()) {
+		if !n.IsLeaf() && !hyperrectangle.Disjoint(n.Left().AABB(), n.Right().AABB()) {
 			p += float64(n.Height()) * float64(n.Height())
 		}
 	})
