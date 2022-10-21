@@ -9,8 +9,10 @@ import (
 )
 
 func TestDelete(t *testing.T) {
-	c := New(O{})
-	x := c.Insert(-1, -1, -1)
+	c := New(O{
+		K: 1,
+	})
+	x := c.Insert(-1, -1, -1, true)
 	c.DeleteOrDie(x)
 	if _, ok := c.Get(x); ok {
 		t.Errorf("Get() = %v, want = %v", ok, false)
@@ -26,49 +28,55 @@ func TestInsert(t *testing.T) {
 	}
 	configs := []config{
 		func() config {
-			c := New(O{})
+			c := New(O{
+				K: 1,
+			})
 			return config{
 				name: "Empty",
 				c:    c,
 				p:    -1,
-				l:    100,
-				r:    101,
+				l:    -1,
+				r:    -1,
 				want: &N{
 					cache:       c,
 					isAllocated: true,
-					ids:         [4]ID{0, -1, 100, 101},
+					ids:         [4]ID{0, -1, -1, -1},
 				},
 			}
 		}(),
 		func() config {
-			c := New(O{})
-			c.Insert(-1, 100, 101)
+			c := New(O{
+				K: 1,
+			})
+			c.Insert(-1, -1, -1, true)
 			return config{
 				name: "AfterInsert",
 				c:    c,
 				p:    -1,
-				l:    102,
-				r:    103,
+				l:    -1,
+				r:    -1,
 				want: &N{
 					cache:       c,
 					isAllocated: true,
-					ids:         [4]ID{1, -1, 102, 103},
+					ids:         [4]ID{1, -1, -1, -1},
 				},
 			}
 		}(),
 		func() config {
-			c := New(O{})
-			c.DeleteOrDie(c.Insert(-1, 100, 101))
+			c := New(O{
+				K: 1,
+			})
+			c.DeleteOrDie(c.Insert(-1, -1, -1, true))
 			return config{
 				name: "AfterFree",
 				c:    c,
 				p:    -1,
-				l:    102,
-				r:    103,
+				l:    -1,
+				r:    -1,
 				want: &N{
 					cache:       c,
 					isAllocated: true,
-					ids:         [4]ID{0, -1, 102, 103},
+					ids:         [4]ID{0, -1, -1, -1},
 				},
 			}
 		}(),
@@ -76,7 +84,7 @@ func TestInsert(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			got := c.c.GetOrDie(c.c.Insert(c.p, c.l, c.r))
+			got := c.c.GetOrDie(c.c.Insert(c.p, c.l, c.r, true))
 			if !DebugEqual(c.want, got) {
 				diff := cmp.Diff(c.want, got, cmp.AllowUnexported(
 					N{}, C{}, hyperrectangle.M{}, hyperrectangle.R{},
@@ -92,23 +100,27 @@ func BenchmarkInsert(b *testing.B) {
 
 	b.Run(fmt.Sprintf("Sequential/Batch=%v", batch), func(b *testing.B) {
 		b.StopTimer()
-		cache := New(O{})
+		cache := New(O{
+			K: 1,
+		})
 		b.StartTimer()
 
 		for i := 0; i < b.N; i++ {
 			for j := 0; j < batch; j++ {
-				cache.Insert(-1, -1, -1)
+				cache.Insert(-1, -1, -1, false)
 			}
 		}
 	})
 	b.Run(fmt.Sprintf("Freed/Batch=%v", batch), func(b *testing.B) {
 		b.StopTimer()
-		cache := New(O{})
+		cache := New(O{
+			K: 1,
+		})
 		b.StartTimer()
 
 		for i := 0; i < b.N; i++ {
 			for j := 0; j < batch; j++ {
-				cache.Insert(-1, -1, -1)
+				cache.Insert(-1, -1, -1, false)
 			}
 
 			b.StopTimer()

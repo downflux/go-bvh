@@ -18,10 +18,12 @@ func TestIsAncestor(t *testing.T) {
 
 	configs := []config{
 		func() config {
-			c := New(O{})
-			root := c.GetOrDie(c.Insert(-1, -1, -1))
-			n := c.Insert(root.ID(), -1, -1)
-			m := c.Insert(root.ID(), -1, -1)
+			c := New(O{
+				K: 1,
+			})
+			root := c.GetOrDie(c.Insert(-1, -1, -1, true))
+			n := c.Insert(root.ID(), -1, -1, true)
+			m := c.Insert(root.ID(), -1, -1, true)
 			root.SetLeft(n)
 			root.SetRight(m)
 
@@ -34,9 +36,11 @@ func TestIsAncestor(t *testing.T) {
 			}
 		}(),
 		func() config {
-			c := New(O{})
-			root := c.GetOrDie(c.Insert(-1, -1, -1))
-			n := c.Insert(root.ID(), -1, -1)
+			c := New(O{
+				K: 1,
+			})
+			root := c.GetOrDie(c.Insert(-1, -1, -1, true))
+			n := c.Insert(root.ID(), -1, -1, true)
 			root.SetLeft(n)
 
 			return config{
@@ -69,14 +73,17 @@ func TestSwap(t *testing.T) {
 
 	configs := []config{
 		func() config {
-			c := New(O{})
-			root := c.GetOrDie(c.Insert(-1, -1, -1))
-			n := c.Insert(root.ID(), -1, -1)
-			m := c.Insert(root.ID(), -1, -1)
+			c := New(O{
+				K: 1,
+			})
+			root := c.GetOrDie(c.Insert(-1, -1, -1, true))
+			n := c.Insert(root.ID(), -1, -1, true)
+			m := c.Insert(root.ID(), -1, -1, true)
 			root.SetLeft(n)
 			root.SetRight(m)
 
 			want := &C{
+				k:     1,
 				freed: []ID{},
 			}
 			want.data = []*N{
@@ -94,19 +101,22 @@ func TestSwap(t *testing.T) {
 			}
 		}(),
 		func() config {
-			c := New(O{})
-			root := c.GetOrDie(c.Insert(-1, -1, -1))
+			c := New(O{
+				K: 1,
+			})
+			root := c.GetOrDie(c.Insert(-1, -1, -1, true))
 
-			n := c.Insert(root.ID(), -1, -1)
+			n := c.Insert(root.ID(), -1, -1, true)
 			root.SetLeft(n)
 
-			r := c.GetOrDie(c.Insert(root.ID(), -1, -1))
+			r := c.GetOrDie(c.Insert(root.ID(), -1, -1, true))
 			root.SetRight(r.ID())
 
-			m := c.Insert(r.ID(), -1, -1)
+			m := c.Insert(r.ID(), -1, -1, true)
 			r.SetLeft(m)
 
 			want := &C{
+				k:     1,
 				freed: []ID{},
 			}
 			want.data = []*N{

@@ -20,6 +20,9 @@ type O struct {
 }
 
 func New(o O) *C {
+	if o.K <= 0 {
+		panic(fmt.Sprintf("invalid AABB dimension %v", o.K))
+	}
 	return &C{
 		epsilon: o.Epsilon,
 		k:       o.K,
@@ -33,7 +36,24 @@ func (c *C) K() vector.D {
 	return c.k
 }
 
-func (c *C) Insert(p, l, r ID) ID {
+func (c *C) IsAllocated(x ID) bool {
+	_, ok := c.Get(x)
+	return ok
+}
+
+func (c *C) Insert(p, l, r ID, validate bool) ID {
+	if validate {
+		if p.IsValid() && !c.IsAllocated(p) {
+			panic(fmt.Sprintf("cannot set new node with invalid parent %v", p))
+		}
+		if l.IsValid() && !c.IsAllocated(l) {
+			panic(fmt.Sprintf("cannot set new node with invalid left child %v", l))
+		}
+		if r.IsValid() && !c.IsAllocated(r) {
+			panic(fmt.Sprintf("cannot set new node with invalid right child %v", r))
+		}
+	}
+
 	var x ID
 	// Reuse a node if available -- this avoids additional allocs.
 	if len(c.freed) > 0 {
