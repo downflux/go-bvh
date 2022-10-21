@@ -3,6 +3,7 @@ package cache
 import (
 	"testing"
 
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -17,7 +18,7 @@ func TestIsAncestor(t *testing.T) {
 
 	configs := []config{
 		func() config {
-			c := New()
+			c := New(O{})
 			root := c.GetOrDie(c.Insert(-1, -1, -1))
 			n := c.Insert(root.ID(), -1, -1)
 			m := c.Insert(root.ID(), -1, -1)
@@ -33,7 +34,7 @@ func TestIsAncestor(t *testing.T) {
 			}
 		}(),
 		func() config {
-			c := New()
+			c := New(O{})
 			root := c.GetOrDie(c.Insert(-1, -1, -1))
 			n := c.Insert(root.ID(), -1, -1)
 			root.SetLeft(n)
@@ -68,7 +69,7 @@ func TestSwap(t *testing.T) {
 
 	configs := []config{
 		func() config {
-			c := New()
+			c := New(O{})
 			root := c.GetOrDie(c.Insert(-1, -1, -1))
 			n := c.Insert(root.ID(), -1, -1)
 			m := c.Insert(root.ID(), -1, -1)
@@ -77,11 +78,11 @@ func TestSwap(t *testing.T) {
 
 			want := &C{
 				freed: []ID{},
-				data: []*N{
-					&N{ids: [4]ID{0, -1, 2, 1}, isAllocated: true},
-					&N{ids: [4]ID{1, 0, -1, -1}, isAllocated: true},
-					&N{ids: [4]ID{2, 0, -1, -1}, isAllocated: true},
-				},
+			}
+			want.data = []*N{
+				&N{cache: want, ids: [4]ID{0, -1, 2, 1}, isAllocated: true},
+				&N{cache: want, ids: [4]ID{1, 0, -1, -1}, isAllocated: true},
+				&N{cache: want, ids: [4]ID{2, 0, -1, -1}, isAllocated: true},
 			}
 
 			return config{
@@ -93,7 +94,7 @@ func TestSwap(t *testing.T) {
 			}
 		}(),
 		func() config {
-			c := New()
+			c := New(O{})
 			root := c.GetOrDie(c.Insert(-1, -1, -1))
 
 			n := c.Insert(root.ID(), -1, -1)
@@ -107,12 +108,12 @@ func TestSwap(t *testing.T) {
 
 			want := &C{
 				freed: []ID{},
-				data: []*N{
-					&N{ids: [4]ID{0, -1, m, r.ID()}, isAllocated: true},
-					&N{ids: [4]ID{n, r.ID(), -1, -1}, isAllocated: true},
-					&N{ids: [4]ID{r.ID(), root.ID(), n, -1}, isAllocated: true},
-					&N{ids: [4]ID{m, root.ID(), -1, -1}, isAllocated: true},
-				},
+			}
+			want.data = []*N{
+				&N{cache: want, ids: [4]ID{0, -1, m, r.ID()}, isAllocated: true},
+				&N{cache: want, ids: [4]ID{n, r.ID(), -1, -1}, isAllocated: true},
+				&N{cache: want, ids: [4]ID{r.ID(), root.ID(), n, -1}, isAllocated: true},
+				&N{cache: want, ids: [4]ID{m, root.ID(), -1, -1}, isAllocated: true},
 			}
 
 			return config{
@@ -128,7 +129,7 @@ func TestSwap(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			Swap(c.c, c.from, c.to /* validate = */, true)
-			if diff := cmp.Diff(c.want, c.c, cmp.AllowUnexported(C{}, N{})); diff != "" {
+			if diff := cmp.Diff(c.want, c.c, cmp.AllowUnexported(C{}, N{}, hyperrectangle.R{}, hyperrectangle.M{})); diff != "" {
 				t.Errorf("Swap() mismatch(-want +got):\n%v", diff)
 			}
 

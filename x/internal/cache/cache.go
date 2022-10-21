@@ -2,18 +2,35 @@ package cache
 
 import (
 	"fmt"
+
+	"github.com/downflux/go-geometry/nd/vector"
 )
 
 type C struct {
+	epsilon float64
+	k       vector.D
+
 	data  []*N
 	freed []ID
 }
 
-func New() *C {
+type O struct {
+	Epsilon float64
+	K       vector.D
+}
+
+func New(o O) *C {
 	return &C{
+		epsilon: o.Epsilon,
+		k:       o.K,
+
 		data:  make([]*N, 0, 128),
 		freed: make([]ID, 0, 128),
 	}
+}
+
+func (c *C) K() vector.D {
+	return c.k
 }
 
 func (c *C) Insert(p, l, r ID) ID {
@@ -25,7 +42,7 @@ func (c *C) Insert(p, l, r ID) ID {
 		c.data = append(c.data, nil)
 		x = ID(len(c.data) - 1)
 	}
-	c.data[x] = c.data[x].allocateOrLoad(x, p, l, r)
+	c.data[x] = c.data[x].allocateOrLoad(c, x, p, l, r)
 	return x
 }
 

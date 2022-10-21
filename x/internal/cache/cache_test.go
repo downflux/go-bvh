@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestDelete(t *testing.T) {
-	c := New()
+	c := New(O{})
 	x := c.Insert(-1, -1, -1)
 	c.DeleteOrDie(x)
 	if _, ok := c.Get(x); ok {
@@ -24,19 +25,23 @@ func TestInsert(t *testing.T) {
 		want    *N
 	}
 	configs := []config{
-		{
-			name: "Empty",
-			c:    New(),
-			p:    -1,
-			l:    100,
-			r:    101,
-			want: &N{
-				isAllocated: true,
-				ids:         [4]ID{0, -1, 100, 101},
-			},
-		},
 		func() config {
-			c := New()
+			c := New(O{})
+			return config{
+				name: "Empty",
+				c:    c,
+				p:    -1,
+				l:    100,
+				r:    101,
+				want: &N{
+					cache:       c,
+					isAllocated: true,
+					ids:         [4]ID{0, -1, 100, 101},
+				},
+			}
+		}(),
+		func() config {
+			c := New(O{})
 			c.Insert(-1, 100, 101)
 			return config{
 				name: "AfterInsert",
@@ -45,13 +50,14 @@ func TestInsert(t *testing.T) {
 				l:    102,
 				r:    103,
 				want: &N{
+					cache:       c,
 					isAllocated: true,
 					ids:         [4]ID{1, -1, 102, 103},
 				},
 			}
 		}(),
 		func() config {
-			c := New()
+			c := New(O{})
 			c.DeleteOrDie(c.Insert(-1, 100, 101))
 			return config{
 				name: "AfterFree",
@@ -60,6 +66,7 @@ func TestInsert(t *testing.T) {
 				l:    102,
 				r:    103,
 				want: &N{
+					cache:       c,
 					isAllocated: true,
 					ids:         [4]ID{0, -1, 102, 103},
 				},
@@ -70,7 +77,10 @@ func TestInsert(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			got := c.c.GetOrDie(c.c.Insert(c.p, c.l, c.r))
-			if diff := cmp.Diff(c.want, got, cmp.AllowUnexported(N{})); diff != "" {
+			if !DebugEqual(c.want, got) {
+				diff := cmp.Diff(c.want, got, cmp.AllowUnexported(
+					N{}, C{}, hyperrectangle.M{}, hyperrectangle.R{},
+				))
 				t.Errorf("GetOrDie() mismatch(-want +got):\n%v", diff)
 			}
 		})
@@ -82,7 +92,7 @@ func BenchmarkInsert(b *testing.B) {
 
 	b.Run(fmt.Sprintf("Sequential/Batch=%v", batch), func(b *testing.B) {
 		b.StopTimer()
-		cache := New()
+		cache := New(O{})
 		b.StartTimer()
 
 		for i := 0; i < b.N; i++ {
@@ -93,7 +103,7 @@ func BenchmarkInsert(b *testing.B) {
 	})
 	b.Run(fmt.Sprintf("Freed/Batch=%v", batch), func(b *testing.B) {
 		b.StopTimer()
-		cache := New()
+		cache := New(O{})
 		b.StartTimer()
 
 		for i := 0; i < b.N; i++ {

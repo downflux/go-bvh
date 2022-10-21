@@ -5,12 +5,13 @@ import (
 )
 
 func IsAncestor(c *C, n ID, m ID) bool {
-	for x := m; x.IsValid(); x = c.GetOrDie(x).Parent() {
-		if x == n {
+	var x *N
+	for x = c.GetOrDie(m); !x.IsRoot(); x = x.Parent() {
+		if x.ID() == n {
 			return true
 		}
 	}
-	return false
+	return x.ID() == n
 }
 
 // Swap moves two nodes in the same tree. This function does not support
@@ -29,8 +30,13 @@ func Swap(c *C, from ID, to ID, validate bool) {
 	}
 
 	n, m := c.GetOrDie(from), c.GetOrDie(to)
-	p, _ := c.Get(n.Parent())
-	q, _ := c.Get(m.Parent())
+	var p, q *N
+	if !n.IsRoot() {
+		p = n.Parent()
+	}
+	if !m.IsRoot() {
+		q = m.Parent()
+	}
 
 	var b, d B
 	if p != nil {
