@@ -62,6 +62,11 @@ type N struct {
 	// objects may move between nodes during operations.
 	//
 	// N.B.: This cache is manually set by the caller.
+	//
+	// N.B.: A valid node AABB must contain all data objects, and may also
+	// be extended in each direction as a buffer. This buffer is useful for
+	// minimizing the amount of frivolous tree add / remove operations, per
+	// Catto 2019.
 	dataCache map[id.ID]bool
 
 	ids [4]ID
