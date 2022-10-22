@@ -25,6 +25,9 @@ func New(o O) *T {
 			K:        o.K,
 			LeafSize: o.LeafSize,
 		}),
+
+		nodes: make(map[id.ID]cache.ID, 1024),
+		data:  make(map[id.ID]hyperrectangle.R, 1024),
 	}
 }
 
