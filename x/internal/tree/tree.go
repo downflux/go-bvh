@@ -33,6 +33,11 @@ func New(o O) *T {
 
 func (t *T) K() vector.D { return t.c.K() }
 
+func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error { return nil }
+func (t *T) Update(x id.ID, aabb hyperrectangle.R) error { return nil }
+func (t *T) Remove(x id.ID) error                        { return nil }
+func (t *T) BroadPhase(q hyperrectangle.R) []id.ID       { return nil }
+
 // When inserting an AABB object, remember we also need to update the leaf node
 // n.Data() as well as the caches tracked by the tree struct.
 //

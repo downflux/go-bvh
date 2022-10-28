@@ -55,6 +55,10 @@ type N struct {
 	//
 	// N.B.: As with the node relationship IDs, the aabbCache must be set
 	// manually by the caller.
+	//
+	// aabbCache may be expanded by some additional factor as compared to
+	// the child nodes; this useful for frequently updated trees to reduce
+	// object insert and remove churn.
 	aabbCache hyperrectangle.M
 
 	// dataCache is a buffer for leaf nodes to track AABB child objects. The
