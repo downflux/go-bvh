@@ -46,6 +46,7 @@ func (t *T) BroadPhase(q hyperrectangle.R) []id.ID       { return nil }
 // 2. add a new cache node, or
 //    a. split an existing node;
 // 3. update cache node n.Data() with AABB
+//    a. expand AABB by some factor for both new and existing nodes
 // 4. update T.nodes with new AABB, and
 //    a. update other nodes which may have moved during split;
 // 5. walk up the cache node (i.e. n.Parent()) and balance the tree
