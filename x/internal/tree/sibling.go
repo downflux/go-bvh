@@ -1,6 +1,7 @@
 package tree
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/downflux/go-bvh/x/internal/cache"
@@ -13,21 +14,6 @@ import (
 // sibling finds an insertion sibling candidate, as per Bittner et al.  2013.
 // This is the original algorithm described in the Catto 2019 slides, and aims
 // to decrease the overall SAH value of the resultant tree.
-//
-// Given some tree
-//
-//	  A
-//	 / \
-//	B   C
-//
-// # We consider the lower bound cost of inserting into A to be the cost of
-//
-// 1. the cost of traveling into A,
-// 2. adding a new node to contain B and C, and
-// 3. adding a new node to contain the input AABB.
-//
-// We define the cost of traveling into A recursively, where each node
-// contributes
 func sibling(c *cache.C, x cache.ID, aabb hyperrectangle.R) cache.ID {
 	l := heuristic.H(aabb)
 
@@ -53,6 +39,8 @@ func sibling(c *cache.C, x cache.ID, aabb hyperrectangle.R) cache.ID {
 
 	for q.Len() > 0 {
 		m, g := q.Pop()
+		fmt.Printf("DEBUG: m.ID() == %v, g == %v, h == %v\n", m.ID(), g, h)
+
 		// Prune the current node and any other nodes in the queue if
 		// the mininum incurred penalty is greater than the current
 		// optimal lower bound, as l is the highest allowable additional
