@@ -233,6 +233,57 @@ func TestSibling(t *testing.T) {
 				want: left.ID(),
 			}
 		}(),
+		// Assert that the induced cost matters is accounted for within
+		// inner nodes.
+		//
+		//      A
+		//     / \
+		//    /   \
+		//   B     C
+		//  / \   / \
+		// D   E F   G
+		func() config {
+			c := cache.New(cache.O{
+				LeafSize: 1,
+				K:        2,
+			})
+			nA := c.GetOrDie(c.Insert(cache.IDInvalid, cache.IDInvalid, cache.IDInvalid, true))
+
+			nB := c.GetOrDie(c.Insert(nA.ID(), cache.IDInvalid, cache.IDInvalid, true))
+			nC := c.GetOrDie(c.Insert(nA.ID(), cache.IDInvalid, cache.IDInvalid, true))
+
+			nD := c.GetOrDie(c.Insert(nB.ID(), cache.IDInvalid, cache.IDInvalid, true))
+			nE := c.GetOrDie(c.Insert(nB.ID(), cache.IDInvalid, cache.IDInvalid, true))
+			nF := c.GetOrDie(c.Insert(nC.ID(), cache.IDInvalid, cache.IDInvalid, true))
+			nG := c.GetOrDie(c.Insert(nC.ID(), cache.IDInvalid, cache.IDInvalid, true))
+
+			nA.SetLeft(nB.ID())
+			nA.SetRight(nC.ID())
+			nB.SetLeft(nD.ID())
+			nB.SetRight(nE.ID())
+			nC.SetLeft(nF.ID())
+			nC.SetRight(nG.ID())
+
+			nA.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{100, 100})))
+
+			nB.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{50, 50})))
+			nC.AABB().Copy(*hyperrectangle.New(vector.V([]float64{90, 90}), vector.V([]float64{100, 100})))
+
+			nD.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{10, 10})))
+			nE.AABB().Copy(*hyperrectangle.New(vector.V([]float64{40, 40}), vector.V([]float64{50, 50})))
+			nF.AABB().Copy(*hyperrectangle.New(vector.V([]float64{90, 90}), vector.V([]float64{91, 91})))
+			nG.AABB().Copy(*hyperrectangle.New(vector.V([]float64{95, 95}), vector.V([]float64{100, 100})))
+
+			// Check that the induced cost is accounted for by inner
+			// tree nodes.
+			return config{
+				name: "InnerNode/Overlaps",
+				c:    c,
+				x:    nA.ID(),
+				aabb: *hyperrectangle.New(vector.V([]float64{49, 49}), vector.V([]float64{51, 51})),
+				want: nE.ID(),
+			}
+		}(),
 	}
 
 	for _, c := range configs {
