@@ -123,6 +123,13 @@ func (n *N) free() {
 func (n *N) IsAllocated() bool { return n.isAllocated }
 func (n *N) ID() ID            { return n.ids[idSelf] }
 
+func (n *N) IsFull() bool {
+	if !n.IsLeaf() {
+		panic(fmt.Sprintf("internal node %v cannot have a meaningful data cache size", n.ID()))
+	}
+	return len(n.dataCache) >= n.cache.LeafSize()
+}
+
 // AABB returns the bounding box of the node. This bounding box may be mutated
 // by the caller.
 func (n *N) AABB() hyperrectangle.M { return n.aabbCache }

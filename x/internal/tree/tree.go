@@ -54,11 +54,22 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 		nid = t.root
 		t.c.GetOrDie(nid).Data()[x] = true
 	} else {
-		return fmt.Errorf("unimplemented tree insert for non-nil root")
+		t.root, nid = insert(
+			t.c,
+			t.root,
+			t.data,
+			x,
+			aabb,
+		)
 	}
 
-	t.nodes[x] = nid
 	t.data[x] = aabb
+
+	// Ensure any data points moved into a new node are updated in the
+	// lookup table.
+	for x := range t.c.GetOrDie(nid).Data() {
+		t.nodes[x] = nid
+	}
 
 	return nil
 }
