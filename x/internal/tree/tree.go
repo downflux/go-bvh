@@ -15,11 +15,14 @@ type T struct {
 
 	nodes map[id.ID]cache.ID
 	data  map[id.ID]hyperrectangle.R
+
+	tolerance float64
 }
 
 type O struct {
-	K        vector.D
-	LeafSize int
+	K         vector.D
+	LeafSize  int
+	Tolerance float64
 }
 
 func New(o O) *T {
@@ -31,8 +34,9 @@ func New(o O) *T {
 
 		root: cache.IDInvalid,
 
-		nodes: make(map[id.ID]cache.ID, 1024),
-		data:  make(map[id.ID]hyperrectangle.R, 1024),
+		nodes:     make(map[id.ID]cache.ID, 1024),
+		data:      make(map[id.ID]hyperrectangle.R, 1024),
+		tolerance: o.Tolerance,
 	}
 }
 
@@ -43,7 +47,8 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 		return fmt.Errorf("cannot insert a duplicate node %v", x)
 	}
 
-	var nid cache.ID
+	t.data[x] = aabb
+
 	if _, ok := t.c.Get(t.root); !ok {
 		t.root = t.c.Insert(
 			t.root,
@@ -51,24 +56,22 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 			cache.IDInvalid,
 			/* validate = */ false,
 		)
-		nid = t.root
-		t.c.GetOrDie(nid).Data()[x] = true
+		t.c.GetOrDie(t.root).Data()[x] = struct{}{}
+		t.nodes[x] = t.root
 	} else {
-		t.root, nid = insert(
+		var updates []Update
+		t.root, updates = insert(
 			t.c,
 			t.root,
 			t.data,
+			t.nodes,
 			x,
-			aabb,
+			t.tolerance,
 		)
-	}
 
-	t.data[x] = aabb
-
-	// Ensure any data points moved into a new node are updated in the
-	// lookup table.
-	for x := range t.c.GetOrDie(nid).Data() {
-		t.nodes[x] = nid
+		for _, m := range updates {
+			t.nodes[m.ID] = m.Node
+		}
 	}
 
 	return nil

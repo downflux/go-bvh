@@ -31,12 +31,11 @@ func (n *N) Within(m *N) bool {
 	if len(n.dataCache) != len(m.dataCache) {
 		return false
 	}
-	for k, v := range n.dataCache {
-		if m.dataCache[k] != v {
+	for k := range n.dataCache {
+		if _, ok := m.dataCache[k]; !ok {
 			return false
 		}
 	}
-
 	return true
 }
 
@@ -71,7 +70,7 @@ type N struct {
 	// be extended in each direction as a buffer. This buffer is useful for
 	// minimizing the amount of frivolous tree add / remove operations, per
 	// Catto 2019.
-	dataCache map[id.ID]bool
+	dataCache map[id.ID]struct{}
 
 	ids [4]ID
 }
@@ -84,7 +83,7 @@ func (n *N) allocateOrLoad(c *C, x ID, parent ID, left ID, right ID) *N {
 				vector.V(make([]float64, c.K())),
 				vector.V(make([]float64, c.K())),
 			).M(),
-			dataCache: make(map[id.ID]bool, c.LeafSize()),
+			dataCache: make(map[id.ID]struct{}, c.LeafSize()),
 		}
 		n.ids[idSelf] = x
 	}
@@ -138,7 +137,11 @@ func (n *N) AABB() hyperrectangle.M { return n.aabbCache }
 // leaf node.
 //
 // This cache may be mutated by the caller.
-func (n *N) Data() map[id.ID]bool { return n.dataCache }
+//
+// N.B.: We make the assumption that every member of the map here is a valid
+// object -- in order to remove an object from the node, the caller must instead
+// make a delete call.
+func (n *N) Data() map[id.ID]struct{} { return n.dataCache }
 
 func (n *N) IsRoot() bool {
 	_, ok := n.cache.Get(n.ids[idParent])
