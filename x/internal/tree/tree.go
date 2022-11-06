@@ -49,29 +49,12 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 
 	t.data[x] = aabb
 
-	if _, ok := t.c.Get(t.root); !ok {
-		t.root = t.c.Insert(
-			t.root,
-			cache.IDInvalid,
-			cache.IDInvalid,
-			/* validate = */ false,
-		)
-		t.c.GetOrDie(t.root).Data()[x] = struct{}{}
-		t.nodes[x] = t.root
-	} else {
-		var updates []Update
-		t.root, updates = insert(
-			t.c,
-			t.root,
-			t.data,
-			t.nodes,
-			x,
-			t.tolerance,
-		)
-
-		for _, m := range updates {
-			t.nodes[m.ID] = m.Node
-		}
+	var updates []Update
+	t.root, updates = insert(
+		t.c, t.root, t.data, t.nodes, x, t.tolerance,
+	)
+	for _, m := range updates {
+		t.nodes[m.ID] = m.Node
 	}
 
 	return nil

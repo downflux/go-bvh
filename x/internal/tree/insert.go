@@ -116,6 +116,22 @@ func setAABB(data map[id.ID]hyperrectangle.R, n *cache.N, c float64) {
 //
 // The input data cache is a read-only map within the insert function.
 func insert(c *cache.C, root cache.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cache.ID, x id.ID, expansion float64) (cache.ID, []Update) {
+	if root == cache.IDInvalid {
+		s := c.GetOrDie(c.Insert(
+			cache.IDInvalid,
+			cache.IDInvalid,
+			cache.IDInvalid,
+			/* validate = */ false,
+		))
+		s.Data()[x] = struct{}{}
+		return s.ID(), []Update{
+			{
+				ID:   x,
+				Node: s.ID(),
+			},
+		}
+	}
+
 	// t is the new node into which we insert the AABB.
 	var t *cache.N
 	aabb := data[x]
