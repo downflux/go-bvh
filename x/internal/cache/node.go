@@ -15,6 +15,7 @@ const (
 	idRight
 )
 
+// Within is a debugging function used to test equivalence between two nodes.
 func (n *N) Within(m *N) bool {
 	if n.cache != m.cache {
 		return false
@@ -75,6 +76,25 @@ type N struct {
 	ids [4]ID
 }
 
+// NewN is a debug function to directly instantiate a node. This is used for
+// testing equivalence, but must not be used to update a cache.
+func NewN(c *C, x ID, parent ID, left ID, right ID) *N {
+	return (&N{}).allocateOrLoad(c, x, parent, left, right)
+}
+
+// allocateOrLoad resets an unallocated node and returns it as an allocated
+// node. A new node is created if the input node is nil, with syntax similar to
+// the list append function, e.g.
+//
+//	x = append(x, ...)
+//
+// Experimentally, this is much faster (i.e. ~33%) than the other constructor
+// pattern, which is
+//
+//	n := &N{}
+//	n.allocateOrLoad()
+//
+// And changing the method to set the properties.
 func (n *N) allocateOrLoad(c *C, x ID, parent ID, left ID, right ID) *N {
 	if n == nil {
 		n = &N{
@@ -88,6 +108,9 @@ func (n *N) allocateOrLoad(c *C, x ID, parent ID, left ID, right ID) *N {
 		n.ids[idSelf] = x
 	}
 
+	if n.isAllocated {
+		panic(fmt.Sprintf("cannot re-allocate an existing node %v", x))
+	}
 	if c != n.cache {
 		panic("cannot set cache again after allocation")
 	}
