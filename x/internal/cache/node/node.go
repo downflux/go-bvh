@@ -11,6 +11,14 @@ import (
 )
 
 func Equal(n N, m N) bool {
+	if n == nil && m == nil {
+		return true
+	}
+
+	if n == nil && m != nil {
+		return false
+	}
+
 	if n.ID() != m.ID() {
 		return false
 	}
@@ -19,8 +27,26 @@ func Equal(n N, m N) bool {
 		return false
 	}
 
-	if n.IsLeaf() != m.IsRoot() {
+	if !n.IsRoot() {
+		if (n.Parent() == nil && m.Parent() != nil) || (n.Parent() != nil && m.Parent() == nil) {
+			return false
+		}
+
+		if n.Parent() != nil {
+			if n.Parent().ID() != m.Parent().ID() {
+				return false
+			}
+		}
+	}
+
+	if n.IsLeaf() != m.IsLeaf() {
 		return false
+	}
+
+	if !n.IsLeaf() {
+		if !Equal(n.Left(), m.Left()) || !Equal(n.Right(), m.Right()) {
+			return false
+		}
 	}
 
 	if n.IsLeaf() {

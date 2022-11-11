@@ -34,37 +34,10 @@ type A interface {
 	K() vector.D
 }
 
-/*
-// Within is a debugging function used to test equivalence between two nodes.
-func (n *N) Within(m *N) bool {
-	if n.cache != m.cache {
-		return false
-	}
-	if n.isAllocated != m.isAllocated {
-		return false
-	}
-	if n.ids != m.ids {
-		return false
-	}
-	if !hyperrectangle.Within(n.aabbCache.R(), m.aabbCache.R()) {
-		return false
-	}
-	if len(n.dataCache) != len(m.dataCache) {
-		return false
-	}
-	for k := range n.dataCache {
-		if _, ok := m.dataCache[k]; !ok {
-			return false
-		}
-	}
-	return true
-}
-*/
-
 // N is a pure data struct representing a BVH tree node. This data struct is
 // modified externally.
 type N struct {
-	node A
+	cache A
 
 	// isAllocated is a private variable which indicates whether or not the
 	// current node is used in the tree or not.
@@ -99,7 +72,7 @@ type N struct {
 
 func New(a A, x cid.ID) *N {
 	return &N{
-		node: a,
+		cache: a,
 		aabbCache: hyperrectangle.New(
 			vector.V(make([]float64, a.K())),
 			vector.V(make([]float64, a.K())),
@@ -161,7 +134,7 @@ func (n *N) IsRoot() bool {
 		panic("accessing an unallocated node")
 	}
 
-	_, ok := n.node.Get(n.ids[idParent])
+	_, ok := n.cache.Get(n.ids[idParent])
 	return !ok
 }
 
@@ -174,7 +147,7 @@ func (n *N) IsLeaf() bool {
 		panic("accessing an unallocated node")
 	}
 
-	_, ok := n.node.Get(n.ids[idLeft])
+	_, ok := n.cache.Get(n.ids[idLeft])
 	return !ok
 }
 
@@ -186,7 +159,7 @@ func (n *N) IsFull() bool {
 	if !n.IsLeaf() {
 		panic(fmt.Sprintf("internal node %v does not have a data cache size", n.ID()))
 	}
-	return len(n.dataCache) >= n.node.LeafSize()
+	return len(n.dataCache) >= n.cache.LeafSize()
 }
 
 // Leaves returns the list of AABBs contained in this node. The node must be a
@@ -233,7 +206,7 @@ func (n *N) Child(b branch.B) node.N {
 		panic(fmt.Sprintf("invalid branch %v", b))
 	}
 
-	m, ok := n.node.Get(n.ids[b])
+	m, ok := n.cache.Get(n.ids[b])
 	if !ok {
 		return nil
 	}
@@ -273,7 +246,7 @@ func (n *N) Parent() node.N {
 		panic("accessing an unallocated node")
 	}
 
-	m, ok := n.node.Get(n.ids[idParent])
+	m, ok := n.cache.Get(n.ids[idParent])
 	if !ok {
 		return nil
 	}
