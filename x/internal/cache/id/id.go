@@ -1,4 +1,4 @@
-package cache
+package id
 
 const (
 	IDInvalid = ID(-1)

@@ -5,8 +5,11 @@ import (
 	"testing"
 
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
-	"github.com/downflux/go-geometry/nd/vector"
+	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/shared"
 	"github.com/google/go-cmp/cmp"
+
+	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
 func TestDelete(t *testing.T) {
@@ -25,8 +28,8 @@ func TestInsert(t *testing.T) {
 	type config struct {
 		name    string
 		c       *C
-		p, l, r ID
-		want    *N
+		p, l, r cid.ID
+		want    shared.N
 	}
 	configs := []config{
 		func() config {
@@ -34,21 +37,15 @@ func TestInsert(t *testing.T) {
 				K:        1,
 				LeafSize: 1,
 			})
+			n := node.New(c, 0)
+			n.Allocate(-1, -1, -1)
 			return config{
 				name: "Empty",
 				c:    c,
 				p:    -1,
 				l:    -1,
 				r:    -1,
-				want: &N{
-					cache:       c,
-					isAllocated: true,
-					ids:         [4]ID{0, -1, -1, -1},
-					aabbCache: hyperrectangle.New(
-						vector.V([]float64{0}),
-						vector.V([]float64{0}),
-					).M(),
-				},
+				want: n,
 			}
 		}(),
 		func() config {
@@ -57,21 +54,15 @@ func TestInsert(t *testing.T) {
 				LeafSize: 1,
 			})
 			c.Insert(-1, -1, -1, true)
+			n := node.New(c, 1)
+			n.Allocate(-1, -1, -1)
 			return config{
 				name: "AfterInsert",
 				c:    c,
 				p:    -1,
 				l:    -1,
 				r:    -1,
-				want: &N{
-					cache:       c,
-					isAllocated: true,
-					ids:         [4]ID{1, -1, -1, -1},
-					aabbCache: hyperrectangle.New(
-						vector.V([]float64{0}),
-						vector.V([]float64{0}),
-					).M(),
-				},
+				want: n,
 			}
 		}(),
 		func() config {
@@ -80,31 +71,24 @@ func TestInsert(t *testing.T) {
 				LeafSize: 1,
 			})
 			c.DeleteOrDie(c.Insert(-1, -1, -1, true))
+			n := node.New(c, 0)
+			n.Allocate(-1, -1, -1)
 			return config{
 				name: "AfterFree",
 				c:    c,
 				p:    -1,
 				l:    -1,
 				r:    -1,
-				want: &N{
-					cache:       c,
-					isAllocated: true,
-					ids:         [4]ID{0, -1, -1, -1},
-					aabbCache: hyperrectangle.New(
-						vector.V([]float64{0}),
-						vector.V([]float64{0}),
-					).M(),
-				},
+				want: n,
 			}
 		}(),
 	}
-
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			got := c.c.GetOrDie(c.c.Insert(c.p, c.l, c.r, true))
-			if !got.Within(c.want) {
+			if !shared.Equal(got, c.want) {
 				diff := cmp.Diff(c.want, got, cmp.AllowUnexported(
-					N{}, C{}, hyperrectangle.M{}, hyperrectangle.R{},
+					C{}, hyperrectangle.M{}, hyperrectangle.R{},
 				))
 				t.Errorf("GetOrDie() mismatch(-want +got):\n%v", diff)
 			}
@@ -144,7 +128,7 @@ func BenchmarkInsert(b *testing.B) {
 
 			b.StopTimer()
 			for j := 0; j < batch; j++ {
-				cache.Delete(ID(j))
+				cache.Delete(cid.ID(j))
 			}
 			b.StartTimer()
 		}
