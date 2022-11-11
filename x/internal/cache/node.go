@@ -143,7 +143,7 @@ func (n *N) free() {
 	}
 }
 
-func (n *N) IsAllocated() bool { return n.isAllocated }
+func (n *N) IsAllocated() bool { return n != nil && n.isAllocated }
 
 func (n *N) ID() ID {
 	if n != nil && n.IsAllocated() {
