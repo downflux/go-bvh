@@ -79,7 +79,8 @@ type N struct {
 // NewN is a debug function to directly instantiate a node. This is used for
 // testing equivalence, but must not be used to update a cache.
 func NewN(c *C, x ID, parent ID, left ID, right ID) *N {
-	return (&N{}).allocateOrLoad(c, x, parent, left, right)
+	var n *N
+	return n.allocateOrLoad(c, x, parent, left, right)
 }
 
 // allocateOrLoad resets an unallocated node and returns it as an allocated
@@ -143,7 +144,13 @@ func (n *N) free() {
 }
 
 func (n *N) IsAllocated() bool { return n.isAllocated }
-func (n *N) ID() ID            { return n.ids[idSelf] }
+
+func (n *N) ID() ID {
+	if n != nil && n.IsAllocated() {
+		return n.ids[idSelf]
+	}
+	return IDInvalid
+}
 
 func (n *N) IsFull() bool {
 	if !n.IsLeaf() {
@@ -195,6 +202,9 @@ func (n *N) SetChild(b B, x ID) {
 	if !b.IsValid() {
 		panic(fmt.Sprintf("invalid branch %v", b))
 	}
+	if !x.IsValid() {
+		panic(fmt.Sprintf("invalid ID %v", x))
+	}
 
 	if b == BLeft {
 		n.ids[idLeft] = x
@@ -205,6 +215,10 @@ func (n *N) SetChild(b B, x ID) {
 
 // Branch returns the branch of the input child in relation to the current node.
 func (n *N) Branch(x ID) B {
+	if !x.IsValid() {
+		panic(fmt.Sprintf("invalid ID %v", x))
+	}
+
 	switch x {
 	case n.ids[idLeft]:
 		return BLeft

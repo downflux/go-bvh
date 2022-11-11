@@ -14,6 +14,8 @@ import (
 // existing parents or siblings of s and ensure that the generated cache is
 // still valid.
 //
+// The input node s must not be nil.
+//
 // The input node s is a node within the cache.
 //
 //	  Q
@@ -28,12 +30,22 @@ import (
 //	 / \
 //	S   N
 func expand(c *cache.C, s *cache.N) *cache.N {
-	q := s.Parent()
+	if s == nil {
+		panic("cannot expand a nil node")
+	}
+
+	var q *cache.N
+	if !s.IsRoot() {
+		q = s.Parent()
+	}
 
 	p := c.GetOrDie(c.Insert(q.ID(), cache.IDInvalid, cache.IDInvalid, false))
 	n := c.GetOrDie(c.Insert(p.ID(), cache.IDInvalid, cache.IDInvalid, false))
 
-	q.SetChild(q.Branch(s.ID()), p.ID())
+	if q != nil {
+		q.SetChild(q.Branch(s.ID()), p.ID())
+	}
+
 	s.SetParent(p.ID())
 
 	p.SetLeft(s.ID())
