@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/downflux/go-bvh/x/internal/cache"
-	"github.com/downflux/go-bvh/x/internal/cache/shared"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
@@ -14,8 +14,8 @@ func TestExpand(t *testing.T) {
 	type config struct {
 		name string
 		c    *cache.C
-		s    shared.N
-		want shared.N
+		s    node.N
+		want node.N
 	}
 
 	configs := []config{
@@ -30,7 +30,7 @@ func TestExpand(t *testing.T) {
 				cid.IDInvalid,
 				/* validate = */ true,
 			))
-			n := node.New(c, 2)
+			n := impl.New(c, 2)
 			n.Allocate(1, cid.IDInvalid, cid.IDInvalid)
 			return config{
 				name: "Root",
@@ -43,7 +43,7 @@ func TestExpand(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := expand(c.c, c.s); !shared.Equal(c.want, got) {
+			if got := expand(c.c, c.s); !node.Equal(c.want, got) {
 				t.Errorf("expand() = %v, want = %v", got, c.want)
 			}
 		})

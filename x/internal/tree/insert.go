@@ -6,20 +6,20 @@ import (
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
-	"github.com/downflux/go-bvh/x/internal/cache/shared"
+	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
-// expand creates a new node with s as its sibling. This will re-link any
+// expand creates a new impl with s as its sibling. This will re-link any
 // existing parents or siblings of s and ensure that the generated cache is
 // still valid.
 //
-// The input node s must not be nil.
+// The input impl s must not be nil.
 //
-// The input node s is a node within the cache.
+// The input impl s is a impl within the cache.
 //
 //	  Q
 //	 / \
@@ -32,12 +32,12 @@ import (
 //	  P   T
 //	 / \
 //	S   N
-func expand(c *cache.C, s shared.N) shared.N {
+func expand(c *cache.C, s node.N) node.N {
 	if s == nil {
-		panic("cannot expand a nil node")
+		panic("cannot expand a nil impl")
 	}
 
-	var q shared.N
+	var q node.N
 	var qid cid.ID
 	if !s.IsRoot() {
 		q = s.Parent()
@@ -62,11 +62,11 @@ func expand(c *cache.C, s shared.N) shared.N {
 	return n
 }
 
-// partition splits a full node s by moving some objects into a new node t.
+// partition splits a full impl s by moving some objects into a new impl t.
 //
-// We assume t is an empty leaf node and the size of s exceeds the cache leaf
+// We assume t is an empty leaf impl and the size of s exceeds the cache leaf
 // size (that is, it can afford to lose a single object without becoming empty).
-func partition(s shared.N, t shared.N, axis vector.D, data map[id.ID]hyperrectangle.R) {
+func partition(s node.N, t node.N, axis vector.D, data map[id.ID]hyperrectangle.R) {
 	// Find the upper and lower bounds of the tight-fitting AABB for the
 	// data in s. This helps circumvent the case where the cached AABB for s
 	// includes some expansion factor.
@@ -115,9 +115,9 @@ type Update struct {
 	Node cid.ID
 }
 
-// setAABB sets a leaf node's AABB with a given expansion factor. The input node
-// must be a leaf node and contain at least one object.
-func setAABB(data map[id.ID]hyperrectangle.R, n shared.N, c float64) {
+// setAABB sets a leaf impl's AABB with a given expansion factor. The input impl
+// must be a leaf impl and contain at least one object.
+func setAABB(data map[id.ID]hyperrectangle.R, n node.N, c float64) {
 	var initialized bool
 	var k vector.D
 	for x := range n.Leaves() {
@@ -132,10 +132,10 @@ func setAABB(data map[id.ID]hyperrectangle.R, n shared.N, c float64) {
 }
 
 // insert adds a new AABB into a tree, and returns the new root, along with any
-// object node updates.
+// object impl updates.
 //
 // The input data cache is a read-only map within the insert function.
-func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cid.ID, x id.ID, expansion float64) (cid.ID, []Update) {
+func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, impls map[id.ID]cid.ID, x id.ID, expansion float64) (cid.ID, []Update) {
 	if root == cid.IDInvalid {
 		s := c.GetOrDie(c.Insert(
 			cid.IDInvalid,
@@ -152,14 +152,14 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 		}
 	}
 
-	// t is the new node into which we insert the AABB.
-	var t shared.N
+	// t is the new impl into which we insert the AABB.
+	var t node.N
 	aabb := data[x]
 
 	s := c.GetOrDie(sibling(c, root, aabb))
 	if s.IsLeaf() {
 		// If the leaf is full, we need repartition the leaf and split
-		// its children into a new node.
+		// its children into a new impl.
 		if s.IsFull() {
 			s.Leaves()[x] = struct{}{}
 
@@ -178,9 +178,9 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 		setAABB(data, t, expansion)
 	}
 
-	// At this point in execution, nodes s and t have updated caches.
+	// At this point in execution, impls s and t have updated caches.
 
-	var n shared.N
+	var n node.N
 	for n = t; n != nil; n = n.Parent() {
 		if !n.IsLeaf() {
 			n.AABB().Copy(n.Left().AABB().R())
@@ -189,7 +189,7 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 		// TODO: Rebalance and set height.
 	}
 
-	// If we created a new node, we need to broadcast any node changes to
+	// If we created a new impl, we need to broadcast any impl changes to
 	// the caller.
 	updates := make([]Update, 0, c.LeafSize())
 	if t != s {
@@ -202,7 +202,7 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 	}
 
 	// It is possible during repartitioning for the new object to be
-	// inserted into the old node. We need to broadcast this change
+	// inserted into the old impl. We need to broadcast this change
 	// as well.
 	if _, ok := t.Leaves()[x]; !ok {
 		updates = append(updates, Update{

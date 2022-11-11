@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
-	"github.com/downflux/go-bvh/x/internal/cache/shared"
+	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
@@ -29,7 +29,7 @@ func TestInsert(t *testing.T) {
 		name    string
 		c       *C
 		p, l, r cid.ID
-		want    shared.N
+		want    node.N
 	}
 	configs := []config{
 		func() config {
@@ -37,7 +37,7 @@ func TestInsert(t *testing.T) {
 				K:        1,
 				LeafSize: 1,
 			})
-			n := node.New(c, 0)
+			n := impl.New(c, 0)
 			n.Allocate(-1, -1, -1)
 			return config{
 				name: "Empty",
@@ -54,7 +54,7 @@ func TestInsert(t *testing.T) {
 				LeafSize: 1,
 			})
 			c.Insert(-1, -1, -1, true)
-			n := node.New(c, 1)
+			n := impl.New(c, 1)
 			n.Allocate(-1, -1, -1)
 			return config{
 				name: "AfterInsert",
@@ -71,7 +71,7 @@ func TestInsert(t *testing.T) {
 				LeafSize: 1,
 			})
 			c.DeleteOrDie(c.Insert(-1, -1, -1, true))
-			n := node.New(c, 0)
+			n := impl.New(c, 0)
 			n.Allocate(-1, -1, -1)
 			return config{
 				name: "AfterFree",
@@ -86,7 +86,7 @@ func TestInsert(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			got := c.c.GetOrDie(c.c.Insert(c.p, c.l, c.r, true))
-			if !shared.Equal(got, c.want) {
+			if !node.Equal(got, c.want) {
 				diff := cmp.Diff(c.want, got, cmp.AllowUnexported(
 					C{}, hyperrectangle.M{}, hyperrectangle.R{},
 				))

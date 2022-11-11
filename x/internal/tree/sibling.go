@@ -4,7 +4,7 @@ import (
 	"math"
 
 	"github.com/downflux/go-bvh/x/internal/cache"
-	"github.com/downflux/go-bvh/x/internal/cache/shared"
+	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -26,10 +26,10 @@ func sibling(c *cache.C, x cid.ID, aabb hyperrectangle.R) cid.ID {
 	// as those are probably the nodes with the highest chance of being
 	// "optimal", which may allow us to skip a vast majority of later node
 	// expansions.
-	q := pq.New[shared.N](0, pq.PMin)
+	q := pq.New[node.N](0, pq.PMin)
 	q.Push(n, 0)
 
-	var opt shared.N
+	var opt node.N
 	// h tracks the minimum heuristic penalty which would be incurred if the
 	// input AABB is inserted here.
 	h := math.Inf(1)
