@@ -6,15 +6,17 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
+
+	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
 func TestSibling(t *testing.T) {
 	type config struct {
 		name string
 		c    *cache.C
-		x    cache.ID
+		x    cid.ID
 		aabb hyperrectangle.R
-		want cache.ID
+		want cid.ID
 	}
 
 	configs := []config{
@@ -25,9 +27,9 @@ func TestSibling(t *testing.T) {
 			})
 			root := c.GetOrDie(
 				c.Insert(
-					cache.IDInvalid,
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					/* validate = */ true,
 				),
 			)
@@ -50,9 +52,9 @@ func TestSibling(t *testing.T) {
 			})
 			root := c.GetOrDie(
 				c.Insert(
-					cache.IDInvalid,
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					/* validate = */ true,
 				),
 			)
@@ -73,9 +75,9 @@ func TestSibling(t *testing.T) {
 			})
 			root := c.GetOrDie(
 				c.Insert(
-					cache.IDInvalid,
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					/* validate = */ true,
 				),
 			)
@@ -98,17 +100,17 @@ func TestSibling(t *testing.T) {
 			})
 			root := c.GetOrDie(
 				c.Insert(
-					cache.IDInvalid,
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
 			left := c.GetOrDie(
 				c.Insert(
 					root.ID(),
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
@@ -116,8 +118,8 @@ func TestSibling(t *testing.T) {
 			right := c.GetOrDie(
 				c.Insert(
 					root.ID(),
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
@@ -144,17 +146,17 @@ func TestSibling(t *testing.T) {
 			})
 			root := c.GetOrDie(
 				c.Insert(
-					cache.IDInvalid,
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
 			left := c.GetOrDie(
 				c.Insert(
 					root.ID(),
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
@@ -162,8 +164,8 @@ func TestSibling(t *testing.T) {
 			right := c.GetOrDie(
 				c.Insert(
 					root.ID(),
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
@@ -193,17 +195,17 @@ func TestSibling(t *testing.T) {
 			})
 			root := c.GetOrDie(
 				c.Insert(
-					cache.IDInvalid,
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
 			left := c.GetOrDie(
 				c.Insert(
 					root.ID(),
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
@@ -211,8 +213,8 @@ func TestSibling(t *testing.T) {
 			right := c.GetOrDie(
 				c.Insert(
 					root.ID(),
-					cache.IDInvalid,
-					cache.IDInvalid,
+					cid.IDInvalid,
+					cid.IDInvalid,
 					true,
 				),
 			)
@@ -247,15 +249,15 @@ func TestSibling(t *testing.T) {
 				LeafSize: 1,
 				K:        2,
 			})
-			nA := c.GetOrDie(c.Insert(cache.IDInvalid, cache.IDInvalid, cache.IDInvalid, true))
+			nA := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 
-			nB := c.GetOrDie(c.Insert(nA.ID(), cache.IDInvalid, cache.IDInvalid, true))
-			nC := c.GetOrDie(c.Insert(nA.ID(), cache.IDInvalid, cache.IDInvalid, true))
+			nB := c.GetOrDie(c.Insert(nA.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nC := c.GetOrDie(c.Insert(nA.ID(), cid.IDInvalid, cid.IDInvalid, true))
 
-			nD := c.GetOrDie(c.Insert(nB.ID(), cache.IDInvalid, cache.IDInvalid, true))
-			nE := c.GetOrDie(c.Insert(nB.ID(), cache.IDInvalid, cache.IDInvalid, true))
-			nF := c.GetOrDie(c.Insert(nC.ID(), cache.IDInvalid, cache.IDInvalid, true))
-			nG := c.GetOrDie(c.Insert(nC.ID(), cache.IDInvalid, cache.IDInvalid, true))
+			nD := c.GetOrDie(c.Insert(nB.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nE := c.GetOrDie(c.Insert(nB.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nF := c.GetOrDie(c.Insert(nC.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nG := c.GetOrDie(c.Insert(nC.ID(), cid.IDInvalid, cid.IDInvalid, true))
 
 			nA.SetLeft(nB.ID())
 			nA.SetRight(nC.ID())

@@ -7,13 +7,15 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
+
+	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
 type T struct {
 	c    *cache.C
-	root cache.ID
+	root cid.ID
 
-	nodes map[id.ID]cache.ID
+	nodes map[id.ID]cid.ID
 	data  map[id.ID]hyperrectangle.R
 
 	tolerance float64
@@ -32,9 +34,9 @@ func New(o O) *T {
 			LeafSize: o.LeafSize,
 		}),
 
-		root: cache.IDInvalid,
+		root: cid.IDInvalid,
 
-		nodes:     make(map[id.ID]cache.ID, 1024),
+		nodes:     make(map[id.ID]cid.ID, 1024),
 		data:      make(map[id.ID]hyperrectangle.R, 1024),
 		tolerance: o.Tolerance,
 	}

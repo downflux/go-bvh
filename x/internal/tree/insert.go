@@ -6,8 +6,11 @@ import (
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
+	"github.com/downflux/go-bvh/x/internal/cache/shared"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
+
+	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
 // expand creates a new node with s as its sibling. This will re-link any
@@ -29,18 +32,23 @@ import (
 //	  P   T
 //	 / \
 //	S   N
-func expand(c *cache.C, s *cache.N) *cache.N {
+func expand(c *cache.C, s shared.N) shared.N {
 	if s == nil {
 		panic("cannot expand a nil node")
 	}
 
-	var q *cache.N
+	var q shared.N
+	var qid cid.ID
 	if !s.IsRoot() {
 		q = s.Parent()
+		qid = cid.IDInvalid
+		if q != nil {
+			qid = q.ID()
+		}
 	}
 
-	p := c.GetOrDie(c.Insert(q.ID(), cache.IDInvalid, cache.IDInvalid, false))
-	n := c.GetOrDie(c.Insert(p.ID(), cache.IDInvalid, cache.IDInvalid, false))
+	p := c.GetOrDie(c.Insert(qid, cid.IDInvalid, cid.IDInvalid, false))
+	n := c.GetOrDie(c.Insert(p.ID(), cid.IDInvalid, cid.IDInvalid, false))
 
 	if q != nil {
 		q.SetChild(q.Branch(s.ID()), p.ID())
@@ -58,13 +66,13 @@ func expand(c *cache.C, s *cache.N) *cache.N {
 //
 // We assume t is an empty leaf node and the size of s exceeds the cache leaf
 // size (that is, it can afford to lose a single object without becoming empty).
-func partition(s *cache.N, t *cache.N, axis vector.D, data map[id.ID]hyperrectangle.R) {
+func partition(s shared.N, t shared.N, axis vector.D, data map[id.ID]hyperrectangle.R) {
 	// Find the upper and lower bounds of the tight-fitting AABB for the
 	// data in s. This helps circumvent the case where the cached AABB for s
 	// includes some expansion factor.
 	kmin := math.Inf(1)
 	kmax := math.Inf(-1)
-	for x := range s.Data() {
+	for x := range s.Leaves() {
 		if min := data[x].Min().X(axis); min < kmin {
 			kmin = min
 		}
@@ -82,7 +90,7 @@ func partition(s *cache.N, t *cache.N, axis vector.D, data map[id.ID]hyperrectan
 
 	// Because of the way kmin is constructed, we guarantee that there is at
 	// least one object still left in s.
-	for y := range s.Data() {
+	for y := range s.Leaves() {
 		ymin := data[y].Min().X(axis)
 		if ymin > xmin {
 			x = y
@@ -90,29 +98,29 @@ func partition(s *cache.N, t *cache.N, axis vector.D, data map[id.ID]hyperrectan
 		}
 
 		if ymin > kmid {
-			delete(s.Data(), y)
-			t.Data()[y] = struct{}{}
+			delete(s.Leaves(), y)
+			t.Leaves()[y] = struct{}{}
 		}
 	}
 
 	// Ensure t has some object in it.
-	if len(t.Data()) == 0 {
-		delete(s.Data(), x)
-		t.Data()[x] = struct{}{}
+	if len(t.Leaves()) == 0 {
+		delete(s.Leaves(), x)
+		t.Leaves()[x] = struct{}{}
 	}
 }
 
 type Update struct {
 	ID   id.ID
-	Node cache.ID
+	Node cid.ID
 }
 
 // setAABB sets a leaf node's AABB with a given expansion factor. The input node
 // must be a leaf node and contain at least one object.
-func setAABB(data map[id.ID]hyperrectangle.R, n *cache.N, c float64) {
+func setAABB(data map[id.ID]hyperrectangle.R, n shared.N, c float64) {
 	var initialized bool
 	var k vector.D
-	for x := range n.Data() {
+	for x := range n.Leaves() {
 		if !initialized {
 			n.AABB().Copy(data[x])
 			k = data[x].Min().Dimension()
@@ -127,15 +135,15 @@ func setAABB(data map[id.ID]hyperrectangle.R, n *cache.N, c float64) {
 // object node updates.
 //
 // The input data cache is a read-only map within the insert function.
-func insert(c *cache.C, root cache.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cache.ID, x id.ID, expansion float64) (cache.ID, []Update) {
-	if root == cache.IDInvalid {
+func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cid.ID, x id.ID, expansion float64) (cid.ID, []Update) {
+	if root == cid.IDInvalid {
 		s := c.GetOrDie(c.Insert(
-			cache.IDInvalid,
-			cache.IDInvalid,
-			cache.IDInvalid,
+			cid.IDInvalid,
+			cid.IDInvalid,
+			cid.IDInvalid,
 			/* validate = */ false,
 		))
-		s.Data()[x] = struct{}{}
+		s.Leaves()[x] = struct{}{}
 		return s.ID(), []Update{
 			{
 				ID:   x,
@@ -145,7 +153,7 @@ func insert(c *cache.C, root cache.ID, data map[id.ID]hyperrectangle.R, nodes ma
 	}
 
 	// t is the new node into which we insert the AABB.
-	var t *cache.N
+	var t shared.N
 	aabb := data[x]
 
 	s := c.GetOrDie(sibling(c, root, aabb))
@@ -153,26 +161,26 @@ func insert(c *cache.C, root cache.ID, data map[id.ID]hyperrectangle.R, nodes ma
 		// If the leaf is full, we need repartition the leaf and split
 		// its children into a new node.
 		if s.IsFull() {
-			s.Data()[x] = struct{}{}
+			s.Leaves()[x] = struct{}{}
 
 			t = expand(c, s)
 			partition(s, t, vector.D(rand.Intn(int(c.K()))), data)
 		} else {
-			s.Data()[x] = struct{}{}
+			s.Leaves()[x] = struct{}{}
 		}
 
 		setAABB(data, s, expansion)
 		setAABB(data, t, expansion)
 	} else {
 		t = expand(c, s)
-		t.Data()[x] = struct{}{}
+		t.Leaves()[x] = struct{}{}
 
 		setAABB(data, t, expansion)
 	}
 
 	// At this point in execution, nodes s and t have updated caches.
 
-	var n *cache.N
+	var n shared.N
 	for n = t; n != nil; n = n.Parent() {
 		if !n.IsLeaf() {
 			n.AABB().Copy(n.Left().AABB().R())
@@ -185,7 +193,7 @@ func insert(c *cache.C, root cache.ID, data map[id.ID]hyperrectangle.R, nodes ma
 	// the caller.
 	updates := make([]Update, 0, c.LeafSize())
 	if t != s {
-		for n := range t.Data() {
+		for n := range t.Leaves() {
 			updates = append(updates, Update{
 				ID:   n,
 				Node: t.ID(),
@@ -196,7 +204,7 @@ func insert(c *cache.C, root cache.ID, data map[id.ID]hyperrectangle.R, nodes ma
 	// It is possible during repartitioning for the new object to be
 	// inserted into the old node. We need to broadcast this change
 	// as well.
-	if _, ok := t.Data()[x]; !ok {
+	if _, ok := t.Leaves()[x]; !ok {
 		updates = append(updates, Update{
 			ID:   x,
 			Node: s.ID(),

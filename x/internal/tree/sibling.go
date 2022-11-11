@@ -4,16 +4,19 @@ import (
 	"math"
 
 	"github.com/downflux/go-bvh/x/internal/cache"
+	"github.com/downflux/go-bvh/x/internal/cache/shared"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/downflux/go-pq/pq"
+
+	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
 // sibling finds an insertion sibling candidate, as per Bittner et al.  2013.
 // This is the original algorithm described in the Catto 2019 slides, and aims
 // to decrease the overall SAH value of the resultant tree.
-func sibling(c *cache.C, x cache.ID, aabb hyperrectangle.R) cache.ID {
+func sibling(c *cache.C, x cid.ID, aabb hyperrectangle.R) cid.ID {
 	l := heuristic.H(aabb)
 
 	n := c.GetOrDie(x)
@@ -23,10 +26,10 @@ func sibling(c *cache.C, x cache.ID, aabb hyperrectangle.R) cache.ID {
 	// as those are probably the nodes with the highest chance of being
 	// "optimal", which may allow us to skip a vast majority of later node
 	// expansions.
-	q := pq.New[*cache.N](0, pq.PMin)
+	q := pq.New[shared.N](0, pq.PMin)
 	q.Push(n, 0)
 
-	var opt *cache.N
+	var opt shared.N
 	// h tracks the minimum heuristic penalty which would be incurred if the
 	// input AABB is inserted here.
 	h := math.Inf(1)
@@ -77,7 +80,7 @@ func sibling(c *cache.C, x cache.ID, aabb hyperrectangle.R) cache.ID {
 			q.Push(m.Right(), induced)
 		}
 	}
-	if !opt.IsAllocated() {
+	if opt == nil {
 		panic("cannot find valid insertion sibling candidate")
 	}
 	return opt.ID()
