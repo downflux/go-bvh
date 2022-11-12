@@ -112,38 +112,6 @@ type Update struct {
 	Node cid.ID
 }
 
-// setAABB sets a leaf node's AABB with a given expansion factor. The input node
-// must be a leaf node and contain at least one object.
-//
-// TODO(minkezhang): Improve performance by concurrently updating the final
-// AABB.
-func setAABB(data map[id.ID]hyperrectangle.R, n node.N, c float64) {
-	var initialized bool
-	var k vector.D
-	for x := range n.Leaves() {
-		if !initialized {
-			n.AABB().Copy(data[x])
-			k = data[x].Min().Dimension()
-		} else {
-			n.AABB().Union(data[x])
-		}
-	}
-	n.AABB().Scale(math.Pow(c, 1/float64(k)))
-}
-
-func setHeight(n node.N) {
-	if n.IsLeaf() {
-		n.SetHeight(0)
-	} else {
-		n.SetHeight(1 + int(
-			math.Max(
-				float64(n.Left().Height()),
-				float64(n.Right().Height()),
-			),
-		))
-	}
-}
-
 // insert adds a new AABB into a tree, and returns the new root, along with any
 // object node updates.
 //
@@ -186,30 +154,31 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 			s.Leaves()[x] = struct{}{}
 		}
 
-		setAABB(data, s, expansion)
-		setHeight(s)
-		setAABB(data, t, expansion)
-		setHeight(t)
+		node.SetAABB(s, data, expansion)
+		node.SetHeight(s)
+		node.SetAABB(t, data, expansion)
+		node.SetHeight(t)
 	} else {
 		t = expand(c, s)
 		t.Leaves()[x] = struct{}{}
 
-		setAABB(data, t, expansion)
-		setHeight(t)
+		node.SetAABB(t, data, expansion)
+		node.SetHeight(t)
 	}
 
 	// At this point in execution, nodes s and t have updated caches and
 	// correct heights. As we traverse up to the root, we will incrementally
 	// rebalance the trees.
-
 	var n node.N
 	for n = t; n != nil; n = n.Parent() {
 		if !n.IsLeaf() {
-			n.AABB().Copy(n.Left().AABB().R())
-			n.AABB().Union(n.Right().AABB().R())
-			setHeight(n)
+			node.SetAABB(n, data, expansion)
+			node.SetHeight(n)
+
+			n = avl(n, data, expansion)
+			// TODO(minkezhang): Optimize for AABB, then rebalance and set
+			// height.
 		}
-		// TODO(minkezhang): Rebalance and set height.
 	}
 
 	// If we created a new node, we need to broadcast any node changes to
