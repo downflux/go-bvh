@@ -16,13 +16,10 @@ import (
 )
 
 const (
-	// N.B.: ID values start with idSelf to make casting to / from branch.B
-	// easier.
-
 	idSelf int = iota
+	idParent
 	idLeft
 	idRight
-	idParent
 )
 
 // A is an node interface. This is our cache back-reference. We are
@@ -80,9 +77,9 @@ func New(a A, x cid.ID) *N {
 		dataCache: make(map[id.ID]struct{}, a.LeafSize()),
 		ids: [4]cid.ID{
 			/* idSelf = */ x,
+			/* idParent = */ cid.IDInvalid,
 			/* idLeft = */ cid.IDInvalid,
 			/* idRight = */ cid.IDInvalid,
-			/* idParent = */ cid.IDInvalid,
 		},
 	}
 }
@@ -206,7 +203,14 @@ func (n *N) Child(b branch.B) node.N {
 		panic(fmt.Sprintf("invalid branch %v", b))
 	}
 
-	m, ok := n.cache.Get(n.ids[b])
+	var id int
+	switch b {
+	case branch.BLeft:
+		id = idLeft
+	case branch.BRight:
+		id = idRight
+	}
+	m, ok := n.cache.Get(n.ids[id])
 	if !ok {
 		return nil
 	}
@@ -222,7 +226,12 @@ func (n *N) SetChild(b branch.B, x cid.ID) {
 		panic(fmt.Sprintf("invalid branch %v", b))
 	}
 
-	n.ids[b] = x
+	switch b {
+	case branch.BLeft:
+		n.ids[idLeft] = x
+	case branch.BRight:
+		n.ids[idRight] = x
+	}
 }
 
 // Branch returns the branch of the input child in relation to the current node.
