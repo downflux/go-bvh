@@ -74,6 +74,44 @@ func TestEqual(t *testing.T) {
 			c := &MockCache{
 				data: map[cid.ID]*N{},
 			}
+			n := New(c, 0)
+			n.Allocate(-1, -1, -1)
+			n.SetHeight(10)
+
+			m := New(c, 0)
+			m.Allocate(-1, -1, -1)
+			m.SetHeight(10)
+
+			return config{
+				name: "Height",
+				n:    n,
+				m:    m,
+				want: true,
+			}
+		}(),
+		func() config {
+			c := &MockCache{
+				data: map[cid.ID]*N{},
+			}
+			n := New(c, 0)
+			n.Allocate(-1, -1, -1)
+			n.SetHeight(10)
+
+			m := New(c, 0)
+			m.Allocate(-1, -1, -1)
+			m.SetHeight(11)
+
+			return config{
+				name: "Height/NotEqual",
+				n:    n,
+				m:    m,
+				want: false,
+			}
+		}(),
+		func() config {
+			c := &MockCache{
+				data: map[cid.ID]*N{},
+			}
 
 			c.data[0] = New(c, 0)
 			c.data[0].Allocate(-1, -1, -1)

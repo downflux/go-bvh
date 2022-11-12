@@ -27,6 +27,10 @@ func Equal(n N, m N) bool {
 		return false
 	}
 
+	if n.Height() != m.Height() {
+		return false
+	}
+
 	if !n.IsRoot() {
 		if (n.Parent() == nil && m.Parent() != nil) || (n.Parent() != nil && m.Parent() == nil) {
 			return false
@@ -72,6 +76,9 @@ type N interface {
 	ID() cid.ID
 
 	IsRoot() bool
+
+	Height() int
+	SetHeight(h int)
 
 	IsLeaf() bool
 	IsFull() bool

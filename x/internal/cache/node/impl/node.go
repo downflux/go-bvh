@@ -64,6 +64,8 @@ type N struct {
 	// Catto 2019.
 	dataCache map[id.ID]struct{}
 
+	heightCache int
+
 	ids [4]cid.ID
 }
 
@@ -133,6 +135,22 @@ func (n *N) IsRoot() bool {
 
 	_, ok := n.cache.Get(n.ids[idParent])
 	return !ok
+}
+
+func (n *N) Height() int {
+	if !n.IsAllocated() {
+		panic("accessing an unallocated node")
+	}
+
+	return n.heightCache
+}
+
+func (n *N) SetHeight(h int) {
+	if !n.IsAllocated() {
+		panic("accessing an unallocated node")
+	}
+
+	n.heightCache = h
 }
 
 // IsLeaf returns if the current node has no valid children.
