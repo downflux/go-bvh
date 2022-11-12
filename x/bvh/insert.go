@@ -131,6 +131,19 @@ func setAABB(data map[id.ID]hyperrectangle.R, n node.N, c float64) {
 	n.AABB().Scale(math.Pow(c, 1/float64(k)))
 }
 
+func setHeight(n node.N) {
+	if n.IsLeaf() {
+		n.SetHeight(0)
+	} else {
+		n.SetHeight(1 + int(
+			math.Max(
+				float64(n.Left().Height()),
+				float64(n.Right().Height()),
+			),
+		))
+	}
+}
+
 // insert adds a new AABB into a tree, and returns the new root, along with any
 // object node updates.
 //
@@ -174,21 +187,27 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 		}
 
 		setAABB(data, s, expansion)
+		setHeight(s)
 		setAABB(data, t, expansion)
+		setHeight(t)
 	} else {
 		t = expand(c, s)
 		t.Leaves()[x] = struct{}{}
 
 		setAABB(data, t, expansion)
+		setHeight(t)
 	}
 
-	// At this point in execution, nodes s and t have updated caches.
+	// At this point in execution, nodes s and t have updated caches and
+	// correct heights. As we traverse up to the root, we will incrementally
+	// rebalance the trees.
 
 	var n node.N
 	for n = t; n != nil; n = n.Parent() {
 		if !n.IsLeaf() {
 			n.AABB().Copy(n.Left().AABB().R())
 			n.AABB().Union(n.Right().AABB().R())
+			setHeight(n)
 		}
 		// TODO(minkezhang): Rebalance and set height.
 	}

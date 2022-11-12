@@ -109,6 +109,7 @@ func (n *N) Free() {
 	}
 
 	n.isAllocated = false
+	n.heightCache = 0
 
 	// Since the dataCache represents external data (which may be freed
 	// outside the cache), we should remove all references to that data when
