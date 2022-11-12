@@ -93,6 +93,7 @@ func (n *N) Allocate(parent cid.ID, left cid.ID, right cid.ID) {
 	}
 
 	n.isAllocated = true
+	n.heightCache = 0
 
 	n.ids[idLeft] = left
 	n.ids[idRight] = right
@@ -109,7 +110,6 @@ func (n *N) Free() {
 	}
 
 	n.isAllocated = false
-	n.heightCache = 0
 
 	// Since the dataCache represents external data (which may be freed
 	// outside the cache), we should remove all references to that data when
