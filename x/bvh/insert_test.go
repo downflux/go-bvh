@@ -39,6 +39,41 @@ func TestExpand(t *testing.T) {
 				want: n,
 			}
 		}(),
+		func() config {
+			c := cache.New(cache.O{
+				K:        2,
+				LeafSize: 1,
+			})
+			root := c.GetOrDie(c.Insert(
+				cid.IDInvalid,
+				cid.IDInvalid,
+				cid.IDInvalid,
+				/* validate = */ true,
+			))
+			s := c.GetOrDie(c.Insert(
+				root.ID(),
+				cid.IDInvalid,
+				cid.IDInvalid,
+				true,
+			))
+			root.SetLeft(s.ID())
+			t := c.GetOrDie(c.Insert(
+				root.ID(),
+				cid.IDInvalid,
+				cid.IDInvalid,
+				true,
+			))
+			root.SetRight(t.ID())
+
+			n := impl.New(c, 4)
+			n.Allocate(3, cid.IDInvalid, cid.IDInvalid)
+			return config{
+				name: "Child",
+				c:    c,
+				s:    s,
+				want: n,
+			}
+		}(),
 	}
 
 	for _, c := range configs {
