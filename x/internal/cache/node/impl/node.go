@@ -16,12 +16,12 @@ import (
 )
 
 const (
-	// N.B.: ID values start with idLeft to make casting to / from branch.B
+	// N.B.: ID values start with idSelf to make casting to / from branch.B
 	// easier.
 
-	idLeft int = iota
+	idSelf int = iota
+	idLeft
 	idRight
-	idSelf
 	idParent
 )
 
@@ -79,9 +79,9 @@ func New(a A, x cid.ID) *N {
 		).M(),
 		dataCache: make(map[id.ID]struct{}, a.LeafSize()),
 		ids: [4]cid.ID{
+			/* idSelf = */ x,
 			/* idLeft = */ cid.IDInvalid,
 			/* idRight = */ cid.IDInvalid,
-			/* idSelf = */ x,
 			/* idParent = */ cid.IDInvalid,
 		},
 	}
@@ -95,9 +95,9 @@ func (n *N) Allocate(parent cid.ID, left cid.ID, right cid.ID) {
 
 	n.isAllocated = true
 
-	n.ids[idParent] = parent
 	n.ids[idLeft] = left
 	n.ids[idRight] = right
+	n.ids[idParent] = parent
 
 	// N.B.: The AABB cache is not guaranteed to be zeroed at the end of the
 	// allocation. The caller will usually copy data into this cache

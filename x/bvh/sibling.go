@@ -16,7 +16,7 @@ import (
 // sibling finds an insertion sibling candidate, as per Bittner et al.  2013.
 // This is the original algorithm described in the Catto 2019 slides, and aims
 // to decrease the overall SAH value of the resultant tree.
-func sibling(c *cache.C, x cid.ID, aabb hyperrectangle.R) cid.ID {
+func sibling(c *cache.C, x cid.ID, aabb hyperrectangle.R) node.N {
 	l := heuristic.H(aabb)
 
 	n := c.GetOrDie(x)
@@ -38,7 +38,6 @@ func sibling(c *cache.C, x cid.ID, aabb hyperrectangle.R) cid.ID {
 		vector.V(make([]float64, aabb.Min().Dimension())),
 		vector.V(make([]float64, aabb.Min().Dimension())),
 	).M()
-
 	for q.Len() > 0 {
 		m, induced := q.Pop()
 
@@ -74,14 +73,13 @@ func sibling(c *cache.C, x cid.ID, aabb hyperrectangle.R) cid.ID {
 		// m to fully accomodate the input AABB. That is, this allows us
 		// to prefer nodes which contains more (or are closer to) the
 		// input AABB.
-		induced = cost - heuristic.H(m.AABB().R())
-		if !m.IsLeaf() && induced+l < h {
-			q.Push(m.Left(), induced)
-			q.Push(m.Right(), induced)
+		if !m.IsLeaf() {
+			induced = cost - heuristic.H(m.AABB().R())
+			if bound := induced + l; bound < h {
+				q.Push(m.Left(), induced)
+				q.Push(m.Right(), induced)
+			}
 		}
 	}
-	if opt == nil {
-		panic("cannot find valid insertion sibling candidate")
-	}
-	return opt.ID()
+	return opt
 }

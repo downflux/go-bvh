@@ -156,7 +156,11 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, impls map[
 	var t node.N
 	aabb := data[x]
 
-	s := c.GetOrDie(sibling(c, root, aabb))
+	s := sibling(c, root, aabb)
+	if s == nil {
+		panic("cannot find valid insertion sibling candidate")
+	}
+
 	if s.IsLeaf() {
 		// If the leaf is full, we need repartition the leaf and split
 		// its children into a new impl.

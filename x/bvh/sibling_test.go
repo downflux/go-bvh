@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/downflux/go-bvh/x/internal/cache"
+	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -16,7 +17,7 @@ func TestSibling(t *testing.T) {
 		c    *cache.C
 		x    cid.ID
 		aabb hyperrectangle.R
-		want cid.ID
+		want node.N
 	}
 
 	configs := []config{
@@ -40,7 +41,7 @@ func TestSibling(t *testing.T) {
 				c:    c,
 				x:    root.ID(),
 				aabb: *hyperrectangle.New(vector.V([]float64{1, 1}), vector.V([]float64{2, 2})),
-				want: root.ID(),
+				want: root,
 			}
 		}(),
 		// Ensure that we will always get a sibling node as long as the
@@ -65,7 +66,7 @@ func TestSibling(t *testing.T) {
 				c:    c,
 				x:    root.ID(),
 				aabb: *hyperrectangle.New(vector.V([]float64{-1, -1}), vector.V([]float64{100, 100})),
-				want: root.ID(),
+				want: root,
 			}
 		}(),
 		func() config {
@@ -88,7 +89,7 @@ func TestSibling(t *testing.T) {
 				c:    c,
 				x:    root.ID(),
 				aabb: *hyperrectangle.New(vector.V([]float64{1, 1}), vector.V([]float64{100, 100})),
-				want: root.ID(),
+				want: root,
 			}
 		}(),
 		// Check that the child node which contains the input AABB
@@ -134,7 +135,7 @@ func TestSibling(t *testing.T) {
 				c:    c,
 				x:    root.ID(),
 				aabb: *hyperrectangle.New(vector.V([]float64{1, 1}), vector.V([]float64{9, 9})),
-				want: left.ID(),
+				want: left,
 			}
 		}(),
 		// Check that the child node which minimizes the total AABB SAH
@@ -183,7 +184,7 @@ func TestSibling(t *testing.T) {
 				c:    c,
 				x:    root.ID(),
 				aabb: *hyperrectangle.New(vector.V([]float64{89, 89}), vector.V([]float64{91, 91})),
-				want: right.ID(),
+				want: right,
 			}
 		}(),
 		// Assert that the total size of the candidate node after a
@@ -232,7 +233,7 @@ func TestSibling(t *testing.T) {
 				c:    c,
 				x:    root.ID(),
 				aabb: *hyperrectangle.New(vector.V([]float64{49, 49}), vector.V([]float64{51, 51})),
-				want: left.ID(),
+				want: left,
 			}
 		}(),
 		// Assert that the induced cost matters is accounted for within
@@ -283,14 +284,14 @@ func TestSibling(t *testing.T) {
 				c:    c,
 				x:    nA.ID(),
 				aabb: *hyperrectangle.New(vector.V([]float64{49, 49}), vector.V([]float64{51, 51})),
-				want: nE.ID(),
+				want: nE,
 			}
 		}(),
 	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := sibling(c.c, c.x, c.aabb); got != c.want {
+			if got := sibling(c.c, c.x, c.aabb); !node.Equal(got, c.want) {
 				t.Errorf("sibling() = %v, want = %v", got, c.want)
 			}
 		})
