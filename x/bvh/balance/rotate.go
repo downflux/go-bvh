@@ -26,7 +26,76 @@ type r struct {
 	dest node.N
 }
 
-func getOptimalRotation(a node.N) *r {
+// rotate returns a valid rotation which will not unbalance our BVH tree.
+//
+// The list of rotations to be considered is taken from Kopta et al. 2012.
+//
+//	     A
+//	    / \
+//	   /   \
+//	  B     C
+//	 / \   / \
+//	D   E F   G
+//
+// Here, we want to create an optimal rotation for the A subtree. Per Kopta et
+// al., we will consider the following node swaps --
+//
+// B -> F
+// B -> G
+// C -> D
+// C -> E
+//
+// These rotations are also the same ones mentioned in the Catto 2019 slides.
+//
+// Kopta also considers the following rotations --
+//
+// D -> F
+// D -> G
+//
+// Because the BVH tree is invariant under reflection, we do not consider the
+// redundant swaps E -> F and E -> G.
+//
+// For each of these swaps, we expect the balance of A to potentially change
+// (e.g. if we are lifting too shallow a tree), and the total heuristic
+//
+//	H(A.L) + H(A.R)
+//
+// to change.
+func rotate(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
+	r := optimal(x)
+
+	switch r.t {
+	case rotationTypeBF:
+		swap(r.src, r.dest)
+
+		// By construction, r.src is the b node, and therefore the
+		// shallower node before the swap. Now that the nodes are
+		// swapped, r.src is the deeper node.
+		node.SetAABB(r.src.Parent(), data, epsilon)
+		node.SetHeight(r.src.Parent())
+
+		node.SetAABB(x, data, epsilon)
+		node.SetHeight(x)
+	case rotationTypeDF:
+		swap(r.src, r.dest)
+
+		// A D -> F rotation means both nodes are of the same depth --
+		// both their parents need to be updated in addition to the
+		// local root node.
+		node.SetAABB(r.src.Parent(), data, epsilon)
+		node.SetHeight(r.src.Parent())
+
+		node.SetAABB(r.dest.Parent(), data, epsilon)
+		node.SetHeight(r.dest.Parent())
+
+		node.SetAABB(x, data, epsilon)
+		node.SetHeight(x)
+	}
+
+	return x
+}
+
+func optimal(a node.N) *r {
 	r := &r{}
 
 	if a.Height() < 2 {
@@ -101,75 +170,6 @@ func getOptimalRotation(a node.N) *r {
 	}
 
 	return r
-}
-
-// rotate returns a valid rotation which will not unbalance our BVH tree.
-//
-// The list of rotations to be considered is taken from Kopta et al. 2012.
-//
-//	     A
-//	    / \
-//	   /   \
-//	  B     C
-//	 / \   / \
-//	D   E F   G
-//
-// Here, we want to create an optimal rotation for the A subtree. Per Kopta et
-// al., we will consider the following node swaps --
-//
-// B -> F
-// B -> G
-// C -> D
-// C -> E
-//
-// These rotations are also the same ones mentioned in the Catto 2019 slides.
-//
-// Kopta also considers the following rotations --
-//
-// D -> F
-// D -> G
-//
-// Because the BVH tree is invariant under reflection, we do not consider the
-// redundant swaps E -> F and E -> G.
-//
-// For each of these swaps, we expect the balance of A to potentially change
-// (e.g. if we are lifting too shallow a tree), and the total heuristic
-//
-//	H(A.L) + H(A.R)
-//
-// to change.
-func rotate(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
-	r := getOptimalRotation(x)
-
-	switch r.t {
-	case rotationTypeBF:
-		swap(r.src, r.dest)
-
-		// By construction, r.src is the b node, and therefore the
-		// shallower node before the swap. Now that the nodes are
-		// swapped, r.src is the deeper node.
-		node.SetAABB(r.src.Parent(), data, epsilon)
-		node.SetHeight(r.src.Parent())
-
-		node.SetAABB(x, data, epsilon)
-		node.SetHeight(x)
-	case rotationTypeDF:
-		swap(r.src, r.dest)
-
-		// A D -> F rotation means both nodes are of the same depth --
-		// both their parents need to be updated in addition to the
-		// local root node.
-		node.SetAABB(r.src.Parent(), data, epsilon)
-		node.SetHeight(r.src.Parent())
-
-		node.SetAABB(r.dest.Parent(), data, epsilon)
-		node.SetHeight(r.dest.Parent())
-
-		node.SetAABB(x, data, epsilon)
-		node.SetHeight(x)
-	}
-
-	return x
 }
 
 // merge simulates the results if the input nodes are set as siblings of one
