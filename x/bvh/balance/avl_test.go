@@ -140,13 +140,13 @@ func TestAVL(t *testing.T) {
 				K:        2,
 				LeafSize: 1,
 			})
-			wa := c.GetOrDie(d.Insert(cid.IDInvalid, ne.ID(), nc.ID(), false))
-			wb := c.GetOrDie(d.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, false))
-			wc := c.GetOrDie(d.Insert(na.ID(), nd.ID(), nb.ID(), false))
-			wd := c.GetOrDie(d.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, false))
-			we := c.GetOrDie(d.Insert(na.ID(), nf.ID(), ng.ID(), false))
-			wf := c.GetOrDie(d.Insert(ne.ID(), cid.IDInvalid, cid.IDInvalid, false))
-			wg := c.GetOrDie(d.Insert(ne.ID(), cid.IDInvalid, cid.IDInvalid, false))
+			wa := d.GetOrDie(d.Insert(cid.IDInvalid, ne.ID(), nc.ID(), false))
+			wb := d.GetOrDie(d.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, false))
+			wc := d.GetOrDie(d.Insert(na.ID(), nd.ID(), nb.ID(), false))
+			wd := d.GetOrDie(d.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, false))
+			we := d.GetOrDie(d.Insert(na.ID(), nf.ID(), ng.ID(), false))
+			wf := d.GetOrDie(d.Insert(ne.ID(), cid.IDInvalid, cid.IDInvalid, false))
+			wg := d.GetOrDie(d.Insert(ne.ID(), cid.IDInvalid, cid.IDInvalid, false))
 
 			wb.Leaves()[100] = struct{}{}
 			wd.Leaves()[101] = struct{}{}
