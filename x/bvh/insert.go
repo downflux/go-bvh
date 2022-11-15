@@ -170,8 +170,11 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 	// At this point in execution, nodes s and t have updated caches and
 	// correct heights. As we traverse up to the root, we will incrementally
 	// rebalance the trees.
-	var n node.N
-	for n = t; n != nil; n = n.Parent() {
+	var m node.N
+	for n := t; n != nil; n = n.Parent() {
+		if n.Parent() == nil {
+			m = t
+		}
 		if !n.IsLeaf() {
 			node.SetAABB(n, data, expansion)
 			node.SetHeight(n)
@@ -202,5 +205,5 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 		})
 	}
 
-	return n.ID(), updates
+	return m.ID(), updates
 }
