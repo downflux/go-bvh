@@ -62,6 +62,10 @@ type r struct {
 //
 // to change.
 func rotate(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
+	if x.Height() < 2 {
+		return x
+	}
+
 	r := optimal(x)
 
 	switch r.t {

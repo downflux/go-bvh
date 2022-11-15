@@ -88,7 +88,7 @@ func Equal(n N, m N) bool {
 		return true
 	}
 
-	if n == nil && m != nil {
+	if (n == nil && m != nil) || (n != nil && m == nil) {
 		return false
 	}
 
