@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/downflux/go-bvh/x/bvh/balance"
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
@@ -175,9 +176,7 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 			node.SetAABB(n, data, expansion)
 			node.SetHeight(n)
 
-			n = avl(n, data, expansion)
-			// TODO(minkezhang): Optimize for AABB, then rebalance and set
-			// height.
+			n = balance.B(n, data, expansion)
 		}
 	}
 

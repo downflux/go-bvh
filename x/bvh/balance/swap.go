@@ -1,4 +1,4 @@
-package bvh
+package balance
 
 import (
 	"github.com/downflux/go-bvh/x/internal/cache/node"

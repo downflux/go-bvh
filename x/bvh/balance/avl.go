@@ -1,4 +1,4 @@
-package bvh
+package balance
 
 import (
 	"github.com/downflux/go-bvh/x/id"
@@ -95,5 +95,6 @@ func avl(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
 		node.SetAABB(x, data, epsilon)
 		node.SetHeight(x)
 	}
+
 	return x
 }

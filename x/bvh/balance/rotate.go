@@ -1,4 +1,4 @@
-package bvh
+package balance
 
 import (
 	"math"
