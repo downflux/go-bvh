@@ -99,6 +99,8 @@ func rotate(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
 	return x
 }
 
+// optimal generates a rotation (which may be a no-op) that minimizes the SAH of
+// the local subtree.
 func optimal(a node.N) *r {
 	r := &r{}
 
