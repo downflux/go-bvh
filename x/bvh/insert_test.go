@@ -3,12 +3,37 @@ package bvh
 import (
 	"testing"
 
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
+
+func TestPartition(t *testing.T) {
+	type config struct {
+		name string
+		s    node.N
+		t    node.N
+		axis vector.D
+		data map[id.ID]hyperrectangle.R
+		want node.N
+	}
+
+	configs := []config{}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			partition(c.s, c.t, c.axis, c.data)
+			if !node.Equal(c.t, c.want) {
+				t.Errorf("n = %v, want = %v", c.t, c.want)
+			}
+		})
+	}
+}
 
 func TestExpand(t *testing.T) {
 	type config struct {
