@@ -184,8 +184,12 @@ func merge(l node.N, r node.N, buf hyperrectangle.M) (int, bool, float64) {
 	buf.Copy(l.AABB().R())
 	buf.Union(r.AABB().R())
 
-	height := int(math.Abs(float64(l.Height() - r.Height())))
-	return height, height <= 1, heuristic.H(buf.R())
+	lh := float64(l.Height())
+	rh := float64(r.Height())
+
+	height := math.Max(lh, rh) + 1
+	balanced := math.Abs(lh-rh) <= 1
+	return int(height), balanced, heuristic.H(buf.R())
 }
 
 // checkBF checks if a potential B -> F rotation will generate a more efficient
