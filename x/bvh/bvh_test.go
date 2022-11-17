@@ -6,6 +6,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/container/bruteforce"
 	"github.com/downflux/go-bvh/x/id"
+	"github.com/downflux/go-bvh/x/internal/perf"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
@@ -70,6 +71,13 @@ func TestBroadPhaseConformance(t *testing.T) {
 				vector.V([]float64{10, 10}),
 				vector.V([]float64{90, 90}),
 			),
+		},
+		{
+			k:         2,
+			size:      4,
+			tolerance: 1.05,
+			data:      perf.GenerateObjects(1000, 2, 100, 200),
+			q:         perf.GenerateAABB(2, 50, 70),
 		},
 	}
 
