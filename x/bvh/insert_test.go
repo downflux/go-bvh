@@ -23,7 +23,34 @@ func TestPartition(t *testing.T) {
 		want node.N
 	}
 
-	configs := []config{}
+	configs := []config{
+		func() config {
+			data := map[id.ID]hyperrectangle.R{
+				100: *hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{10, 10})),
+				101: *hyperrectangle.New(vector.V([]float64{100, 0}), vector.V([]float64{110, 10})),
+			}
+			c := cache.New(cache.O{
+				LeafSize: 1,
+				K:        2,
+			})
+			s := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+			s.Leaves()[100] = struct{}{}
+			s.Leaves()[101] = struct{}{}
+			t := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+
+			want := impl.New(c, t.ID())
+			want.Allocate(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid)
+			want.Leaves()[101] = struct{}{}
+			return config{
+				name: "Trivial",
+				s:    s,
+				t:    t,
+				axis: vector.AXIS_X,
+				data: data,
+				want: want,
+			}
+		}(),
+	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
