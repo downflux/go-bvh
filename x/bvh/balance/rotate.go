@@ -83,7 +83,7 @@ func rotate(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
 	case rotationTypeDF:
 		swap(r.src, r.dest)
 
-		// A D -> F rotation means both nodes are of the same depth --
+		// The D -> F rotation means both nodes are of the same depth --
 		// both their parents need to be updated in addition to the
 		// local root node.
 		node.SetAABB(r.src.Parent(), data, epsilon)
@@ -120,10 +120,9 @@ func optimal(a node.N) *r {
 		vector.V(make([]float64, k)),
 	).M()
 
-	var d, e, f, g node.N
 	if !c.IsLeaf() {
-		f = c.Left()
-		g = c.Right()
+		f := c.Left()
+		g := c.Right()
 
 		if h, ok := checkBF(b, f, g, opt, buf); ok {
 			opt = h
@@ -141,8 +140,8 @@ func optimal(a node.N) *r {
 	}
 
 	if !b.IsLeaf() {
-		d = b.Left()
-		e = b.Right()
+		d := b.Left()
+		e := b.Right()
 
 		if h, ok := checkBF(c, d, e, opt, buf); ok {
 			opt = h
@@ -160,6 +159,11 @@ func optimal(a node.N) *r {
 	}
 
 	if !b.IsLeaf() && !c.IsLeaf() {
+		d := b.Left()
+		e := b.Right()
+		f := c.Left()
+		g := c.Right()
+
 		if h, ok := checkDF(d, e, f, g, opt, buf); ok {
 			opt = h
 			r.src = d
