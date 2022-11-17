@@ -204,8 +204,11 @@ func merge(l node.N, r node.N, buf hyperrectangle.M) (int, bool, float64) {
 //	   / \
 //	  F   G
 func checkBF(b node.N, f node.N, g node.N, opt float64, buf hyperrectangle.M) (float64, bool) {
-	if _, balanced, h := merge(b, g, buf); balanced && h < opt {
-		return opt, false
+	_, balanced, h := merge(b, g, buf)
+	h += heuristic.H(f.AABB().R())
+
+	if balanced && h < opt {
+		return h, true
 	}
 	return opt, false
 }

@@ -3,6 +3,7 @@ package balance
 import (
 	"testing"
 
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
@@ -29,7 +30,145 @@ func TestCheckBF(t *testing.T) {
 		want w
 	}
 
-	configs := []config{}
+	configs := []config{
+		func() config {
+			data := map[id.ID]hyperrectangle.R{
+				100: *hyperrectangle.New(vector.V([]float64{1, 1}), vector.V([]float64{2, 2})),
+				101: *hyperrectangle.New(vector.V([]float64{99, 99}), vector.V([]float64{100, 100})),
+				102: *hyperrectangle.New(vector.V([]float64{3, 3}), vector.V([]float64{4, 4})),
+			}
+			c := cache.New(cache.O{
+				LeafSize: 1,
+				K:        k,
+			})
+
+			na := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+
+			nb := c.GetOrDie(c.Insert(na.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nb.Leaves()[100] = struct{}{}
+			na.SetLeft(nb.ID())
+
+			nc := c.GetOrDie(c.Insert(na.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			na.SetRight(nc.ID())
+
+			nf := c.GetOrDie(c.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nf.Leaves()[101] = struct{}{}
+			nc.SetLeft(nf.ID())
+
+			ng := c.GetOrDie(c.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			ng.Leaves()[102] = struct{}{}
+			nc.SetRight(ng.ID())
+
+			for _, n := range []node.N{ng, nf, nc, nb, na} {
+				node.SetAABB(n, data, 1)
+				node.SetHeight(n)
+			}
+
+			return config{
+				name: "Swap",
+				b:    nb,
+				f:    nf,
+				g:    ng,
+				opt:  heuristic.H(nb.AABB().R()) + heuristic.H(nc.AABB().R()),
+				want: w{
+					h:       16,
+					optimal: true,
+				},
+			}
+		}(),
+		func() config {
+			data := map[id.ID]hyperrectangle.R{
+				100: *hyperrectangle.New(vector.V([]float64{99, 99}), vector.V([]float64{100, 100})),
+				101: *hyperrectangle.New(vector.V([]float64{1, 1}), vector.V([]float64{2, 2})),
+				102: *hyperrectangle.New(vector.V([]float64{3, 3}), vector.V([]float64{4, 4})),
+			}
+			c := cache.New(cache.O{
+				LeafSize: 1,
+				K:        k,
+			})
+
+			na := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+
+			nb := c.GetOrDie(c.Insert(na.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nb.Leaves()[100] = struct{}{}
+			na.SetLeft(nb.ID())
+
+			nc := c.GetOrDie(c.Insert(na.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			na.SetRight(nc.ID())
+
+			nf := c.GetOrDie(c.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nf.Leaves()[101] = struct{}{}
+			nc.SetLeft(nf.ID())
+
+			ng := c.GetOrDie(c.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			ng.Leaves()[102] = struct{}{}
+			nc.SetRight(ng.ID())
+
+			for _, n := range []node.N{ng, nf, nc, nb, na} {
+				node.SetAABB(n, data, 1)
+				node.SetHeight(n)
+			}
+
+			return config{
+				name: "NoSwap/AABB",
+				b:    nb,
+				f:    nf,
+				g:    ng,
+				opt:  heuristic.H(nb.AABB().R()) + heuristic.H(nc.AABB().R()),
+				want: w{
+					h:       16,
+					optimal: false,
+				},
+			}
+		}(),
+		func() config {
+			data := map[id.ID]hyperrectangle.R{
+				100: *hyperrectangle.New(vector.V([]float64{1, 1}), vector.V([]float64{2, 2})),
+				101: *hyperrectangle.New(vector.V([]float64{99, 99}), vector.V([]float64{100, 100})),
+				102: *hyperrectangle.New(vector.V([]float64{3, 3}), vector.V([]float64{4, 4})),
+			}
+			c := cache.New(cache.O{
+				LeafSize: 1,
+				K:        k,
+			})
+
+			na := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+
+			nb := c.GetOrDie(c.Insert(na.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nb.Leaves()[100] = struct{}{}
+			na.SetLeft(nb.ID())
+
+			nc := c.GetOrDie(c.Insert(na.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			na.SetRight(nc.ID())
+
+			nf := c.GetOrDie(c.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nf.AABB().Copy(data[101])
+			nc.SetLeft(nf.ID())
+			nf.SetHeight(2) // Manually set height for a pseudo-leaf.
+
+			ng := c.GetOrDie(c.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			ng.AABB().Copy(data[102])
+			nc.SetRight(ng.ID())
+			ng.SetHeight(2)
+
+			for _, n := range []node.N{nc, nb, na} {
+				node.SetAABB(n, data, 1)
+				node.SetHeight(n)
+			}
+
+			return config{
+				name: "NoSwap/Height",
+				b:    nb,
+				f:    nf,
+				g:    ng,
+				opt:  heuristic.H(nb.AABB().R()) + heuristic.H(nc.AABB().R()),
+				want: w{
+					h:       392,
+					optimal: false,
+				},
+			}
+		}(),
+	}
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
