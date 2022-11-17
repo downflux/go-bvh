@@ -121,6 +121,7 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 			/* validate = */ false,
 		))
 		s.Leaves()[x] = struct{}{}
+		node.SetAABB(s, data, expansion)
 		return s.ID(), map[id.ID]cid.ID{
 			x: s.ID(),
 		}
@@ -149,11 +150,14 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 			t.Leaves()[x] = struct{}{}
 		}
 
-		node.SetAABB(s, data, expansion)
-		node.SetHeight(s)
-
 		node.SetAABB(t, data, expansion)
 		node.SetHeight(t)
+
+		if t != s {
+			node.SetAABB(s, data, expansion)
+			node.SetHeight(s)
+		}
+
 	} else {
 		t = expand(c, s)
 		t.Leaves()[x] = struct{}{}

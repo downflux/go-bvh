@@ -74,6 +74,7 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, epsilon float64) {
 	var k vector.D
 	for x := range n.Leaves() {
 		if !initialized {
+			initialized = true
 			n.AABB().Copy(data[x])
 			k = data[x].Min().Dimension()
 		} else {
