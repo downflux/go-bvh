@@ -3,7 +3,9 @@ package perf
 import (
 	"math"
 	"math/rand"
+	"runtime"
 
+	"github.com/downflux/go-bvh/x/container"
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -24,10 +26,61 @@ func GenerateAABB(k vector.D, min float64, max float64) hyperrectangle.R {
 	return aabb.R()
 }
 
-func GenerateObjects(n int, k vector.D, min float64, max float64) map[id.ID]hyperrectangle.R {
+// grid generates a complete K-dimensional grid.
+func grid(min, max int, k vector.D) []vector.V {
+	if k == 1 {
+		var vs []vector.V
+		for i := min; i < max; i++ {
+			vs = append(vs, []float64{float64(i)})
+		}
+		return vs
+	}
+
+	var vs []vector.V
+	for _, j := range grid(min, max, k-1) {
+		for i := min; i < max; i++ {
+			v := []float64{float64(i)}
+			v = append(v, j...)
+			vs = append(vs, v)
+		}
+	}
+	return vs
+}
+
+func GenerateRandomTiles(n int, k vector.D, min int, max int) map[id.ID]hyperrectangle.R {
+	runtime.MemProfileRate = 0
+	defer func() { runtime.MemProfileRate = 512 * 1024 }()
+
+	tiles := grid(0, int(math.Pow(5*float64(n), 1.0/float64(k))), k)
+	rand.Shuffle(len(tiles), func(i, j int) { tiles[i], tiles[j] = tiles[j], tiles[i] })
+
+	aabbs := make(map[id.ID]hyperrectangle.R, n)
+	for i := 0; i < n; i++ {
+		max := vector.M(make([]float64, k))
+		for j := vector.D(0); j < k; j++ {
+			max.SetX(j, tiles[i].X(j)+1)
+		}
+		aabbs[id.ID(i)] = *hyperrectangle.New(tiles[i], max.V())
+	}
+	return aabbs
+}
+
+func GenerateRandomBoxes(n int, k vector.D, min float64, max float64) map[id.ID]hyperrectangle.R {
+	runtime.MemProfileRate = 0
+	defer func() { runtime.MemProfileRate = 512 * 1024 }()
+
 	data := make(map[id.ID]hyperrectangle.R, n)
 	for i := 0; i < n; i++ {
 		data[id.ID(i)] = GenerateAABB(k, min, max)
 	}
 	return data
+}
+
+func Insert(c container.C, data map[id.ID]hyperrectangle.R) {
+	runtime.MemProfileRate = 0
+	defer func() { runtime.MemProfileRate = 512 * 1024 }()
+
+	for x, aabb := range data {
+		c.Insert(x, aabb)
+	}
 }

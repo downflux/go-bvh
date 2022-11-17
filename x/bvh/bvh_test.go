@@ -95,14 +95,14 @@ func TestBroadPhaseConformance(t *testing.T) {
 			k:         2,
 			size:      1,
 			tolerance: 1.05,
-			data:      perf.GenerateObjects(10000, 2, 100, 200),
+			data:      perf.GenerateRandomBoxes(10000, 2, 100, 200),
 			q:         perf.GenerateAABB(2, 50, 70),
 		},
 		{
 			k:         2,
 			size:      4,
 			tolerance: 1.05,
-			data:      perf.GenerateObjects(1000, 2, 100, 200),
+			data:      perf.GenerateRandomBoxes(1000, 2, 100, 200),
 			q:         perf.GenerateAABB(2, 50, 70),
 		},
 	}
