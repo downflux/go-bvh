@@ -15,7 +15,7 @@ import (
 func broadphase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hyperrectangle.R) []id.ID {
 	n, ok := c.Get(root)
 	if !ok {
-		return nil
+		return []id.ID{}
 	}
 
 	open := stack.New(make([]node.N, 0, 128))
