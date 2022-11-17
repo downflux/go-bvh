@@ -34,7 +34,7 @@ func TestBroadPhaseConformance(t *testing.T) {
 		},
 		{
 			k:         2,
-			size:      1,
+			size:      4,
 			tolerance: 1.05,
 			data: map[id.ID]hyperrectangle.R{
 				100: *hyperrectangle.New(
