@@ -47,7 +47,7 @@ func grid(min, max int, k vector.D) []vector.V {
 	return vs
 }
 
-func GenerateRandomTiles(n int, k vector.D, min int, max int) map[id.ID]hyperrectangle.R {
+func GenerateRandomTiles(n int, k vector.D) map[id.ID]hyperrectangle.R {
 	runtime.MemProfileRate = 0
 	defer func() { runtime.MemProfileRate = 512 * 1024 }()
 

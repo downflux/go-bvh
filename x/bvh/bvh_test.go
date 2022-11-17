@@ -6,7 +6,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/container/bruteforce"
 	"github.com/downflux/go-bvh/x/id"
-	"github.com/downflux/go-bvh/x/internal/perf"
+	"github.com/downflux/go-bvh/x/perf"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
