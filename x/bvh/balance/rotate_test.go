@@ -13,9 +13,45 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
+func TestCheckBF(t *testing.T) {
+	const k = 2
+	type w struct {
+		h       float64
+		optimal bool
+	}
+
+	type config struct {
+		name string
+		b    node.N
+		f    node.N
+		g    node.N
+		opt  float64
+		want w
+	}
+
+	configs := []config{}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			buf := hyperrectangle.New(
+				vector.V(make([]float64, k)),
+				vector.V(make([]float64, k)),
+			).M()
+
+			got := &w{}
+			got.h, got.optimal = checkBF(c.b, c.f, c.g, c.opt, buf)
+			if !epsilon.Within(got.h, c.want.h) {
+				t.Errorf("h = %v, want = %v", got.h, c.want.h)
+			}
+			if got.optimal != c.want.optimal {
+				t.Errorf("optimal = %v, want = %v", got.optimal, c.want.optimal)
+			}
+		})
+	}
+}
+
 func TestMerge(t *testing.T) {
 	const k = 2
-
 	type w struct {
 		height   int
 		balanced bool
@@ -33,7 +69,7 @@ func TestMerge(t *testing.T) {
 		func() config {
 			c := cache.New(cache.O{
 				LeafSize: 1,
-				K:        2,
+				K:        k,
 			})
 
 			l := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
@@ -69,8 +105,8 @@ func TestMerge(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			buf := hyperrectangle.New(
-				vector.V(make([]float64, 2)),
-				vector.V(make([]float64, 2)),
+				vector.V(make([]float64, k)),
+				vector.V(make([]float64, k)),
 			).M()
 			got := &w{}
 
