@@ -35,6 +35,25 @@ func TestBroadPhaseConformance(t *testing.T) {
 		},
 		{
 			k:         2,
+			size:      1,
+			tolerance: 1.05,
+			data: map[id.ID]hyperrectangle.R{
+				100: *hyperrectangle.New(
+					vector.V([]float64{0, 0}),
+					vector.V([]float64{1, 1}),
+				),
+				101: *hyperrectangle.New(
+					vector.V([]float64{10, 10}),
+					vector.V([]float64{11, 11}),
+				),
+			},
+			q: *hyperrectangle.New(
+				vector.V([]float64{1, 1}),
+				vector.V([]float64{10, 10}),
+			),
+		},
+		{
+			k:         2,
 			size:      4,
 			tolerance: 1.05,
 			data: map[id.ID]hyperrectangle.R{
@@ -71,6 +90,13 @@ func TestBroadPhaseConformance(t *testing.T) {
 				vector.V([]float64{10, 10}),
 				vector.V([]float64{90, 90}),
 			),
+		},
+		{
+			k:         2,
+			size:      1,
+			tolerance: 1.05,
+			data:      perf.GenerateObjects(10000, 2, 100, 200),
+			q:         perf.GenerateAABB(2, 50, 70),
 		},
 		{
 			k:         2,
