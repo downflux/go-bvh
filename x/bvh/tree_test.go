@@ -34,30 +34,34 @@ func TestBroadPhaseConformance(t *testing.T) {
 		},
 		{
 			k:         2,
-			size:      4,
+			size:      1,
 			tolerance: 1.05,
 			data: map[id.ID]hyperrectangle.R{
-				0: *hyperrectangle.New(
+				100: *hyperrectangle.New(
 					vector.V([]float64{0, 0}),
 					vector.V([]float64{1, 1}),
 				),
-				1: *hyperrectangle.New(
+				101: *hyperrectangle.New(
 					vector.V([]float64{10, 10}),
 					vector.V([]float64{11, 11}),
 				),
-				2: *hyperrectangle.New(
+				102: *hyperrectangle.New(
 					vector.V([]float64{9, 9}),
 					vector.V([]float64{11, 11}),
 				),
-				3: *hyperrectangle.New(
+				103: *hyperrectangle.New(
 					vector.V([]float64{30, 30}),
 					vector.V([]float64{40, 40}),
 				),
-				4: *hyperrectangle.New(
+				104: *hyperrectangle.New(
 					vector.V([]float64{100, 100}),
 					vector.V([]float64{101, 101}),
 				),
-				5: *hyperrectangle.New(
+				105: *hyperrectangle.New(
+					vector.V([]float64{90.01, 90.01}),
+					vector.V([]float64{95, 95}),
+				),
+				106: *hyperrectangle.New(
 					vector.V([]float64{0, 0}),
 					vector.V([]float64{100, 100}),
 				),

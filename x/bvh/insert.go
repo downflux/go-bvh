@@ -108,16 +108,11 @@ func partition(s node.N, t node.N, axis vector.D, data map[id.ID]hyperrectangle.
 	}
 }
 
-type Update struct {
-	ID   id.ID
-	Node cid.ID
-}
-
 // insert adds a new AABB into a tree, and returns the new root, along with any
 // object node updates.
 //
 // The input data cache is a read-only map within the insert function.
-func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cid.ID, x id.ID, expansion float64) (cid.ID, []Update) {
+func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cid.ID, x id.ID, expansion float64) (cid.ID, map[id.ID]cid.ID) {
 	if root == cid.IDInvalid {
 		s := c.GetOrDie(c.Insert(
 			cid.IDInvalid,
@@ -126,11 +121,8 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 			/* validate = */ false,
 		))
 		s.Leaves()[x] = struct{}{}
-		return s.ID(), []Update{
-			{
-				ID:   x,
-				Node: s.ID(),
-			},
+		return s.ID(), map[id.ID]cid.ID{
+			x: s.ID(),
 		}
 	}
 
@@ -152,11 +144,14 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 			t = expand(c, s)
 			partition(s, t, vector.D(rand.Intn(int(c.K()))), data)
 		} else {
-			s.Leaves()[x] = struct{}{}
+			t = s
+
+			t.Leaves()[x] = struct{}{}
 		}
 
 		node.SetAABB(s, data, expansion)
 		node.SetHeight(s)
+
 		node.SetAABB(t, data, expansion)
 		node.SetHeight(t)
 	} else {
@@ -173,7 +168,7 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 	var m node.N
 	for n := t; n != nil; n = n.Parent() {
 		if n.Parent() == nil {
-			m = t
+			m = n
 		}
 		if !n.IsLeaf() {
 			node.SetAABB(n, data, expansion)
@@ -183,26 +178,23 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 		}
 	}
 
-	// If we created a new node, we need to broadcast any node changes to
-	// the caller.
-	updates := make([]Update, 0, c.LeafSize())
-	if t != s {
-		for n := range t.Leaves() {
-			updates = append(updates, Update{
-				ID:   n,
-				Node: t.ID(),
-			})
-		}
-	}
+	updates := make(map[id.ID]cid.ID, c.LeafSize())
 
 	// It is possible during repartitioning for the new object to be
 	// inserted into the old node. We need to broadcast this change
 	// as well.
-	if _, ok := t.Leaves()[x]; !ok {
-		updates = append(updates, Update{
-			ID:   x,
-			Node: s.ID(),
-		})
+	if _, ok := s.Leaves()[x]; ok {
+		updates[x] = s.ID()
+	} else {
+		updates[x] = t.ID()
+	}
+
+	// If we created a new node, we need to broadcast any node changes to
+	// the caller.
+	if t != s {
+		for n := range t.Leaves() {
+			updates[n] = t.ID()
+		}
 	}
 
 	return m.ID(), updates

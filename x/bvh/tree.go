@@ -59,12 +59,12 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 
 	t.data[x] = aabb
 
-	var updates []Update
+	var updates map[id.ID]cid.ID
 	t.root, updates = insert(
 		t.c, t.root, t.data, t.nodes, x, t.tolerance,
 	)
-	for _, m := range updates {
-		t.nodes[m.ID] = m.Node
+	for x, n := range updates {
+		t.nodes[x] = n
 	}
 
 	return nil
