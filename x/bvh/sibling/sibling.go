@@ -1,4 +1,4 @@
-package bvh
+package sibling
 
 import (
 	"math"
@@ -13,10 +13,11 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
-// sibling finds an insertion sibling candidate, as per Bittner et al.  2013.
-// This is the original algorithm described in the Catto 2019 slides, and aims
-// to decrease the overall SAH value of the resultant tree.
-func sibling(c *cache.C, x cid.ID, aabb hyperrectangle.R) node.N {
+// Find traverses down a tree and gets the insertion sibling candidate, as per
+// Bittner et al.  2013.  This is the original algorithm described in the Catto
+// 2019 slides, and aims to decrease the overall SAH value of the resultant
+// tree.
+func Find(c *cache.C, x cid.ID, aabb hyperrectangle.R) node.N {
 	l := heuristic.H(aabb)
 
 	n := c.GetOrDie(x)

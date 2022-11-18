@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/downflux/go-bvh/x/bvh/balance"
+	"github.com/downflux/go-bvh/x/bvh/sibling"
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
@@ -130,7 +131,7 @@ func raw(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, x id.ID) (nod
 	var t node.N
 	aabb := data[x]
 
-	s := sibling(c, root, aabb)
+	s := sibling.Find(c, root, aabb)
 	if s == nil {
 		panic("cannot find valid insertion sibling candidate")
 	}
