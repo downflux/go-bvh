@@ -13,6 +13,63 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
+// FindBox2D implements a find sibling algorithm as per the Box2D
+// implementation. See
+// https://github.com/erincatto/box2d/blob/9dc24a6fd4f32442c4bcf80791de47a0a7d25afb/src/collision/b2_dynamic_tree.cpp#L197
+// for more information.
+func FindBox2D(c *cache.C, x cid.ID, aabb hyperrectangle.R) node.N {
+	buf := hyperrectangle.New(vector.V(make([]float64, c.K())), vector.V(make([]float64, c.K()))).M()
+
+	var n node.N
+	for n = c.GetOrDie(x); !n.IsLeaf(); {
+		h := heuristic.H(n.AABB().R())
+		nlh := heuristic.H(n.Left().AABB().R())
+		nrh := heuristic.H(n.Right().AABB().R())
+
+		buf.Copy(n.AABB().R())
+		buf.Union(aabb)
+
+		ch := heuristic.H(buf.R())
+
+		// Find the cost of creating a new parent for this node and the new leaf.
+		direct := 2 * ch
+
+		// Find the minimum cost of pushing the AABB further down the
+		// tree.
+		inherited := 2 * (ch - h)
+
+		var lh, rh float64
+
+		buf.Copy(n.Left().AABB().R())
+		buf.Union(aabb)
+		if n.Left().IsLeaf() {
+			lh = inherited + heuristic.H(buf.R())
+		} else {
+			lh = inherited + (nlh - heuristic.H(buf.R()))
+		}
+
+		buf.Copy(n.Right().AABB().R())
+		buf.Union(aabb)
+		if n.Left().IsLeaf() {
+			rh = inherited + heuristic.H(buf.R())
+		} else {
+			rh = inherited + (nrh - heuristic.H(buf.R()))
+		}
+
+		if direct < lh && direct < rh {
+			break
+		}
+
+		if lh < rh {
+			n = n.Left()
+		} else {
+			n = n.Right()
+		}
+	}
+
+	return n
+}
+
 // Find traverses down a tree and gets the insertion sibling candidate, as per
 // Bittner et al.  2013.  This is the original algorithm described in the Catto
 // 2019 slides, and aims to decrease the overall SAH value of the resultant
