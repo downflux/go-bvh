@@ -67,7 +67,7 @@ func expand(c *cache.C, s node.N) node.N {
 func partition(s node.N, t node.N, axis vector.D, data map[id.ID]hyperrectangle.R) {
 	// Find the upper and lower bounds of the tight-fitting AABB for the
 	// data in s. We need to calculate this directly as the cached AABB may
-	// include some expansion factor.
+	// include some tolerance factor.
 	kmin := math.Inf(1)
 	kmax := math.Inf(-1)
 	for x := range s.Leaves() {
@@ -108,23 +108,22 @@ func partition(s node.N, t node.N, axis vector.D, data map[id.ID]hyperrectangle.
 	}
 }
 
-// insert adds a new AABB into a tree, and returns the new root, along with any
-// object node updates.
+// raw is the base insert into the tree. This method only guarantees the
+// newly-created nodes have valid links back up to (potentially a new) root.
 //
-// The input data cache is a read-only map within the insert function.
-func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cid.ID, x id.ID, expansion float64) (cid.ID, map[id.ID]cid.ID) {
+// This function returns an (s, t) node tuple, where s is the existing insertion
+// sibling candidate, and t is a newly-created node (in the case that s is
+// full).
+func raw(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, x id.ID) (node.N, node.N) {
 	if root == cid.IDInvalid {
-		s := c.GetOrDie(c.Insert(
+		t := c.GetOrDie(c.Insert(
 			cid.IDInvalid,
 			cid.IDInvalid,
 			cid.IDInvalid,
 			/* validate = */ false,
 		))
-		s.Leaves()[x] = struct{}{}
-		node.SetAABB(s, data, expansion)
-		return s.ID(), map[id.ID]cid.ID{
-			x: s.ID(),
-		}
+		t.Leaves()[x] = struct{}{}
+		return nil, t
 	}
 
 	// t is the new node into which we insert the AABB.
@@ -145,61 +144,69 @@ func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[
 			t = expand(c, s)
 			partition(s, t, vector.D(rand.Intn(int(c.K()))), data)
 		} else {
-			t = s
-
-			t.Leaves()[x] = struct{}{}
+			s.Leaves()[x] = struct{}{}
 		}
-
-		node.SetAABB(t, data, expansion)
-		node.SetHeight(t)
-
-		if t != s {
-			node.SetAABB(s, data, expansion)
-			node.SetHeight(s)
-		}
-
 	} else {
 		t = expand(c, s)
 		t.Leaves()[x] = struct{}{}
+	}
 
-		node.SetAABB(t, data, expansion)
+	return s, t
+}
+
+// insert adds a new AABB into a tree, and returns the new root, along with any
+// object node updates.
+//
+// The input data cache is a read-only map within the insert function.
+func insert(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cid.ID, x id.ID, tolerance float64) (cid.ID, map[id.ID]cid.ID) {
+	s, t := raw(c, root, data, x)
+
+	updates := make(map[id.ID]cid.ID, c.LeafSize())
+	if s != nil {
+		node.SetAABB(s, data, tolerance)
+		node.SetHeight(s)
+
+		// x may be inserted into either s or t.
+		if _, ok := s.Leaves()[x]; ok {
+			updates[x] = s.ID()
+		}
+	}
+
+	if t != nil {
+		node.SetAABB(t, data, tolerance)
 		node.SetHeight(t)
+
+		// In the course of creating the new node t, we will need to
+		// update any migrated nodes.
+		for x := range t.Leaves() {
+			updates[x] = t.ID()
+		}
+	}
+
+	// Walk back up the tree, while at the same time getting the root. Since
+	// nodes s and t are already balanced by construction, the balancing op
+	// will only start at the shared parent.
+	n := s
+	if n == nil {
+		n = t
 	}
 
 	// At this point in execution, nodes s and t have updated caches and
 	// correct heights. As we traverse up to the root, we will incrementally
 	// rebalance the trees.
-	var m node.N
-	for n := t; n != nil; n = n.Parent() {
-		if n.Parent() == nil {
-			m = n
+	var r node.N
+	for m := n; m != nil; m = m.Parent() {
+		if !m.IsLeaf() {
+			node.SetAABB(m, data, tolerance)
+			node.SetHeight(m)
+
+			m = balance.B(m, data, tolerance)
 		}
-		if !n.IsLeaf() {
-			node.SetAABB(n, data, expansion)
-			node.SetHeight(n)
 
-			n = balance.B(n, data, expansion)
-		}
-	}
-
-	updates := make(map[id.ID]cid.ID, c.LeafSize())
-
-	// It is possible during repartitioning for the new object to be
-	// inserted into the old node. We need to broadcast this change
-	// as well.
-	if _, ok := s.Leaves()[x]; ok {
-		updates[x] = s.ID()
-	} else {
-		updates[x] = t.ID()
-	}
-
-	// If we created a new node, we need to broadcast any node changes to
-	// the caller.
-	if t != s {
-		for n := range t.Leaves() {
-			updates[n] = t.ID()
+		if m.Parent() == nil {
+			r = m
 		}
 	}
 
-	return m.ID(), updates
+	return r.ID(), updates
 }

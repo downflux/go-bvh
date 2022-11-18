@@ -171,6 +171,7 @@ func optimal(a node.N) *r {
 			r.t = rotationTypeDF
 
 		}
+
 		if h, ok := checkDF(d, e, g, f, opt, buf); ok {
 			opt = h
 			r.src = d

@@ -11,9 +11,9 @@ import (
 
 func main() {
 	t := bvh.New(bvh.O{
-		LeafSize: 1,
-		K:        vector.D(2),
-		Tolerance: 1.05,
+		LeafSize:  1,
+		K:         vector.D(2),
+		Tolerance: 1,
 	})
 
 	data := map[id.ID]hyperrectangle.R{
