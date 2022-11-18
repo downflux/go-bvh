@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -40,6 +41,23 @@ func New(o O) *T {
 		data:      make(map[id.ID]hyperrectangle.R, 1024),
 		tolerance: o.Tolerance,
 	}
+}
+
+func (t *T) SAH() float64 {
+	n, ok := t.c.Get(t.root)
+	if !ok {
+		return 0
+	}
+
+	return util.SAH(n)
+}
+
+func (t *T) H() int {
+	n, ok := t.c.Get(t.root)
+	if !ok {
+		return 0
+	}
+	return n.Height()
 }
 
 func (t *T) K() vector.D { return t.c.K() }

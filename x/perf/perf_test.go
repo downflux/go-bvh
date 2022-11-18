@@ -121,6 +121,13 @@ func BenchmarkInsert(b *testing.B) {
 					b.Errorf("Insert() = %v, want = nil", err)
 				}
 			}
+
+			b.StopTimer()
+			if u, ok := t.(*bvh.T); ok {
+				b.ReportMetric(u.SAH(), "SAH")
+				b.ReportMetric(float64(u.H()), "H")
+			}
+			defer b.StartTimer()
 		})
 	}
 }
