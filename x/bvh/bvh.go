@@ -29,6 +29,10 @@ type O struct {
 }
 
 func New(o O) *T {
+	if o.Tolerance < 1 {
+		panic(fmt.Sprintf("cannot set tolerance factor %v < 1", o.Tolerance))
+	}
+
 	return &T{
 		c: cache.New(cache.O{
 			K:        o.K,
