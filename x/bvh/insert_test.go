@@ -104,6 +104,43 @@ func TestRaw(t *testing.T) {
 				},
 			}
 		}(),
+		func() config {
+			data := map[id.ID]hyperrectangle.R{
+				100: *hyperrectangle.New(vector.V{1, 1}, vector.V{10, 10}),
+				101: *hyperrectangle.New(vector.V{100, 100}, vector.V{110, 110}),
+			}
+
+			c := cache.New(cache.O{
+				LeafSize: 1,
+				K:        k,
+			})
+
+			root := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+			root.Leaves()[100] = struct{}{}
+
+			s := impl.New(c, root.ID())
+			s.Allocate(1, cid.IDInvalid, cid.IDInvalid)
+			s.Leaves()[100] = struct{}{}
+
+			t := impl.New(c, 2)
+			t.Allocate(1, cid.IDInvalid, cid.IDInvalid)
+			t.Leaves()[101] = struct{}{}
+
+			r := impl.New(c, 1)
+			r.Allocate(cid.IDInvalid, root.ID(), 2)
+
+			return config{
+				name: "Nil",
+				c:    c,
+				root: root.ID(),
+				data: data,
+				x:    101,
+				want: w{
+					s: s,
+					t: t,
+				},
+			}
+		}(),
 	}
 
 	for _, c := range configs {
