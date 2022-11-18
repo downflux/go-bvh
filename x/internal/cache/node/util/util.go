@@ -8,6 +8,14 @@ import (
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 )
 
+func PostOrder(n node.N f func(n node.N) {
+	if !n.IsLeaf() {
+		PostOrder(n.Left(), f)
+		PostOrder(n.Right(), f)
+	}
+	f(n)
+}
+
 func PreOrder(n node.N, f func(n node.N)) {
 	f(n)
 	if !n.IsLeaf() {
