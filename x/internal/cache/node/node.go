@@ -61,7 +61,7 @@ func SetHeight(n N) {
 // factor.
 //
 // The input node must be valid and up-to-date.
-func SetAABB(n N, data map[id.ID]hyperrectangle.R, epsilon float64) {
+func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 	if !n.IsLeaf() {
 		n.AABB().Copy(n.Left().AABB().R())
 		n.AABB().Union(n.Right().AABB().R())
@@ -81,7 +81,15 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, epsilon float64) {
 			n.AABB().Union(data[x])
 		}
 	}
-	n.AABB().Scale(math.Pow(epsilon, 1/float64(k)))
+
+	epsilon := math.Pow(tolerance, 1/float64(k))
+	for i := vector.D(0); i < k; i++ {
+		d := n.AABB().Max().X(i) - n.AABB().Min().X(i)
+		offset := (epsilon*d - d) / 2
+		n.AABB().Min().SetX(i, n.AABB().Min().X(i)-offset)
+		n.AABB().Max().SetX(i, n.AABB().Max().X(i)-offset)
+	}
+	n.AABB().Scale(epsilon)
 }
 
 func Equal(n N, m N) bool {
