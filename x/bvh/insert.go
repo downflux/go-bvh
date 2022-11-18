@@ -115,7 +115,7 @@ func partition(s node.N, t node.N, axis vector.D, data map[id.ID]hyperrectangle.
 // sibling candidate, and t is a newly-created node (in the case that s is
 // full).
 func raw(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, x id.ID) (node.N, node.N) {
-	if root == cid.IDInvalid {
+	if _, ok := c.Get(root); !ok {
 		t := c.GetOrDie(c.Insert(
 			cid.IDInvalid,
 			cid.IDInvalid,

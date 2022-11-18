@@ -62,6 +62,64 @@ func TestPartition(t *testing.T) {
 	}
 }
 
+func TestRaw(t *testing.T) {
+	const k = 2
+
+	type w struct {
+		s node.N
+		t node.N
+	}
+
+	type config struct {
+		name string
+		c    *cache.C
+		root cid.ID
+		data map[id.ID]hyperrectangle.R
+		x    id.ID
+		want w
+	}
+
+	configs := []config{
+		func() config {
+			x := id.ID(100)
+
+			c := cache.New(cache.O{
+				LeafSize: 1,
+				K:        k,
+			})
+
+			t := impl.New(c, 0)
+			t.Allocate(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid)
+			t.Leaves()[x] = struct{}{}
+
+			return config{
+				name: "Nil",
+				c:    c,
+				root: cid.IDInvalid,
+				data: nil,
+				x:    x,
+				want: w{
+					s: nil,
+					t: t,
+				},
+			}
+		}(),
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			got := &w{}
+			got.s, got.t = raw(c.c, c.root, c.data, c.x)
+			if !node.Equal(got.s, c.want.s) {
+				t.Errorf("s = %v, want = %v", got.s, c.want.s)
+			}
+			if !node.Equal(got.t, c.want.t) {
+				t.Errorf("t = %v, want = %v", got.t, c.want.t)
+			}
+		})
+	}
+}
+
 func TestExpand(t *testing.T) {
 	type config struct {
 		name string
