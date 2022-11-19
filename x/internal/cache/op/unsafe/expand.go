@@ -38,8 +38,9 @@ func Expand(c *cache.C, n node.N) node.N {
 
 		p.SetParent(q.ID())
 		q.SetChild(q.Branch(n.ID()), p.ID())
-		n.SetParent(p.ID())
 	}
+
+	n.SetParent(p.ID())
 
 	return m
 }

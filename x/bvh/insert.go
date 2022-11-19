@@ -9,57 +9,12 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/op/unsafe"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
-
-// expand creates a new node with s as its sibling. This will re-link any
-// existing parents or siblings of s and ensure that the generated cache is
-// still valid.
-//
-// The input node s must not be nil.
-//
-// The input node s is a node within the cache.
-//
-//	  Q
-//	 / \
-//	S   T
-//
-// to
-//
-//	    Q
-//	   / \
-//	  P   T
-//	 / \
-//	S   N
-func expand(c *cache.C, s node.N) node.N {
-	if s == nil {
-		panic("cannot expand a nil node")
-	}
-
-	var q node.N
-	qid := cid.IDInvalid
-	if !s.IsRoot() {
-		q = s.Parent()
-		qid = q.ID()
-	}
-
-	p := c.GetOrDie(c.Insert(qid, cid.IDInvalid, cid.IDInvalid, false))
-	n := c.GetOrDie(c.Insert(p.ID(), cid.IDInvalid, cid.IDInvalid, false))
-
-	if q != nil {
-		q.SetChild(q.Branch(s.ID()), p.ID())
-	}
-
-	s.SetParent(p.ID())
-
-	p.SetLeft(s.ID())
-	p.SetRight(n.ID())
-
-	return n
-}
 
 // partition splits a full node s by moving some objects into a new node t.
 //
@@ -142,13 +97,13 @@ func raw(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, x id.ID) (nod
 		if s.IsFull() {
 			s.Leaves()[x] = struct{}{}
 
-			t = expand(c, s)
+			t = unsafe.Expand(c, s)
 			partition(s, t, vector.D(rand.Intn(int(c.K()))), data)
 		} else {
 			s.Leaves()[x] = struct{}{}
 		}
 	} else {
-		t = expand(c, s)
+		t = unsafe.Expand(c, s)
 		t.Leaves()[x] = struct{}{}
 	}
 
