@@ -1,4 +1,4 @@
-package sibling
+package candidate
 
 import (
 	"github.com/downflux/go-bvh/x/internal/cache/node"
