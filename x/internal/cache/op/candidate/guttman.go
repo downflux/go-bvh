@@ -1,6 +1,7 @@
 package candidate
 
 import (
+	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/epsilon"
@@ -13,7 +14,7 @@ import (
 // finding a candidate sibling node; as the Box2D BVH implementation does not
 // support multi-AABB leaves, the candidate node will always be split (and thus,
 // is instead called a "sibling" instead).
-func Guttman(n node.N, aabb hyperrectangle.R) node.N {
+func Guttman(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 	buf := hyperrectangle.New(
 		vector.V(make([]float64, aabb.Min().Dimension())),
 		vector.V(make([]float64, aabb.Min().Dimension())),
