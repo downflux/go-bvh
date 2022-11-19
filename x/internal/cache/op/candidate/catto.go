@@ -6,8 +6,6 @@ import (
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
-
-	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
 // Catto finds or creates a leaf node which will result in a minimal increase in
@@ -75,21 +73,7 @@ func Catto(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 	//  N   M
 	//
 	if !n.IsLeaf() {
-		q := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, false))
-		m := c.GetOrDie(c.Insert(q.ID(), cid.IDInvalid, cid.IDInvalid, false))
-
-		q.SetLeft(n.ID())
-		q.SetRight(m.ID())
-
-		if !n.IsRoot() {
-			p := n.Parent()
-
-			q.SetParent(p.ID())
-			p.SetChild(p.Branch(n.ID()), q.ID())
-			n.SetParent(q.ID())
-		}
-
-		n = m
+		n = expand(c, n)
 	}
 
 	return n
