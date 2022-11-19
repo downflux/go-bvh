@@ -3,6 +3,7 @@ package balance
 import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/op/unsafe"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 )
 
@@ -82,7 +83,7 @@ func avl(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
 		}
 	}
 	if a != nil && y != nil {
-		swap(a, y)
+		unsafe.Swap(a, y)
 
 		// By construction, the y node is always the deeper node, and a
 		// the shallower node before swapping -- now that they are

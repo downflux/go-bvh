@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/op/unsafe"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -70,7 +71,7 @@ func rotate(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
 
 	switch r.t {
 	case rotationTypeBF:
-		swap(r.src, r.dest)
+		unsafe.Swap(r.src, r.dest)
 
 		// By construction, r.src is the b node, and therefore the
 		// shallower node before the swap. Now that the nodes are
@@ -81,7 +82,7 @@ func rotate(x node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
 		node.SetAABB(x, data, epsilon)
 		node.SetHeight(x)
 	case rotationTypeDF:
-		swap(r.src, r.dest)
+		unsafe.Swap(r.src, r.dest)
 
 		// The D -> F rotation means both nodes are of the same depth --
 		// both their parents need to be updated in addition to the
