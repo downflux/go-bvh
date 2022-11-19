@@ -3,6 +3,7 @@ package candidate
 import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/op/unsafe"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -75,7 +76,7 @@ func Catto(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 	//  N   M
 	//
 	if !m.IsLeaf() {
-		m = expand(c, m)
+		m = unsafe.Expand(c, m)
 	}
 
 	return m
