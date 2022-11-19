@@ -27,6 +27,69 @@ func (m *MockCache) Get(x cid.ID) (node.N, bool) {
 	return n, ok
 }
 
+func TestSetHeight(t *testing.T) {
+	type config struct {
+		name string
+		n    *N
+		want int
+	}
+
+	configs := []config{
+		func() config {
+			c := &MockCache{
+				data: map[cid.ID]*N{},
+			}
+
+			n := New(c, 0)
+			n.Allocate(-1, -1, -1)
+
+			c.data[n.ID()] = n
+
+			return config{
+				name: "Leaf",
+				n:    n,
+				want: 0,
+			}
+		}(),
+		func() config {
+			c := &MockCache{
+				data: map[cid.ID]*N{},
+			}
+
+			n := New(c, 0)
+			n.Allocate(-1, -1, -1)
+
+			l := New(c, 1)
+			l.Allocate(n.ID(), -1, -1)
+
+			r := New(c, 2)
+			r.Allocate(n.ID(), -1, -1)
+
+			n.SetLeft(l.ID())
+			n.SetRight(r.ID())
+
+			c.data[n.ID()] = n
+			c.data[l.ID()] = l
+			c.data[r.ID()] = r
+
+			return config{
+				name: "NonLeaf",
+				n:    n,
+				want: 1,
+			}
+		}(),
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			node.SetHeight(c.n)
+			if got := c.n.Height(); got != c.want {
+				t.Errorf("Height() = %v, want = %v", got, c.want)
+			}
+		})
+	}
+}
+
 func TestEqual(t *testing.T) {
 	type config struct {
 		name string
@@ -165,9 +228,11 @@ func TestEqual(t *testing.T) {
 
 			n := New(c, 0)
 			n.Allocate(-1, 1, 2)
+			n.SetHeight(1)
 
 			m := New(c, 0)
 			m.Allocate(-1, 1, 2)
+			m.SetHeight(1)
 
 			return config{
 				name: "Child",
@@ -192,9 +257,11 @@ func TestEqual(t *testing.T) {
 
 			n := New(c, 0)
 			n.Allocate(-1, 1, 2)
+			n.SetHeight(1)
 
 			m := New(c, 0)
 			m.Allocate(-1, 1, 3)
+			m.SetHeight(1)
 
 			return config{
 				name: "Child/NotEqual",

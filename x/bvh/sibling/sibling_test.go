@@ -99,31 +99,13 @@ func TestSibling(t *testing.T) {
 				LeafSize: 1,
 				K:        2,
 			})
-			root := c.GetOrDie(
-				c.Insert(
-					cid.IDInvalid,
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
-			left := c.GetOrDie(
-				c.Insert(
-					root.ID(),
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
+			root := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+			left := c.GetOrDie(c.Insert(root.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			right := c.GetOrDie(c.Insert(root.ID(), cid.IDInvalid, cid.IDInvalid, true))
+
+			root.SetHeight(1)
+
 			root.SetLeft(left.ID())
-			right := c.GetOrDie(
-				c.Insert(
-					root.ID(),
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
 			root.SetRight(right.ID())
 
 			root.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{100, 100})))
@@ -145,31 +127,14 @@ func TestSibling(t *testing.T) {
 				LeafSize: 1,
 				K:        2,
 			})
-			root := c.GetOrDie(
-				c.Insert(
-					cid.IDInvalid,
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
-			left := c.GetOrDie(
-				c.Insert(
-					root.ID(),
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
+
+			root := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+			left := c.GetOrDie(c.Insert(root.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			right := c.GetOrDie(c.Insert(root.ID(), cid.IDInvalid, cid.IDInvalid, true))
+
+			root.SetHeight(1)
+
 			root.SetLeft(left.ID())
-			right := c.GetOrDie(
-				c.Insert(
-					root.ID(),
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
 			root.SetRight(right.ID())
 
 			root.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{100, 100})))
@@ -194,31 +159,14 @@ func TestSibling(t *testing.T) {
 				LeafSize: 1,
 				K:        2,
 			})
-			root := c.GetOrDie(
-				c.Insert(
-					cid.IDInvalid,
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
-			left := c.GetOrDie(
-				c.Insert(
-					root.ID(),
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
+
+			root := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+			left := c.GetOrDie(c.Insert(root.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			right := c.GetOrDie(c.Insert(root.ID(), cid.IDInvalid, cid.IDInvalid, true))
+
+			root.SetHeight(1)
+
 			root.SetLeft(left.ID())
-			right := c.GetOrDie(
-				c.Insert(
-					root.ID(),
-					cid.IDInvalid,
-					cid.IDInvalid,
-					true,
-				),
-			)
 			root.SetRight(right.ID())
 
 			root.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{100, 100})))
@@ -250,41 +198,45 @@ func TestSibling(t *testing.T) {
 				LeafSize: 1,
 				K:        2,
 			})
-			nA := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+			na := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 
-			nB := c.GetOrDie(c.Insert(nA.ID(), cid.IDInvalid, cid.IDInvalid, true))
-			nC := c.GetOrDie(c.Insert(nA.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nb := c.GetOrDie(c.Insert(na.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nc := c.GetOrDie(c.Insert(na.ID(), cid.IDInvalid, cid.IDInvalid, true))
 
-			nD := c.GetOrDie(c.Insert(nB.ID(), cid.IDInvalid, cid.IDInvalid, true))
-			nE := c.GetOrDie(c.Insert(nB.ID(), cid.IDInvalid, cid.IDInvalid, true))
-			nF := c.GetOrDie(c.Insert(nC.ID(), cid.IDInvalid, cid.IDInvalid, true))
-			nG := c.GetOrDie(c.Insert(nC.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nd := c.GetOrDie(c.Insert(nb.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			ne := c.GetOrDie(c.Insert(nb.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			nf := c.GetOrDie(c.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			ng := c.GetOrDie(c.Insert(nc.ID(), cid.IDInvalid, cid.IDInvalid, true))
 
-			nA.SetLeft(nB.ID())
-			nA.SetRight(nC.ID())
-			nB.SetLeft(nD.ID())
-			nB.SetRight(nE.ID())
-			nC.SetLeft(nF.ID())
-			nC.SetRight(nG.ID())
+			na.SetHeight(2)
+			nb.SetHeight(1)
+			nc.SetHeight(1)
 
-			nA.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{100, 100})))
+			na.SetLeft(nb.ID())
+			na.SetRight(nc.ID())
+			nb.SetLeft(nd.ID())
+			nb.SetRight(ne.ID())
+			nc.SetLeft(nf.ID())
+			nc.SetRight(ng.ID())
 
-			nB.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{50, 50})))
-			nC.AABB().Copy(*hyperrectangle.New(vector.V([]float64{90, 90}), vector.V([]float64{100, 100})))
+			na.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{100, 100})))
 
-			nD.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{10, 10})))
-			nE.AABB().Copy(*hyperrectangle.New(vector.V([]float64{40, 40}), vector.V([]float64{50, 50})))
-			nF.AABB().Copy(*hyperrectangle.New(vector.V([]float64{90, 90}), vector.V([]float64{91, 91})))
-			nG.AABB().Copy(*hyperrectangle.New(vector.V([]float64{95, 95}), vector.V([]float64{100, 100})))
+			nb.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{50, 50})))
+			nc.AABB().Copy(*hyperrectangle.New(vector.V([]float64{90, 90}), vector.V([]float64{100, 100})))
+
+			nd.AABB().Copy(*hyperrectangle.New(vector.V([]float64{0, 0}), vector.V([]float64{10, 10})))
+			ne.AABB().Copy(*hyperrectangle.New(vector.V([]float64{40, 40}), vector.V([]float64{50, 50})))
+			nf.AABB().Copy(*hyperrectangle.New(vector.V([]float64{90, 90}), vector.V([]float64{91, 91})))
+			ng.AABB().Copy(*hyperrectangle.New(vector.V([]float64{95, 95}), vector.V([]float64{100, 100})))
 
 			// Check that the induced cost is accounted for by inner
 			// tree nodes.
 			return config{
 				name: "InnerNode/Overlaps",
 				c:    c,
-				x:    nA.ID(),
+				x:    na.ID(),
 				aabb: *hyperrectangle.New(vector.V([]float64{49, 49}), vector.V([]float64{51, 51})),
-				want: nE,
+				want: ne,
 			}
 		}(),
 	}
