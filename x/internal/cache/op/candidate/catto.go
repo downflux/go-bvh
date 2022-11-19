@@ -11,39 +11,40 @@ import (
 // Catto finds or creates a leaf node which will result in a minimal increase in
 // the heuristic.
 //
-// This is the method utilized in the Box2D implementation.
+// This is the method utilized in the Box2D implementatiom.
 func Catto(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 	buf := hyperrectangle.New(
 		vector.V(make([]float64, c.K())),
 		vector.V(make([]float64, c.K())),
 	).M()
 
-	aabbh := heuristic.H(aabb)
+	g := heuristic.H(aabb)
 
-	for n := n; !n.IsLeaf(); {
+	var m node.N
+	for m = n; !m.IsLeaf(); {
 		buf.Copy(aabb)
-		buf.Union(n.AABB().R())
+		buf.Union(m.AABB().R())
 		combined := heuristic.H(buf.R())
 
 		h := 2 * combined
-		inherited := 2 * (combined - aabbh)
+		inherited := 2 * (combined - g)
 
 		var lh, rh float64
 
 		buf.Copy(aabb)
-		buf.Union(n.Left().AABB().R())
-		if n.Left().IsLeaf() {
+		buf.Union(m.Left().AABB().R())
+		if m.Left().IsLeaf() {
 			lh = heuristic.H(buf.R()) + inherited
 		} else {
-			lh = heuristic.H(buf.R()) - heuristic.H(n.Left().AABB().R()) + inherited
+			lh = heuristic.H(buf.R()) - heuristic.H(m.Left().AABB().R()) + inherited
 		}
 
 		buf.Copy(aabb)
-		buf.Union(n.Right().AABB().R())
-		if n.Right().IsLeaf() {
+		buf.Union(m.Right().AABB().R())
+		if m.Right().IsLeaf() {
 			rh = heuristic.H(buf.R()) + inherited
 		} else {
-			rh = heuristic.H(buf.R()) - heuristic.H(n.Right().AABB().R()) + inherited
+			rh = heuristic.H(buf.R()) - heuristic.H(m.Right().AABB().R()) + inherited
 		}
 
 		if h < lh && h < rh {
@@ -51,9 +52,9 @@ func Catto(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 		}
 
 		if lh < rh {
-			n = n.Left()
+			m = m.Left()
 		} else {
-			n = n.Right()
+			m = m.Right()
 		}
 	}
 
@@ -72,9 +73,9 @@ func Catto(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 	//   / \
 	//  N   M
 	//
-	if !n.IsLeaf() {
-		n = expand(c, n)
+	if !m.IsLeaf() {
+		m = expand(c, m)
 	}
 
-	return n
+	return m
 }
