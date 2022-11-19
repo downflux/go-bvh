@@ -2,10 +2,14 @@ package util
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
+	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 )
 
 func PostOrder(n node.N, f func(n node.N)) {
@@ -22,6 +26,60 @@ func PreOrder(n node.N, f func(n node.N)) {
 		PreOrder(n.Left(), f)
 		PreOrder(n.Right(), f)
 	}
+}
+
+func ValidateOrDie(data map[id.ID]hyperrectangle.R, n node.N) {
+	if err := Validate(data, n); err != nil {
+		panic(fmt.Errorf("encountered validation error on node %v: %v", n.ID(), err))
+	}
+}
+
+func Validate(data map[id.ID]hyperrectangle.R, n node.N) error {
+	var err error
+	buf := hyperrectangle.New(
+		vector.V(make([]float64, n.AABB().Min().Dimension())),
+		vector.V(make([]float64, n.AABB().Min().Dimension())),
+	).M()
+
+	PostOrder(n, func(n node.N) {
+		if err != nil {
+			return
+		}
+
+		if n.IsLeaf() {
+			if len(n.Leaves()) == 0 {
+				err = fmt.Errorf("leaf node %v has no child objects", n.ID())
+				return
+			}
+
+			initialized := false
+			for x := range n.Leaves() {
+				if !initialized {
+					initialized = true
+					buf.Copy(data[x])
+				} else {
+					buf.Union(data[x])
+				}
+			}
+		} else {
+			if h := int(math.Max(
+				float64(n.Left().Height()),
+				float64(n.Right().Height()),
+			)) + 1; h != n.Height() {
+				err = fmt.Errorf("parent node %v height does not match expected", n.ID())
+				return
+			}
+
+			buf.Copy(n.Left().AABB().R())
+			buf.Union(n.Right().AABB().R())
+
+		}
+		if !hyperrectangle.Contains(n.AABB().R(), buf.R()) {
+			err = fmt.Errorf("parent node %v does not wholly encapsulate its children", n.ID())
+			return
+		}
+	})
+	return err
 }
 
 // SAH returns the surface area heuristic as defined in Macdonald and Booth
