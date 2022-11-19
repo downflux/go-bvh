@@ -29,7 +29,8 @@ func Catto(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 		h := 2 * combined
 		inherited := 2 * (combined - g)
 
-		var lh, rh float64
+		var lh float64
+		var rh float64
 
 		buf.Copy(aabb)
 		buf.Union(m.Left().AABB().R())
