@@ -7,7 +7,6 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
-	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -20,18 +19,12 @@ var (
 )
 
 func TestGuttmanLinear(t *testing.T) {
-	type w struct {
-		n node.N
-		m node.N
-	}
-
 	type config struct {
 		name string
 		c    *cache.C
 		data map[id.ID]hyperrectangle.R
 		n    node.N
 		m    node.N
-		want w
 	}
 
 	configs := []config{
@@ -59,28 +52,12 @@ func TestGuttmanLinear(t *testing.T) {
 			nb.Leaves()[100] = struct{}{}
 			nb.Leaves()[101] = struct{}{}
 
-			wn := impl.New(c, nb.ID())
-			wm := impl.New(c, nc.ID())
-
-			wn = impl.New(c, nb.ID())
-			wm = impl.New(c, nc.ID())
-
-			wn.Allocate(na.ID(), cid.IDInvalid, cid.IDInvalid)
-			wm.Allocate(na.ID(), cid.IDInvalid, cid.IDInvalid)
-
-			wn.Leaves()[100] = struct{}{}
-			wm.Leaves()[101] = struct{}{}
-
 			return config{
 				name: "LeafSize=1",
 				c:    c,
 				data: data,
 				n:    nb,
 				m:    nc,
-				want: w{
-					n: wn,
-					m: wm,
-				},
 			}
 		}(),
 	}
