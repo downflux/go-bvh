@@ -3,6 +3,7 @@
 package node
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/downflux/go-bvh/x/id"
@@ -62,6 +63,10 @@ func SetHeight(n N) {
 //
 // The input node must be valid and up-to-date.
 func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
+	if tolerance < 1 {
+		panic(fmt.Sprintf("cannot set expansion factor to be less than the AABB size"))
+	}
+
 	if !n.IsLeaf() {
 		n.AABB().Copy(n.Left().AABB().R())
 		n.AABB().Union(n.Right().AABB().R())
