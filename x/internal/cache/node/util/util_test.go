@@ -15,6 +15,7 @@ import (
 func TestValidate(t *testing.T) {
 	type config struct {
 		name    string
+		c       *cache.C
 		data    map[id.ID]hyperrectangle.R
 		n       node.N
 		success bool
@@ -37,6 +38,7 @@ func TestValidate(t *testing.T) {
 
 			return config{
 				name:    "Leaf",
+				c:       c,
 				data:    data,
 				n:       root,
 				success: true,
@@ -57,6 +59,7 @@ func TestValidate(t *testing.T) {
 
 			return config{
 				name:    "Leaf/NoData",
+				c:       c,
 				data:    data,
 				n:       root,
 				success: false,
@@ -78,6 +81,7 @@ func TestValidate(t *testing.T) {
 
 			return config{
 				name:    "Leaf/NoEncapsulate",
+				c:       c,
 				data:    data,
 				n:       root,
 				success: false,
@@ -113,6 +117,7 @@ func TestValidate(t *testing.T) {
 
 			return config{
 				name:    "HeightMismatch",
+				c:       c,
 				data:    data,
 				n:       na,
 				success: false,
@@ -122,7 +127,7 @@ func TestValidate(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if err := Validate(c.data, c.n); c.success && err != nil {
+			if err := Validate(c.c, c.data, c.n); c.success && err != nil {
 				t.Errorf("Validate() encountered an unexpected error: %v", err)
 			} else if !c.success && err == nil {
 				t.Errorf("Validate() unexpectedly succeeded")

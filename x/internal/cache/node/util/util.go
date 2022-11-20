@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/downflux/go-bvh/x/id"
+	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
@@ -28,13 +29,13 @@ func PreOrder(n node.N, f func(n node.N)) {
 	}
 }
 
-func ValidateOrDie(data map[id.ID]hyperrectangle.R, n node.N) {
-	if err := Validate(data, n); err != nil {
+func ValidateOrDie(c *cache.C, data map[id.ID]hyperrectangle.R, n node.N) {
+	if err := Validate(c, data, n); err != nil {
 		panic(fmt.Errorf("encountered validation error on node %v: %v", n.ID(), err))
 	}
 }
 
-func Validate(data map[id.ID]hyperrectangle.R, n node.N) error {
+func Validate(c *cache.C, data map[id.ID]hyperrectangle.R, n node.N) error {
 	var err error
 	buf := hyperrectangle.New(
 		vector.V(make([]float64, n.AABB().Min().Dimension())),
@@ -47,8 +48,13 @@ func Validate(data map[id.ID]hyperrectangle.R, n node.N) error {
 		}
 
 		if n.IsLeaf() {
-			if len(n.Leaves()) == 0 {
+			l := len(n.Leaves())
+			if l == 0 {
 				err = fmt.Errorf("leaf node %v has no child objects", n.ID())
+				return
+			}
+			if l > c.LeafSize() {
+				err = fmt.Errorf("leaf node %v has too many child objects", n.ID())
 				return
 			}
 
