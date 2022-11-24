@@ -11,6 +11,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
+	"github.com/downflux/go-geometry/epsilon"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
@@ -159,6 +160,10 @@ func Equal(n N, m N) bool {
 	}
 
 	if !hyperrectangle.Within(n.AABB().R(), m.AABB().R()) {
+		return false
+	}
+
+	if !epsilon.Within(n.Heuristic(), m.Heuristic()) {
 		return false
 	}
 
