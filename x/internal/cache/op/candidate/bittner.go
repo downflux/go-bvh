@@ -17,6 +17,14 @@ import (
 // 2019 slides, and aims to decrease the overall SAH value of the resultant
 // tree.
 func Bittner(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
+	m := bittnerRO(c, n, aabb)
+	if !m.IsLeaf() {
+		m = unsafe.Expand(c, m)
+	}
+	return m
+}
+
+func bittnerRO(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 	buf := hyperrectangle.New(
 		vector.V(make([]float64, c.K())),
 		vector.V(make([]float64, c.K())),
@@ -80,10 +88,6 @@ func Bittner(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 				q.Push(m.Right(), induced)
 			}
 		}
-	}
-
-	if !opt.IsLeaf() {
-		opt = unsafe.Expand(c, opt)
 	}
 
 	return opt

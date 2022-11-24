@@ -14,6 +14,30 @@ import (
 //
 // This is the method utilized in the Box2D implementatiom.
 func Catto(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
+	m := cattoRO(c, n, aabb)
+
+	// It is possible that the "optimal" candidate is an internal node; in
+	// this case, we need to create a new leaf node to pass back to the
+	// caller.
+	//
+	//    P
+	//   /
+	//  N
+	//
+	// to
+	//      P
+	//     /
+	//    Q
+	//   / \
+	//  N   M
+	//
+	if !m.IsLeaf() {
+		m = unsafe.Expand(c, m)
+	}
+	return m
+}
+
+func cattoRO(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 	buf := hyperrectangle.New(
 		vector.V(make([]float64, c.K())),
 		vector.V(make([]float64, c.K())),
@@ -58,25 +82,6 @@ func Catto(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 		} else {
 			m = m.Right()
 		}
-	}
-
-	// It is possible that the "optimal" candidate is an internal node; in
-	// this case, we need to create a new leaf node to pass back to the
-	// caller.
-	//
-	//    P
-	//   /
-	//  N
-	//
-	// to
-	//      P
-	//     /
-	//    Q
-	//   / \
-	//  N   M
-	//
-	if !m.IsLeaf() {
-		m = unsafe.Expand(c, m)
 	}
 
 	return m
