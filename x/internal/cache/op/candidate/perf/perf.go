@@ -3,6 +3,7 @@ package perf
 import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -19,6 +20,7 @@ func Trivial() (*cache.C, node.N) {
 
 	root := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 	root.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{1, 1}))
+	root.SetHeuristic(heuristic.H(root.AABB().R()))
 
 	return c, root
 }
@@ -34,6 +36,7 @@ func Balanced(n int) (*cache.C, node.N) {
 	for i := 0; i < n; i++ {
 		l := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 		l.AABB().Copy(*hyperrectangle.New(vector.V{float64(i), 0}, vector.V{float64(i) + 1, 1}))
+		l.SetHeuristic(heuristic.H(l.AABB().R()))
 
 		horizon = append(horizon, l)
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -33,6 +34,7 @@ func TestGuttman(t *testing.T) {
 
 			root := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 			root.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{1, 1}))
+			root.SetHeuristic(heuristic.H(root.AABB().R()))
 
 			return config{
 				name: "Root",
@@ -61,6 +63,10 @@ func TestGuttman(t *testing.T) {
 		root.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{10, 1}))
 		left.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{1, 1}))
 		right.AABB().Copy(*hyperrectangle.New(vector.V{8, 0}, vector.V{10, 1}))
+
+		root.SetHeuristic(heuristic.H(root.AABB().R()))
+		left.SetHeuristic(heuristic.H(left.AABB().R()))
+		right.SetHeuristic(heuristic.H(right.AABB().R()))
 
 		return []config{
 			config{

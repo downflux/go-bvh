@@ -6,6 +6,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -45,6 +46,10 @@ func TestBittner(t *testing.T) {
 			left.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{3, 1}))
 			right.AABB().Copy(*hyperrectangle.New(vector.V{7, 0}, vector.V{10, 1}))
 
+			root.SetHeuristic(heuristic.H(root.AABB().R()))
+			left.SetHeuristic(heuristic.H(left.AABB().R()))
+			right.SetHeuristic(heuristic.H(right.AABB().R()))
+
 			want := impl.New(c, 4)
 			want.Allocate(3, cid.IDInvalid, cid.IDInvalid)
 
@@ -76,6 +81,10 @@ func TestBittner(t *testing.T) {
 		root.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{10, 1}))
 		left.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{3, 1}))
 		right.AABB().Copy(*hyperrectangle.New(vector.V{7, 0}, vector.V{10, 1}))
+
+		root.SetHeuristic(heuristic.H(root.AABB().R()))
+		left.SetHeuristic(heuristic.H(left.AABB().R()))
+		right.SetHeuristic(heuristic.H(right.AABB().R()))
 
 		return []config{
 			{

@@ -64,6 +64,11 @@ type N struct {
 	// Catto 2019.
 	dataCache map[id.ID]struct{}
 
+	// heuristicCache is a buffer for the cost of the node bounding AABB. The
+	// caller is responsible for tracking when the AABB changes and updating
+	// this field manually.
+	heuristicCache float64
+
 	heightCache int
 
 	ids [4]cid.ID
@@ -94,6 +99,7 @@ func (n *N) Allocate(parent cid.ID, left cid.ID, right cid.ID) {
 
 	n.isAllocated = true
 	n.heightCache = 0
+	n.heuristicCache = 0
 
 	n.ids[idLeft] = left
 	n.ids[idRight] = right
@@ -136,6 +142,22 @@ func (n *N) IsRoot() bool {
 
 	_, ok := n.cache.Get(n.ids[idParent])
 	return !ok
+}
+
+func (n *N) Heuristic() float64 {
+	if !n.IsAllocated() {
+		panic("accessing an unallocated node")
+	}
+
+	return n.heuristicCache
+}
+
+func (n *N) SetHeuristic(a float64) {
+	if !n.IsAllocated() {
+		panic("accessing an unallocated node")
+	}
+
+	n.heuristicCache = a
 }
 
 func (n *N) Height() int {

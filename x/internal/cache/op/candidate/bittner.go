@@ -82,7 +82,7 @@ func bittnerRO(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 		// to prefer nodes which contains more (or are closer to) the
 		// input AABB.
 		if !m.IsLeaf() {
-			induced = cost - heuristic.H(m.AABB().R())
+			induced = cost - m.Heuristic()
 			if bound := induced + l; bound < h {
 				q.Push(m.Left(), induced)
 				q.Push(m.Right(), induced)

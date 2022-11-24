@@ -62,7 +62,7 @@ func cattoRO(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 		if m.Left().IsLeaf() {
 			lh = heuristic.H(buf.R()) + inherited
 		} else {
-			lh = heuristic.H(buf.R()) - heuristic.H(m.Left().AABB().R()) + inherited
+			lh = heuristic.H(buf.R()) - m.Left().Heuristic() + inherited
 		}
 
 		buf.Copy(aabb)
@@ -70,7 +70,7 @@ func cattoRO(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 		if m.Right().IsLeaf() {
 			rh = heuristic.H(buf.R()) + inherited
 		} else {
-			rh = heuristic.H(buf.R()) - heuristic.H(m.Right().AABB().R()) + inherited
+			rh = heuristic.H(buf.R()) - m.Right().Heuristic() + inherited
 		}
 
 		if h < lh && h < rh {

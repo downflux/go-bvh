@@ -8,6 +8,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache/branch"
+	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -27,6 +28,9 @@ type N interface {
 	Leaves() map[id.ID]struct{}
 
 	AABB() hyperrectangle.M
+
+	Heuristic() float64
+	SetHeuristic(a float64)
 
 	Child(b branch.B) N
 	SetChild(b branch.B, x cid.ID)
@@ -70,6 +74,7 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 	if !n.IsLeaf() {
 		n.AABB().Copy(n.Left().AABB().R())
 		n.AABB().Union(n.Right().AABB().R())
+		n.SetHeuristic(heuristic.H(n.AABB().R()))
 		return
 	}
 
@@ -95,6 +100,7 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 		n.AABB().Max().SetX(i, n.AABB().Max().X(i)-offset)
 	}
 	n.AABB().Scale(epsilon)
+	n.SetHeuristic(heuristic.H(n.AABB().R()))
 }
 
 func Equal(n N, m N) bool {

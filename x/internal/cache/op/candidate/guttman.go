@@ -25,12 +25,12 @@ func Guttman(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 		buf.Copy(aabb)
 		buf.Union(m.Left().AABB().R())
 		lh := heuristic.H(buf.R())
-		dlh := lh - heuristic.H(m.Left().AABB().R())
+		dlh := lh - m.Left().Heuristic()
 
 		buf.Copy(aabb)
 		buf.Union(m.Right().AABB().R())
 		rh := heuristic.H(buf.R())
-		drh := rh - heuristic.H(m.Right().AABB().R())
+		drh := rh - m.Right().Heuristic()
 
 		// Choose an appropriate node to search. Use the node with the
 		// least change in cost; in the case of a tie, use the node with

@@ -6,6 +6,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -34,6 +35,7 @@ func TestCatto(t *testing.T) {
 
 			root := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 			root.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{1, 1}))
+			root.SetHeuristic(heuristic.H(root.AABB().R()))
 
 			return config{
 				name: "Root",
@@ -63,6 +65,10 @@ func TestCatto(t *testing.T) {
 
 			nb.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{2, 1}))
 			nc.AABB().Copy(*hyperrectangle.New(vector.V{8, 0}, vector.V{10, 1}))
+
+			na.SetHeuristic(heuristic.H(na.AABB().R()))
+			nb.SetHeuristic(heuristic.H(nb.AABB().R()))
+			nc.SetHeuristic(heuristic.H(nc.AABB().R()))
 
 			want := impl.New(c, 4)
 			want.Allocate(3, cid.IDInvalid, cid.IDInvalid)
@@ -117,6 +123,14 @@ func TestCatto(t *testing.T) {
 
 		nf.AABB().Copy(*hyperrectangle.New(vector.V{6, 0}, vector.V{8, 1}))
 		ng.AABB().Copy(*hyperrectangle.New(vector.V{9, 0}, vector.V{10, 1}))
+
+		na.SetHeuristic(heuristic.H(na.AABB().R()))
+		nb.SetHeuristic(heuristic.H(nb.AABB().R()))
+		nc.SetHeuristic(heuristic.H(nc.AABB().R()))
+		nd.SetHeuristic(heuristic.H(nd.AABB().R()))
+		ne.SetHeuristic(heuristic.H(ne.AABB().R()))
+		nf.SetHeuristic(heuristic.H(nf.AABB().R()))
+		ng.SetHeuristic(heuristic.H(ng.AABB().R()))
 
 		return []config{
 			{
