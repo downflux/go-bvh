@@ -111,7 +111,8 @@ func group(aabb hyperrectangle.R, n node.N, m node.N, buf hyperrectangle.M) node
 }
 
 // next picks a leaf object to be considered for the left / right node
-// placement. This function assumes that the node heuristic cache is valid.
+// placement. This function assumes that the node bounding box and heuristic
+// cache are valid.
 func next(data map[id.ID]hyperrectangle.R, leaves []id.ID, n node.N, m node.N, buf hyperrectangle.M) int {
 	var next int
 

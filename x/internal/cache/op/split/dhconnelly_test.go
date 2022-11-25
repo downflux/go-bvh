@@ -4,13 +4,55 @@ import (
 	"testing"
 
 	"github.com/downflux/go-bvh/x/id"
+	"github.com/downflux/go-bvh/x/internal/cache"
+	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
+
+	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
 var (
 	_ S = DHConnelly
 )
+
+func TestNext(t *testing.T) {
+	type config struct {
+		name   string
+		data   map[id.ID]hyperrectangle.R
+		leaves []id.ID
+		n      node.N
+		m      node.N
+		want   int
+	}
+
+	configs := []config{
+		func() config {
+			c := cache.New(cache.O{
+				LeafSize: 1,
+				K:        2,
+			})
+			root := c.GetOrDie(c.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+
+			left := c.GetOrDie(c.Insert(root.ID(), cid.IDInvalid, cid.IDInvalid, true))
+			right := c.GetOrDie(c.Insert(root.ID(), cid.IDInvalid, cid.IDInvalid, true))
+
+			root.SetLeft(left.ID())
+			root.SetRight(right.ID())
+
+			return config{}
+		}(),
+	}
+
+	for _, c := range configs {
+		t.Run(c.name, func(t *testing.T) {
+			buf := hyperrectangle.New(vector.V(make([]float64, 2)), vector.V(make([]float64, 2))).M()
+			if got := next(c.data, c.leaves, c.n, c.m, buf); got != c.want {
+				t.Errorf("next() = %v, want = %v", got, c.want)
+			}
+		})
+	}
+}
 
 func TestSeed(t *testing.T) {
 	type w struct {
