@@ -111,7 +111,7 @@ func group(aabb hyperrectangle.R, n node.N, m node.N, buf hyperrectangle.M) node
 }
 
 // next picks a leaf object to be considered for the left / right node
-// placement.
+// placement. This function assumes that the node heuristic cache is valid.
 func next(data map[id.ID]hyperrectangle.R, leaves []id.ID, n node.N, m node.N, buf hyperrectangle.M) int {
 	var next int
 
@@ -149,7 +149,7 @@ func seed(data map[id.ID]hyperrectangle.R, leaves []id.ID, buf hyperrectangle.M)
 			if g := heuristic.H(buf.R()) - (heuristic.H(data[x]) + heuristic.H(data[y])); g > h {
 				h = g
 				l = i
-				r = j
+				r = j + i + 1
 			}
 		}
 	}
