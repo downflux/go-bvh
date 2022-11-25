@@ -1,0 +1,18 @@
+DownFlux
+Copyright 2022 DownFlux
+
+This product includes software from
+
+* the "erincatto/box2d" library (https://github.com/erincatto/box2d).
+* the "dhconnelly/rtreego" library (https://github.com/dhconnelly/rtreego).
+* the "briannoyama/bvh" library (https://github.com/briannoyama/bvh).
+
+Some parts of the framework, including but not limited to
+
+* internal/cache/op/...
+
+are copied from, derived from, or inspired by these libraries.
+
+Copyright 2019 - 2022 Erin Catto. All Rights Reserved.
+Copyright 2019 - 2022 Daniel Connelly. All Rights Reserved.
+Copyright 2018 - 2022 Brian Thomas Noyama. All Rights Reserved.
