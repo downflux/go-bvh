@@ -16,13 +16,18 @@ import (
 //
 // Here, n is the source (i.e. full) node, and m is the destination (empty)
 // node.
+//
+// N.B.: This will leave the nodes n and m in an inconsistent state. The caller
+// will be responsible for updating the bounding box of these leaves via
+// node.SetAABB().
 func GuttmanLinear(c *cache.C, data map[id.ID]hyperrectangle.R, n node.N, m node.N) {
 	if c.LeafSize() == 1 {
 		for x := range n.Leaves() {
 			m.Leaves()[x] = struct{}{}
 			delete(n.Leaves(), x)
-			return
+			break
 		}
+		return
 	}
 
 	// Use the source node AABB as a scratch space to calculate the
