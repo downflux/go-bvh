@@ -8,7 +8,6 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
-	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 )
@@ -86,27 +85,6 @@ func Validate(c *cache.C, data map[id.ID]hyperrectangle.R, n node.N) error {
 		}
 	})
 	return err
-}
-
-// SAH returns the surface area heuristic as defined in Macdonald and Booth
-// 1990.
-//
-// The total heuristic is comprised of three separate components -- the cost of
-// the internal nodes, the cost of the leaves, and the cost of testing for
-// intersections. We use track these via ci, cl, and co respectively.
-//
-// Per Aila et al., a "normal" SAH value is around 100.
-func SAH(n node.N) float64 {
-	var ci, cl, co float64
-	PreOrder(n, func(n node.N) {
-		if !n.IsLeaf() {
-			ci += heuristic.H(n.AABB().R())
-		} else {
-			cl += heuristic.H(n.AABB().R())
-			co += heuristic.H(n.AABB().R()) * float64(len(n.Leaves()))
-		}
-	})
-	return (1.2*ci + 1.0*cl + 0*co) / heuristic.H(n.AABB().R())
 }
 
 func S(n node.N) string {

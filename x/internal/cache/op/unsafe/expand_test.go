@@ -6,6 +6,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
@@ -78,7 +79,7 @@ func TestExpand(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := Expand(c.c, c.s); !node.Equal(c.want, got) {
+			if got := Expand(c.c, c.s); !cmp.Equal(c.want, got) {
 				t.Errorf("Expand() = %v, want = %v", got, c.want)
 			}
 		})

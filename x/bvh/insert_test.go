@@ -7,6 +7,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -55,7 +56,7 @@ func TestPartition(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			partition(c.s, c.t, c.axis, c.data)
-			if !node.Equal(c.t, c.want) {
+			if !cmp.Equal(c.t, c.want) {
 				t.Errorf("n = %v, want = %v", c.t, c.want)
 			}
 		})
@@ -147,10 +148,10 @@ func TestRaw(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			got := &w{}
 			got.s, got.t = raw(c.c, c.root, c.data, c.x)
-			if !node.Equal(got.s, c.want.s) {
+			if !cmp.Equal(got.s, c.want.s) {
 				t.Errorf("s = %v, want = %v", got.s, c.want.s)
 			}
-			if !node.Equal(got.t, c.want.t) {
+			if !cmp.Equal(got.t, c.want.t) {
 				t.Errorf("t = %v, want = %v", got.t, c.want.t)
 			}
 		})

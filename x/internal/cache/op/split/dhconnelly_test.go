@@ -7,6 +7,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -78,16 +79,16 @@ func TestDHConnelly(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			DHConnelly(c.c, c.data, c.n, c.m)
-			cmp := node.Cmp{
+			f := cmp.F{
 				Height:    false,
 				AABB:      false,
 				Heuristic: false,
 			}
 
-			if !cmp.Equal(c.n, c.want.n) {
+			if !f.Equal(c.n, c.want.n) {
 				t.Errorf("n = %v, want = %v", c.n, c.want.n)
 			}
-			if !cmp.Equal(c.m, c.want.m) {
+			if !f.Equal(c.m, c.want.m) {
 				t.Errorf("m = %v, want = %v", c.m, c.want.m)
 			}
 		})
@@ -157,7 +158,7 @@ func TestGroup(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			buf := hyperrectangle.New(vector.V(make([]float64, 2)), vector.V(make([]float64, 2))).M()
-			if got := group(c.aabb, c.n, c.m, buf); !node.Equal(got, c.want) {
+			if got := group(c.aabb, c.n, c.m, buf); !cmp.Equal(got, c.want) {
 				t.Errorf("group() = %v, want = %v", got, c.want)
 			}
 		})

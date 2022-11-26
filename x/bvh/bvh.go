@@ -5,7 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
-	"github.com/downflux/go-bvh/x/internal/cache/node/util"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/sah"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -53,7 +53,7 @@ func (t *T) SAH() float64 {
 		return 0
 	}
 
-	return util.SAH(n)
+	return sah.SAH(n)
 }
 
 func (t *T) H() int {

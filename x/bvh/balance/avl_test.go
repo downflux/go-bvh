@@ -7,6 +7,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -170,7 +171,7 @@ func TestAVL(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := avl(c.x, c.data, c.epsilon); !node.Equal(got, c.want) {
+			if got := avl(c.x, c.data, c.epsilon); !cmp.Equal(got, c.want) {
 				t.Errorf("avl() = %v, want = %v", got, c.want)
 			}
 		})

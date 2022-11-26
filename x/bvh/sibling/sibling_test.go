@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -243,7 +244,7 @@ func TestSibling(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := Find(c.c, c.x, c.aabb); !node.Equal(got, c.want) {
+			if got := Find(c.c, c.x, c.aabb); !cmp.Equal(got, c.want) {
 				t.Errorf("sibling() = %v, want = %v", got, c.want)
 			}
 		})

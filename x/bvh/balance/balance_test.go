@@ -7,6 +7,8 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
+	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -101,6 +103,7 @@ func TestB(t *testing.T) {
 				vector.V([]float64{11, 11}),
 			))
 			want.SetHeight(1)
+			want.Left().SetHeuristic(heuristic.H(want.Left().AABB().R()))
 
 			return config{
 				name: "NoOp/Child",
@@ -113,7 +116,7 @@ func TestB(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := B(c.x, c.data, 1); !node.Equal(got, c.want) {
+			if got := B(c.x, c.data, 1); !cmp.Equal(got, c.want) {
 				t.Errorf("B() = %v, want = %v", got, c.want)
 			}
 		})

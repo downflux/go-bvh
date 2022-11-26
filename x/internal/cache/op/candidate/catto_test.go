@@ -6,6 +6,7 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -166,7 +167,7 @@ func TestCatto(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := Catto(c.c, c.n, c.aabb); !node.Equal(got, c.want) {
+			if got := Catto(c.c, c.n, c.aabb); !cmp.Equal(got, c.want) {
 				t.Errorf("Catto() = %v, want = %v", got, c.want)
 			}
 		})

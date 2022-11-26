@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
+	ncmp "github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 )
 
 func TestDelete(t *testing.T) {
@@ -86,7 +87,7 @@ func TestInsert(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			got := c.c.GetOrDie(c.c.Insert(c.p, c.l, c.r, true))
-			if !node.Equal(got, c.want) {
+			if !ncmp.Equal(got, c.want) {
 				diff := cmp.Diff(c.want, got, cmp.AllowUnexported(
 					C{}, hyperrectangle.M{}, hyperrectangle.R{},
 				))

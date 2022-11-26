@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -99,7 +100,7 @@ func TestGuttman(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := Guttman(c.c, c.n, c.aabb); !node.Equal(got, c.want) {
+			if got := Guttman(c.c, c.n, c.aabb); !cmp.Equal(got, c.want) {
 				t.Errorf("Guttman() = %v, want = %v", got, c.want)
 			}
 		})
