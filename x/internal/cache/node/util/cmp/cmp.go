@@ -8,9 +8,11 @@ import (
 
 var (
 	DefaultF = F{
-		Height:    true,
-		AABB:      true,
-		Heuristic: true,
+		ID:          true,
+		Height:      true,
+		AABB:        true,
+		Heuristic:   true,
+		LRInvariant: true,
 	}
 )
 
@@ -18,9 +20,12 @@ var (
 // values. This is useful for specific types of testing where these cache values
 // do not matter.
 type F struct {
+	ID        bool
 	Height    bool
 	AABB      bool
 	Heuristic bool
+
+	LRInvariant bool
 }
 
 func Equal(n node.N, m node.N) bool { return DefaultF.Equal(n, m) }
@@ -34,7 +39,7 @@ func (f F) Equal(n node.N, m node.N) bool {
 		return false
 	}
 
-	if n.ID() != m.ID() {
+	if f.ID && n.ID() != m.ID() {
 		return false
 	}
 
@@ -64,7 +69,13 @@ func (f F) Equal(n node.N, m node.N) bool {
 
 	if !n.IsLeaf() {
 		if !f.Equal(n.Left(), m.Left()) || !f.Equal(n.Right(), m.Right()) {
-			return false
+			if !f.LRInvariant {
+				if !f.Equal(n.Left(), m.Right()) || !f.Equal(n.Right(), m.Left()) {
+					return false
+				}
+			} else {
+				return false
+			}
 		}
 	}
 

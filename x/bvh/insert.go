@@ -17,7 +17,7 @@ import (
 // object node updates.
 //
 // The input data cache is a read-only map within the insert function.
-func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, nodes map[id.ID]cid.ID, x id.ID, tolerance float64) (cid.ID, map[id.ID]cid.ID) {
+func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, tolerance float64) (node.N, []node.N) {
 	var mutations []node.N
 
 	root, ok := c.Get(rid)
@@ -65,12 +65,5 @@ func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, nodes map[i
 		}
 	}
 
-	updates := map[id.ID]cid.ID{}
-	for _, n := range mutations {
-		for x := range n.Leaves() {
-			updates[x] = n.ID()
-		}
-	}
-
-	return root.ID(), updates
+	return root, mutations
 }
