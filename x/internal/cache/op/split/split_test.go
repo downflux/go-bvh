@@ -75,6 +75,7 @@ func BenchmarkS(b *testing.B) {
 						}
 						n.Leaves()[x] = struct{}{}
 					}
+					node.SetAABB(n, data, 1)
 					return c, n, m
 				}()
 				c.s(ch, data, n, m)
