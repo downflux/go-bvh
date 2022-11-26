@@ -97,8 +97,8 @@ func TestInsert(t *testing.T) {
 				K:        2,
 			})
 
-			wnb := wc.GetOrDie(wc.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 			wna := wc.GetOrDie(wc.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
+			wnb := wc.GetOrDie(wc.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 			wnc := wc.GetOrDie(wc.Insert(cid.IDInvalid, cid.IDInvalid, cid.IDInvalid, true))
 
 			wna.SetLeft(wnb.ID())

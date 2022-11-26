@@ -13,6 +13,7 @@ var (
 		AABB:        true,
 		Heuristic:   true,
 		LRInvariant: true,
+		Recursive:   true,
 	}
 )
 
@@ -25,6 +26,7 @@ type F struct {
 	AABB      bool
 	Heuristic bool
 
+	Recursive   bool
 	LRInvariant bool
 }
 
@@ -67,7 +69,7 @@ func (f F) Equal(n node.N, m node.N) bool {
 		return false
 	}
 
-	if !n.IsLeaf() {
+	if f.Recursive && !n.IsLeaf() {
 		if !f.Equal(n.Left(), m.Left()) || !f.Equal(n.Right(), m.Right()) {
 			if !f.LRInvariant {
 				if !f.Equal(n.Left(), m.Right()) || !f.Equal(n.Right(), m.Left()) {
