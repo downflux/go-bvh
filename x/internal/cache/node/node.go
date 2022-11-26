@@ -9,11 +9,19 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache/branch"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
+	"github.com/downflux/go-geometry/epsilon"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
-	"github.com/downflux/go-geometry/epsilon"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
+)
+
+var (
+	DefaultCmp = Cmp{
+		Height:    true,
+		AABB:      true,
+		Heuristic: true,
+	}
 )
 
 type N interface {
@@ -104,7 +112,18 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 	n.SetHeuristic(heuristic.H(n.AABB().R()))
 }
 
-func Equal(n N, m N) bool {
+func Equal(n N, m N) bool { return DefaultCmp.Equal(n, m) }
+
+// Cmp is a comparison filter used to optionally exclude comparing cached
+// values. This is useful for specific types of testing where these cache values
+// do not matter.
+type Cmp struct {
+	Height    bool
+	AABB      bool
+	Heuristic bool
+}
+
+func (c Cmp) Equal(n N, m N) bool {
 	if n == nil && m == nil {
 		return true
 	}
@@ -121,7 +140,7 @@ func Equal(n N, m N) bool {
 		return false
 	}
 
-	if n.Height() != m.Height() {
+	if c.Height && n.Height() != m.Height() {
 		return false
 	}
 
@@ -159,11 +178,11 @@ func Equal(n N, m N) bool {
 		}
 	}
 
-	if !hyperrectangle.Within(n.AABB().R(), m.AABB().R()) {
+	if c.AABB && !hyperrectangle.Within(n.AABB().R(), m.AABB().R()) {
 		return false
 	}
 
-	if !epsilon.Within(n.Heuristic(), m.Heuristic()) {
+	if c.Heuristic && !epsilon.Within(n.Heuristic(), m.Heuristic()) {
 		return false
 	}
 
