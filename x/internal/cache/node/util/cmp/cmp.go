@@ -25,7 +25,7 @@ type F struct {
 
 func Equal(n node.N, m node.N) bool { return DefaultF.Equal(n, m) }
 
-func (c F) Equal(n node.N, m node.N) bool {
+func (f F) Equal(n node.N, m node.N) bool {
 	if n == nil && m == nil {
 		return true
 	}
@@ -42,7 +42,7 @@ func (c F) Equal(n node.N, m node.N) bool {
 		return false
 	}
 
-	if c.Height && n.Height() != m.Height() {
+	if f.Height && n.Height() != m.Height() {
 		return false
 	}
 
@@ -63,7 +63,7 @@ func (c F) Equal(n node.N, m node.N) bool {
 	}
 
 	if !n.IsLeaf() {
-		if !Equal(n.Left(), m.Left()) || !Equal(n.Right(), m.Right()) {
+		if !f.Equal(n.Left(), m.Left()) || !f.Equal(n.Right(), m.Right()) {
 			return false
 		}
 	}
@@ -80,11 +80,11 @@ func (c F) Equal(n node.N, m node.N) bool {
 		}
 	}
 
-	if c.AABB && !hyperrectangle.Within(n.AABB().R(), m.AABB().R()) {
+	if f.AABB && !hyperrectangle.Within(n.AABB().R(), m.AABB().R()) {
 		return false
 	}
 
-	if c.Heuristic && !epsilon.Within(n.Heuristic(), m.Heuristic()) {
+	if f.Heuristic && !epsilon.Within(n.Heuristic(), m.Heuristic()) {
 		return false
 	}
 

@@ -7,11 +7,13 @@ import (
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
-	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
+	ncmp "github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 )
 
 var (
@@ -76,20 +78,20 @@ func TestDHConnelly(t *testing.T) {
 		}(),
 	}
 
+	op := func(i, j id.ID) bool { return i < j }
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			DHConnelly(c.c, c.data, c.n, c.m)
-			f := cmp.F{
-				Height:    false,
-				AABB:      false,
-				Heuristic: false,
-			}
 
-			if !f.Equal(c.n, c.want.n) {
-				t.Errorf("n = %v, want = %v", c.n, c.want.n)
+			if diff := cmp.Diff(c.n.Leaves(), c.want.n.Leaves(), cmpopts.SortMaps(op)); diff != "" {
+				if diff := cmp.Diff(c.n.Leaves(), c.want.m.Leaves(), cmpopts.SortMaps(op)); diff != "" {
+					t.Errorf("n = %v, want = %v", c.n, c.want.n)
+				}
 			}
-			if !f.Equal(c.m, c.want.m) {
-				t.Errorf("m = %v, want = %v", c.m, c.want.m)
+			if diff := cmp.Diff(c.m.Leaves(), c.want.m.Leaves(), cmpopts.SortMaps(op)); diff != "" {
+				if diff := cmp.Diff(c.m.Leaves(), c.want.n.Leaves(), cmpopts.SortMaps(op)); diff != "" {
+					t.Errorf("m = %v, want = %v", c.m, c.want.m)
+				}
 			}
 		})
 	}
@@ -158,7 +160,7 @@ func TestGroup(t *testing.T) {
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
 			buf := hyperrectangle.New(vector.V(make([]float64, 2)), vector.V(make([]float64, 2))).M()
-			if got := group(c.aabb, c.n, c.m, buf); !cmp.Equal(got, c.want) {
+			if got := group(c.aabb, c.n, c.m, buf); !ncmp.Equal(got, c.want) {
 				t.Errorf("group() = %v, want = %v", got, c.want)
 			}
 		})
