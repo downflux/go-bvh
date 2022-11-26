@@ -10,7 +10,6 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
-	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -48,7 +47,7 @@ func BenchmarkS(b *testing.B) {
 	for l, s := range tests {
 		// For small leaf sizes, the iteration time is too fast, and the
 		// StopTimer / StartTimer invocations take too long.
-		for i := 2; i < j; i++ {
+		for i := 4; i < j; i++ {
 			n := int(math.Pow(2, float64(i)))
 			configs = append(configs, config{
 				name: fmt.Sprintf("%v/LeafSize=%v", l, n),
@@ -64,7 +63,6 @@ func BenchmarkS(b *testing.B) {
 			// rough size of the resultant AABB boxes -- ideally,
 			// the boxes should be of equivalent sizes.
 			var diff float64
-			var start float64
 			for i := 0; i < b.N; i++ {
 				ch, n, m := func() (*cache.C, node.N, node.N) {
 					b.StopTimer()
@@ -87,11 +85,11 @@ func BenchmarkS(b *testing.B) {
 					}
 					node.SetAABB(n, data, 1)
 
-					start = heuristic.H(n.AABB().R())
-
 					return c, n, m
 				}()
+
 				c.s(ch, data, n, m)
+
 				func() {
 					b.StopTimer()
 					defer b.StartTimer()
@@ -101,7 +99,7 @@ func BenchmarkS(b *testing.B) {
 					node.SetAABB(m, data, 1)
 
 					end := math.Abs(n.Heuristic() - m.Heuristic())
-					diff += end / start
+					diff += end / (n.Heuristic() + m.Heuristic())
 				}()
 			}
 			// Track the left / right AABB heuristic balance as a
