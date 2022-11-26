@@ -14,6 +14,10 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
+var (
+	_ B = AVL
+)
+
 func TestAVL(t *testing.T) {
 	type config struct {
 		name string

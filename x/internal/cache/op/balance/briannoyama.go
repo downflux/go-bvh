@@ -3,9 +3,7 @@
 package balance
 
 import (
-	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
-	"github.com/downflux/go-geometry/nd/hyperrectangle"
 )
 
 // B balances a given input node by
@@ -36,6 +34,6 @@ import (
 // no-op.
 //
 // The returned node has its AABB and height updated.
-func BrianNoyama(n node.N, data map[id.ID]hyperrectangle.R, epsilon float64) node.N {
+func BrianNoyama(n node.N) node.N {
 	return Rotate(AVL(n))
 }

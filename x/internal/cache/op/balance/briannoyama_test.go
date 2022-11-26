@@ -15,18 +15,19 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
+var (
+	_ B = BrianNoyama
+)
+
 func TestBrianNoyama(t *testing.T) {
 	type config struct {
 		name string
 		x    node.N
-		data map[id.ID]hyperrectangle.R
 		want node.N
 	}
 
 	configs := []config{
 		func() config {
-			data := map[id.ID]hyperrectangle.R{}
-
 			c := cache.New(cache.O{
 				LeafSize: 1,
 				K:        2,
@@ -40,7 +41,6 @@ func TestBrianNoyama(t *testing.T) {
 			return config{
 				name: "NoOp/Root",
 				x:    x,
-				data: data,
 				want: want,
 			}
 		}(),
@@ -108,7 +108,6 @@ func TestBrianNoyama(t *testing.T) {
 			return config{
 				name: "NoOp/Child",
 				x:    x.Left(),
-				data: data,
 				want: want.Left(),
 			}
 		}(),
@@ -116,7 +115,7 @@ func TestBrianNoyama(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := BrianNoyama(c.x, c.data, 1); !cmp.Equal(got, c.want) {
+			if got := BrianNoyama(c.x); !cmp.Equal(got, c.want) {
 				t.Errorf("B() = %v, want = %v", got, c.want)
 			}
 		})

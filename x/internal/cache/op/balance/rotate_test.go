@@ -14,6 +14,10 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
+var (
+	_ B = Rotate
+)
+
 func TestCheckDF(t *testing.T) {
 	const k = 2
 	type w struct {
