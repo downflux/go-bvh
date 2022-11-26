@@ -73,8 +73,7 @@ func GuttmanLinear(c *cache.C, data map[id.ID]hyperrectangle.R, n node.N, m node
 			if k := aabb.Max().X(i); k < kupper {
 				kupper = k
 				kl = x
-			}
-			if k := aabb.Min().X(i); k > klower {
+			} else if k := aabb.Min().X(i); k > klower && x != kl {
 				klower = k
 				kr = x
 			}

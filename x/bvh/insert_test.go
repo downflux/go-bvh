@@ -144,10 +144,20 @@ func TestInsert(t *testing.T) {
 				LRInvariant: false,
 			}
 
-			got, _ := insert(c.c, c.rid, c.data, c.x, c.tolerance)
+			got, mutations := insert(c.c, c.rid, c.data, c.x, c.tolerance)
 
 			if !f.Equal(got, c.want) {
 				t.Errorf("insert() = %v, _, want = %v, _", got, c.want)
+			}
+
+			updates := map[id.ID]cid.ID{}
+			for _, n := range mutations {
+				for x := range n.Leaves() {
+					if y, ok := updates[x]; ok {
+						t.Errorf("AABB %v found in multiple nodes: %v, %v", x, n.ID(), y)
+					}
+					updates[x] = n.ID()
+				}
 			}
 		})
 	}

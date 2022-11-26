@@ -27,19 +27,17 @@ func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, to
 
 	// s is a leaf node. This leaf node may be full.
 	s := candidate.BrianNoyama(c, root, data[x])
+	s.Leaves()[x] = struct{}{}
+
 	mutations = append(mutations, s)
 
-	if len(s.Leaves()) >= c.LeafSize() {
-		s.Leaves()[x] = struct{}{}
-
+	if len(s.Leaves()) > c.LeafSize() {
 		t := unsafe.Expand(c, s)
 		split.GuttmanLinear(c, data, s, t)
 
 		mutations = append(mutations, t)
 
 		s = t
-	} else {
-		s.Leaves()[x] = struct{}{}
 	}
 
 	for _, n := range mutations {
