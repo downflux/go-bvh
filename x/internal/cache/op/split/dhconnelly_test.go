@@ -40,7 +40,25 @@ func TestNext(t *testing.T) {
 			root.SetLeft(left.ID())
 			root.SetRight(right.ID())
 
-			return config{}
+			left.AABB().Copy(*hyperrectangle.New(vector.V{0, 0}, vector.V{1, 1}))
+			right.AABB().Copy(*hyperrectangle.New(vector.V{10, 0}, vector.V{11, 1}))
+
+			// Leaf 101 is directly adjacent to the left node, which
+			// means the induced cost is much cheaper than if this
+			// leaf were to be merged into the right node instead.
+			// This is the crucial heuristic used by the next()
+			// function.
+			return config{
+				name: "Adjacent",
+				data: map[id.ID]hyperrectangle.R{
+					100: *hyperrectangle.New(vector.V{5, 0}, vector.V{6, 1}),
+					101: *hyperrectangle.New(vector.V{1, 0}, vector.V{2, 1}),
+				},
+				leaves: []id.ID{100, 101},
+				n:      left,
+				m:      right,
+				want:   1,
+			}
 		}(),
 	}
 
