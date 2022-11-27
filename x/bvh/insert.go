@@ -52,7 +52,7 @@ func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, to
 			node.SetAABB(m, nil, 1)
 			node.SetHeight(m)
 
-			m = balance.Rotate(m)
+			m = balance.BrianNoyama(m)
 
 			node.SetAABB(m, nil, 1)
 			node.SetHeight(m)
