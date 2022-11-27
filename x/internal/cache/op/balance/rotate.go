@@ -111,7 +111,7 @@ func optimal(a node.N) *r {
 	b := a.Left()
 	c := a.Right()
 
-	opt := heuristic.H(b.AABB().R()) + heuristic.H(c.AABB().R())
+	opt := b.Heuristic() + c.Heuristic()
 
 	// Generate a virtual node buffer.
 	k := a.AABB().Min().Dimension()
@@ -210,7 +210,7 @@ func merge(l node.N, r node.N, buf hyperrectangle.M) (int, bool, float64) {
 //	  F   G
 func checkBF(b node.N, f node.N, g node.N, opt float64, buf hyperrectangle.M) (float64, bool) {
 	_, balanced, h := merge(b, g, buf)
-	h += heuristic.H(f.AABB().R())
+	h += f.Heuristic()
 
 	if balanced && h < opt {
 		return h, true
