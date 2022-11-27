@@ -18,15 +18,18 @@ func main() {
 
 	data := map[id.ID]hyperrectangle.R{
 		100: *hyperrectangle.New(vector.V{0, 0}, vector.V{1, 1}),
-		101: *hyperrectangle.New(vector.V{90, 90}, vector.V{100, 100}),
+		101: *hyperrectangle.New(vector.V{10, 10}, vector.V{11, 11}),
 		102: *hyperrectangle.New(vector.V{9, 9}, vector.V{11, 11}),
-		103: *hyperrectangle.New(vector.V{50.1, 50.1}, vector.V{60, 60}),
-		104: *hyperrectangle.New(vector.V{0, 0}, vector.V{100, 100}),
+		103: *hyperrectangle.New(vector.V{30, 30}, vector.V{40, 40}),
+		104: *hyperrectangle.New(vector.V{100, 100}, vector.V{101, 101}),
+		105: *hyperrectangle.New(vector.V{90.01, 90.01}, vector.V{95, 95}),
+		106: *hyperrectangle.New(vector.V{0, 0}, vector.V{100, 100}),
 	}
 
-	for _, x := range []id.ID{100, 101, 102, 103, 104} {
-		fmt.Printf("Adding ID = %v, AABB = %v\n", x, data[x])
-		t.Insert(x, data[x])
+	for x, aabb := range data {
+		fmt.Printf("Adding ID = %v, AABB = %v\n", x, aabb)
+		t.Insert(x, aabb)
+		fmt.Printf("DEBUG(example.go): Tree:\n%v\n", t.S())
 	}
 
 	q := *hyperrectangle.New(vector.V{10, 10}, vector.V{50, 50})

@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util"
 	"github.com/downflux/go-bvh/x/internal/cache/node/util/metrics"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -54,6 +55,15 @@ func (t *T) SAH() float64 {
 	}
 
 	return metrics.SAH(n)
+}
+
+func (t *T) S() string {
+	n, ok := t.c.Get(t.root)
+	if !ok {
+		return ""
+	}
+
+	return util.S(n)
 }
 
 func (t *T) LeafSize() float64 {
