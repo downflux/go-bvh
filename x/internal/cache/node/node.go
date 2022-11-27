@@ -3,9 +3,9 @@
 package node
 
 import (
-	"sync"
 	"fmt"
 	"math"
+	"sync"
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache/branch"
