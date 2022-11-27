@@ -59,9 +59,11 @@ func AVL(x node.N) node.N {
 	}
 
 	var a, y node.N
-	// WLOG if sz := x.Right() is a leaf node, then its height is 0, and
-	// therefore cannot be taller than sa := x.Left(). Therefore, we know sz
-	// is an internal node.
+	// Assume WLOG for contradiction that sz := x.Right() is a leaf node,
+	// which means its height is 0. As node heights are strictly
+	// non-negative, this means sz cannot be taller than sa := x.Left().
+	// Therefore, sz.Height() > sa.Height() means sz must be an internal
+	// node.
 	if sa, sz := x.Left(), x.Right(); sa.Height() < sz.Height() {
 		if sb, sy := sz.Left(), sz.Right(); sb.Height() < sy.Height() {
 			a, y = sa, sy
