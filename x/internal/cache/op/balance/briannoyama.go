@@ -34,6 +34,4 @@ import (
 // no-op.
 //
 // The returned node has its AABB and height updated.
-func BrianNoyama(n node.N) node.N {
-	return Rotate(AVL(n))
-}
+func BrianNoyama(n node.N) node.N { return Rotate(AVL(n)) }

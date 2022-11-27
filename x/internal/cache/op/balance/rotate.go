@@ -1,29 +1,19 @@
 package balance
 
 import (
-	"math"
-
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/op/balance/pseudonode"
 	"github.com/downflux/go-bvh/x/internal/cache/op/unsafe"
-	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 )
 
-type rotationType int
+type rotation struct {
+	b pseudonode.I
+	c pseudonode.I
 
-const (
-	rotationTypeNull rotationType = iota
-	rotationTypeBF
-	rotationTypeDF
-)
-
-// r is a mutable rotation struct which keeps track of the current optimal local
-// subtree rotation.
-type r struct {
-	t    rotationType
-	src  node.N
-	dest node.N
+	source node.N
+	target node.N
 }
 
 // Rotate returns a valid rotation which will not unbalance our BVH tree.
@@ -62,171 +52,93 @@ type r struct {
 //
 // to change.
 func Rotate(x node.N) node.N {
-	if x.Height() < 2 {
+	if x.Height() < 1 {
 		return x
 	}
 
-	r := optimal(x)
+	var b, c, d, e, f, g node.N
+	b, c = x.Left(), x.Right()
+	if !b.IsLeaf() {
+		d, e = b.Left(), b.Right()
+	}
+	if !c.IsLeaf() {
+		f, g = c.Left(), c.Right()
+	}
 
-	switch r.t {
-	case rotationTypeBF:
-		unsafe.Swap(r.src, r.dest)
+	buf := hyperrectangle.New(
+		vector.V(make([]float64, x.AABB().Min().Dimension())),
+		vector.V(make([]float64, x.AABB().Min().Dimension())),
+	).M()
 
-		// By construction, r.src is the b node, and therefore the
-		// shallower node before the swap. Now that the nodes are
-		// swapped, r.src is the deeper node.
-		node.SetAABB(r.src.Parent(), nil, 1)
-		node.SetHeight(r.src.Parent())
+	rotations := []rotation{}
+	if !b.IsLeaf() {
+		rotations = append(rotations, rotation{
+			b:      pseudonode.New(c, e, buf),
+			c:      d,
+			source: c,
+			target: d,
+		}, rotation{
+			b:      pseudonode.New(d, c, buf),
+			c:      e,
+			source: c,
+			target: e,
+		})
+	}
+	if !c.IsLeaf() {
+		rotations = append(rotations, rotation{
+			b:      f,
+			c:      pseudonode.New(b, g, buf),
+			source: b,
+			target: f,
+		}, rotation{
+			b:      g,
+			c:      pseudonode.New(b, f, buf),
+			source: b,
+			target: g,
+		})
+	}
+	if !b.IsLeaf() && !c.IsLeaf() {
+		rotations = append(rotations, rotation{
+			b:      pseudonode.New(f, e, buf),
+			c:      pseudonode.New(d, g, buf),
+			source: d,
+			target: f,
+		}, rotation{
+			b:      pseudonode.New(g, e, buf),
+			c:      pseudonode.New(f, d, buf),
+			source: d,
+			target: g,
+		})
+	}
 
-		node.SetAABB(x, nil, 1)
-		node.SetHeight(x)
-	case rotationTypeDF:
-		unsafe.Swap(r.src, r.dest)
+	h := b.Heuristic() + c.Heuristic()
+	opt := rotation{}
 
-		// The D -> F rotation means both nodes are of the same depth --
-		// both their parents need to be updated in addition to the
-		// local root node.
-		node.SetAABB(r.src.Parent(), nil, 1)
-		node.SetHeight(r.src.Parent())
+	for _, r := range rotations {
+		if g := r.b.Heuristic() + r.c.Heuristic(); balanced(r.b, r.c) && g < h {
+			opt = r
+			h = g
+		}
+	}
 
-		node.SetAABB(r.dest.Parent(), nil, 1)
-		node.SetHeight(r.dest.Parent())
+	if opt != (rotation{}) {
+		unsafe.Swap(opt.source, opt.target)
 
-		node.SetAABB(x, nil, 1)
-		node.SetHeight(x)
+		node.SetAABB(opt.source.Parent(), nil, 1)
+		node.SetHeight(opt.source.Parent())
+
+		node.SetAABB(opt.target.Parent(), nil, 1)
+		node.SetHeight(opt.target.Parent())
+
+		if x.ID() != opt.source.Parent().ID() && x.ID() != opt.target.Parent().ID() {
+			node.SetAABB(x, nil, 1)
+			node.SetHeight(x)
+		}
 	}
 
 	return x
 }
 
-// optimal generates a rotation (which may be a no-op) that minimizes the SAH of
-// the local subtree.
-func optimal(a node.N) *r {
-	r := &r{}
-
-	if a.Height() < 2 {
-		return r
-	}
-
-	b := a.Left()
-	c := a.Right()
-
-	opt := b.Heuristic() + c.Heuristic()
-
-	// Generate a virtual node buffer.
-	k := a.AABB().Min().Dimension()
-	buf := hyperrectangle.New(
-		vector.V(make([]float64, k)),
-		vector.V(make([]float64, k)),
-	).M()
-
-	if !c.IsLeaf() {
-		f := c.Left()
-		g := c.Right()
-
-		if h, ok := checkBF(b, f, g, opt, buf); ok {
-			opt = h
-			r.src = b
-			r.dest = f
-			r.t = rotationTypeBF
-		}
-
-		if h, ok := checkBF(b, g, f, opt, buf); ok {
-			opt = h
-			r.src = b
-			r.dest = g
-			r.t = rotationTypeBF
-		}
-	}
-
-	if !b.IsLeaf() {
-		d := b.Left()
-		e := b.Right()
-
-		if h, ok := checkBF(c, d, e, opt, buf); ok {
-			opt = h
-			r.src = c
-			r.dest = d
-			r.t = rotationTypeBF
-		}
-
-		if h, ok := checkBF(c, e, d, opt, buf); ok {
-			opt = h
-			r.src = c
-			r.dest = e
-			r.t = rotationTypeBF
-		}
-	}
-
-	if !b.IsLeaf() && !c.IsLeaf() {
-		d := b.Left()
-		e := b.Right()
-		f := c.Left()
-		g := c.Right()
-
-		if h, ok := checkDF(d, e, f, g, opt, buf); ok {
-			opt = h
-			r.src = d
-			r.dest = f
-			r.t = rotationTypeDF
-
-		}
-
-		if h, ok := checkDF(d, e, g, f, opt, buf); ok {
-			opt = h
-			r.src = d
-			r.dest = g
-			r.t = rotationTypeDF
-		}
-	}
-
-	return r
-}
-
-// merge simulates the results if the input nodes are set as siblings of one
-// another.
-func merge(l node.N, r node.N, buf hyperrectangle.M) (int, bool, float64) {
-	buf.Copy(l.AABB().R())
-	buf.Union(r.AABB().R())
-
-	lh := float64(l.Height())
-	rh := float64(r.Height())
-
-	height := math.Max(lh, rh) + 1
-	balanced := math.Abs(lh-rh) <= 1
-	return int(height), balanced, heuristic.H(buf.R())
-}
-
-// checkBF checks if a potential B -> F rotation will generate a more efficient
-// local subtree than the existing configuration.
-//
-// checkBF will return the new lower bound heuristic and a true value if the
-// input configuration generates a better configuration.
-//
-//	  A
-//	 / \
-//	B   C
-//	   / \
-//	  F   G
-func checkBF(b node.N, f node.N, g node.N, opt float64, buf hyperrectangle.M) (float64, bool) {
-	_, balanced, h := merge(b, g, buf)
-	h += f.Heuristic()
-
-	if balanced && h < opt {
-		return h, true
-	}
-	return opt, false
-}
-
-func checkDF(d node.N, e node.N, f node.N, g node.N, opt float64, buf hyperrectangle.M) (float64, bool) {
-	bheight, bbalanced, bh := merge(f, e, buf)
-	cheight, cbalanced, ch := merge(d, g, buf)
-	balanced := math.Abs(float64(bheight-cheight)) <= 1
-
-	h := bh + ch
-
-	if bbalanced && cbalanced && balanced && h < opt {
-		return h, true
-	}
-	return opt, false
+func balanced(a, b pseudonode.I) bool {
+	return a.Height()-b.Height() < 2 && a.Height()-b.Height() > -2
 }
