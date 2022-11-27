@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	suite = SizeSmall
+	suite = SizeUnit
 )
 
 func TestMain(m *testing.M) {

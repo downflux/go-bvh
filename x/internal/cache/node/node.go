@@ -3,6 +3,7 @@
 package node
 
 import (
+	"sync"
 	"fmt"
 	"math"
 
@@ -61,6 +62,51 @@ func SetHeight(n N) {
 	}
 }
 
+func Union(data map[id.ID]hyperrectangle.R, xs ...id.ID) hyperrectangle.R {
+	k := data[xs[0]].Min().Dimension()
+	buf := hyperrectangle.New(
+		vector.V(make([]float64, k)),
+		vector.V(make([]float64, k)),
+	).M()
+
+	if len(xs) < 8 {
+		var initialized bool
+		for _, x := range xs {
+			if !initialized {
+				initialized = true
+				buf.Copy(data[x])
+			} else {
+				buf.Union(data[x])
+			}
+		}
+		return buf.R()
+	}
+	lbuf := hyperrectangle.New(
+		vector.V(make([]float64, k)),
+		vector.V(make([]float64, k)),
+	).M()
+	rbuf := hyperrectangle.New(
+		vector.V(make([]float64, k)),
+		vector.V(make([]float64, k)),
+	).M()
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		lbuf.Copy(Union(data, xs[:len(xs)/2]...))
+	}()
+	go func() {
+		defer wg.Done()
+		rbuf.Copy(Union(data, xs[len(xs)/2+1:]...))
+	}()
+	wg.Wait()
+
+	buf.Copy(lbuf.R())
+	buf.Union(rbuf.R())
+	return buf.R()
+}
+
 // SetAABB updates a node's AABB with the bounding boxes of its children. For a
 // leaf node, this bounding box will have a buffer of some given expansion
 // factor.
@@ -78,19 +124,13 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 		return
 	}
 
-	// TODO(minkezhang): Improve performance by concurrently updating the
-	// final AABB.
-	var initialized bool
-	var k vector.D
+	xs := make([]id.ID, 0, len(n.Leaves()))
 	for x := range n.Leaves() {
-		if !initialized {
-			initialized = true
-			n.AABB().Copy(data[x])
-			k = data[x].Min().Dimension()
-		} else {
-			n.AABB().Union(data[x])
-		}
+		xs = append(xs, x)
 	}
+
+	n.AABB().Copy(Union(data, xs...))
+	k := n.AABB().Min().Dimension()
 
 	epsilon := math.Pow(tolerance, 1/float64(k))
 	for i := vector.D(0); i < k; i++ {
