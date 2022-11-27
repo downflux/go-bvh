@@ -42,6 +42,7 @@ func generate() []c {
 
 	for _, n := range suite.N() {
 		for _, k := range suite.K() {
+
 			load := GenerateRandomTiles(n, k)
 			cs = append(cs,
 				c{
@@ -61,6 +62,9 @@ func generate() []c {
 			)
 
 			for _, size := range suite.LeafSize() {
+				k := k
+				size := size
+
 				cs = append(cs,
 					c{
 						name: fmt.Sprintf("downflux/K=%v/N=%v/LeafSize=%v", k, n, size),
@@ -75,11 +79,6 @@ func generate() []c {
 						n:    n,
 						load: load,
 					},
-				)
-			}
-
-			for _, size := range suite.LeafSize() {
-				cs = append(cs,
 					c{
 						name: fmt.Sprintf("dhconnelly/K=%v/N=%v/LeafSize=%v", k, n, size),
 						t: func() container.C {
@@ -203,6 +202,7 @@ func BenchmarkInsert(b *testing.B) {
 			b.StopTimer()
 			if u, ok := t.(*bvh.T); ok {
 				b.ReportMetric(u.SAH(), "SAH")
+				b.ReportMetric(u.LeafSize(), "LeafSize")
 				b.ReportMetric(float64(u.H()), "H")
 			}
 			defer b.StartTimer()

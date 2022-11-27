@@ -1,4 +1,4 @@
-package sah
+package metrics
 
 import (
 	"github.com/downflux/go-bvh/x/internal/cache/node"

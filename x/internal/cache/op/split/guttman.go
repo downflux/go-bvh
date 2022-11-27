@@ -63,11 +63,17 @@ func GuttmanLinear(c *cache.C, data map[id.ID]hyperrectangle.R, n node.N, m node
 		var kl id.ID
 		var kr id.ID
 
-		// WLOG klower tracks the maximum lower bound.
-		klower := math.Inf(-1)
-		kupper := math.Inf(1)
+		if data[nodes[0]].Max().X(i) < data[nodes[1]].Max().X(i) {
+			kl, kr = nodes[0], nodes[1]
+		} else {
+			kl, kr = nodes[1], nodes[0]
+		}
 
-		for _, x := range nodes {
+		// WLOG klower tracks the maximum lower bound.
+		klower := math.Max(data[kl].Min().X(i), data[kr].Min().X(i))
+		kupper := math.Min(data[kl].Max().X(i), data[kr].Max().X(i))
+
+		for _, x := range nodes[2:] {
 			aabb := data[x]
 
 			if k := aabb.Max().X(i); k < kupper {
