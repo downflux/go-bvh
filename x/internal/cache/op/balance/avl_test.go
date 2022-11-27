@@ -169,8 +169,19 @@ func TestAVL(t *testing.T) {
 
 	for _, c := range configs {
 		t.Run(c.name, func(t *testing.T) {
-			if got := AVL(c.x); !cmp.Equal(got, c.want) {
+			f := cmp.F{
+				AABB:      false,
+				Heuristic: false,
+			}
+			got := AVL(c.x)
+			if !f.Equal(got, c.want) {
 				t.Errorf("AVL() = %v, want = %v", got, c.want)
+			} else if !got.IsLeaf() {
+				// Only the root cache is invalid -- we fully
+				// expect child nodes to have valid caches.
+				if !cmp.Equal(got.Left(), c.want.Left()) || !cmp.Equal(got.Right(), c.want.Right()) {
+					t.Errorf("AVL() = %v, want = %v", got, c.want)
+				}
 			}
 		})
 	}

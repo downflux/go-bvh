@@ -124,15 +124,14 @@ func Rotate(x node.N) node.N {
 	if opt != (rotation{}) {
 		unsafe.Swap(opt.source, opt.target)
 
-		node.SetAABB(opt.source.Parent(), nil, 1)
-		node.SetHeight(opt.source.Parent())
+		if x.ID() != opt.source.Parent().ID() {
+			node.SetAABB(opt.source.Parent(), nil, 1)
+			node.SetHeight(opt.source.Parent())
+		}
 
-		node.SetAABB(opt.target.Parent(), nil, 1)
-		node.SetHeight(opt.target.Parent())
-
-		if x.ID() != opt.source.Parent().ID() && x.ID() != opt.target.Parent().ID() {
-			node.SetAABB(x, nil, 1)
-			node.SetHeight(x)
+		if x.ID() != opt.target.Parent().ID() {
+			node.SetAABB(opt.target.Parent(), nil, 1)
+			node.SetHeight(opt.target.Parent())
 		}
 	}
 

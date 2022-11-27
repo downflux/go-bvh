@@ -92,9 +92,6 @@ func AVL(x node.N) node.N {
 		// swap.
 		node.SetAABB(a.Parent(), nil, 1)
 		node.SetHeight(a.Parent())
-
-		node.SetAABB(x, nil, 1)
-		node.SetHeight(x)
 	}
 
 	return x
