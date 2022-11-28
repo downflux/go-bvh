@@ -19,6 +19,7 @@ var (
 		"BrianNoyama": BrianNoyama,
 		"Catto":       cattoRO,
 		"Guttman":     Guttman,
+		"DHConnelly":  dhconnellyRO,
 	}
 )
 
