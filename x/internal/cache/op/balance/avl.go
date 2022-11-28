@@ -92,6 +92,10 @@ func AVL(x node.N) node.N {
 		// swap.
 		node.SetAABB(a.Parent(), nil, 1)
 		node.SetHeight(a.Parent())
+
+		// The AABB of the local root has not changed, so we do not need to
+		// update its AABB. The height may have, though.
+		node.SetHeight(x)
 	}
 
 	return x

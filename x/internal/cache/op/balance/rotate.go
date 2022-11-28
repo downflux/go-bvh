@@ -52,7 +52,7 @@ type rotation struct {
 //
 // to change.
 func Rotate(x node.N) node.N {
-	if x.Height() < 1 {
+	if x.Height() < 2 {
 		return x
 	}
 
@@ -133,6 +133,10 @@ func Rotate(x node.N) node.N {
 			node.SetAABB(opt.target.Parent(), nil, 1)
 			node.SetHeight(opt.target.Parent())
 		}
+
+		// The AABB of the local root has not changed, so skip
+		// re-calculating the bounding box.
+		node.SetHeight(x)
 	}
 
 	return x

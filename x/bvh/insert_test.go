@@ -6,6 +6,7 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/internal/cache/node/util"
 	"github.com/downflux/go-bvh/x/internal/cache/node/util/cmp"
 	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
@@ -238,6 +239,10 @@ func TestInsert(t *testing.T) {
 					}
 					updates[x] = n.ID()
 				}
+			}
+
+			if err := util.Validate(c.c, c.data, got); err != nil {
+				t.Errorf("Validate() encountered an unexpected error: %v", err)
 			}
 		})
 	}
