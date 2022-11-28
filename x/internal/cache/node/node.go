@@ -117,10 +117,12 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 		panic(fmt.Sprintf("cannot set expansion factor to be less than the AABB size"))
 	}
 
+	target := n.AABB()
+
 	if !n.IsLeaf() {
-		n.AABB().Copy(n.Left().AABB().R())
-		n.AABB().Union(n.Right().AABB().R())
-		n.SetHeuristic(heuristic.H(n.AABB().R()))
+		target.Copy(n.Left().AABB().R())
+		target.Union(n.Right().AABB().R())
+		n.SetHeuristic(heuristic.H(target.R()))
 		return
 	}
 
@@ -129,16 +131,17 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 		xs = append(xs, x)
 	}
 
-	n.AABB().Copy(Union(data, xs...))
-	k := n.AABB().Min().Dimension()
+	target.Copy(Union(data, xs...))
+	k := target.Min().Dimension()
 
 	epsilon := math.Pow(tolerance, 1/float64(k))
+	tmin, tmax := target.Min(), target.Max()
 	for i := vector.D(0); i < k; i++ {
-		d := n.AABB().Max().X(i) - n.AABB().Min().X(i)
+		d := tmax[i] - tmin[i]
 		offset := (epsilon*d - d) / 2
-		n.AABB().Min().SetX(i, n.AABB().Min().X(i)-offset)
-		n.AABB().Max().SetX(i, n.AABB().Max().X(i)-offset)
+		tmin[i] = tmin[i]-offset
+		tmax[i] = tmax[i]-offset
 	}
-	n.AABB().Scale(epsilon)
-	n.SetHeuristic(heuristic.H(n.AABB().R()))
+	target.Scale(epsilon)
+	n.SetHeuristic(heuristic.H(target.R()))
 }
