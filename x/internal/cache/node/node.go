@@ -139,8 +139,8 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 	for i := vector.D(0); i < k; i++ {
 		d := tmax[i] - tmin[i]
 		offset := (epsilon*d - d) / 2
-		tmin[i] = tmin[i]-offset
-		tmax[i] = tmax[i]-offset
+		tmin[i] = tmin[i] - offset
+		tmax[i] = tmax[i] - offset
 	}
 	target.Scale(epsilon)
 	n.SetHeuristic(heuristic.H(target.R()))
