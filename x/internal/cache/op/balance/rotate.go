@@ -115,9 +115,11 @@ func Rotate(x node.N) node.N {
 	opt := rotation{}
 
 	for _, r := range rotations {
-		if g := r.b.Heuristic() + r.c.Heuristic(); balanced(r.b, r.c) && g < h {
-			opt = r
-			h = g
+		if balanced(r.b, r.c) {
+			if g := r.b.Heuristic() + r.c.Heuristic(); g < h {
+				opt = r
+				h = g
+			}
 		}
 	}
 
