@@ -185,8 +185,12 @@ func (n *N) IsLeaf() bool {
 		panic("accessing an unallocated node")
 	}
 
-	_, ok := n.cache.Get(n.ids[idLeft])
-	return !ok
+	// N.B.: This check only checks if the ID is set to IDInvalid.
+	// Checking for cache existence is slow.
+	//
+	// When removing a node from the cache, make sure its links are broken
+	// correctly.
+	return !n.ids[idLeft].IsValid()
 }
 
 func (n *N) IsFull() bool {
