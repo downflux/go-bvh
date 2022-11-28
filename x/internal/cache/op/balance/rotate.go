@@ -70,7 +70,7 @@ func Rotate(x node.N) node.N {
 		vector.V(make([]float64, x.AABB().Min().Dimension())),
 	).M()
 
-	rotations := []rotation{}
+	rotations := make([]rotation, 0, 8)
 	if !b.IsLeaf() {
 		rotations = append(rotations, rotation{
 			b:      pseudonode.New(c, e, buf),
