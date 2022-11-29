@@ -44,8 +44,8 @@ func New(o O) *C {
 		k:        o.K,
 		leafSize: o.LeafSize,
 
-		data:  make([]N, 0, 128),
-		freed: make([]cid.ID, 0, 128),
+		data:  make([]N, 0, 1024),
+		freed: make([]cid.ID, 0, 1024),
 	}
 }
 
@@ -66,10 +66,7 @@ func (c *C) Get(x cid.ID) (node.N, bool) {
 	}
 
 	n := c.data[x]
-	if !n.IsAllocated() {
-		return nil, false
-	}
-	return n, true
+	return n, n.IsAllocated()
 }
 
 func (c *C) GetOrDie(x cid.ID) node.N {
