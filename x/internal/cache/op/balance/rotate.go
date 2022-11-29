@@ -1,20 +1,22 @@
 package balance
 
 import (
+	"math"
+
 	"github.com/downflux/go-bvh/x/internal/cache/node"
-	"github.com/downflux/go-bvh/x/internal/cache/op/balance/pseudonode"
 	"github.com/downflux/go-bvh/x/internal/cache/op/unsafe"
+	"github.com/downflux/go-bvh/x/internal/heuristic"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 )
 
-type rotation struct {
-	b pseudonode.I
-	c pseudonode.I
+type rtype int
 
-	source node.N
-	target node.N
-}
+const (
+	rtypeUnknown rtype = iota
+	rtypeBF
+	rtypeDF
+)
 
 // Rotate returns a valid rotation which will not unbalance our BVH tree.
 //
@@ -70,80 +72,129 @@ func Rotate(x node.N) node.N {
 		vector.V(make([]float64, x.AABB().Min().Dimension())),
 	).M()
 
-	rotations := make([]rotation, 0, 8)
-	if !b.IsLeaf() {
-		rotations = append(rotations, rotation{
-			b:      pseudonode.New(c, e, buf),
-			c:      d,
-			source: c,
-			target: d,
-		}, rotation{
-			b:      pseudonode.New(d, c, buf),
-			c:      e,
-			source: c,
-			target: e,
-		})
-	}
+	h := b.Heuristic() + c.Heuristic()
+	r := &struct {
+		source node.N
+		target node.N
+
+		rtype rtype
+	}{}
+
 	if !c.IsLeaf() {
-		rotations = append(rotations, rotation{
-			b:      f,
-			c:      pseudonode.New(b, g, buf),
-			source: b,
-			target: f,
-		}, rotation{
-			b:      g,
-			c:      pseudonode.New(b, f, buf),
-			source: b,
-			target: g,
-		})
+		if ok, i := mergeBF(b, f, g, buf); ok && i < h {
+			h = i
+			r.source = b
+			r.target = f
+			r.rtype = rtypeBF
+		}
+		if ok, i := mergeBF(b, g, f, buf); ok && i < h {
+			h = i
+			r.source = b
+			r.target = g
+			r.rtype = rtypeBF
+		}
+	}
+	if !b.IsLeaf() {
+		if ok, i := mergeBF(c, d, e, buf); ok && i < h {
+			h = i
+			r.source = c
+			r.target = d
+			r.rtype = rtypeBF
+		}
+		if ok, i := mergeBF(c, e, d, buf); ok && i < h {
+			h = i
+			r.source = c
+			r.target = e
+			r.rtype = rtypeBF
+		}
 	}
 	if !b.IsLeaf() && !c.IsLeaf() {
-		rotations = append(rotations, rotation{
-			b:      pseudonode.New(f, e, buf),
-			c:      pseudonode.New(d, g, buf),
-			source: d,
-			target: f,
-		}, rotation{
-			b:      pseudonode.New(g, e, buf),
-			c:      pseudonode.New(f, d, buf),
-			source: d,
-			target: g,
-		})
-	}
-
-	h := b.Heuristic() + c.Heuristic()
-	opt := rotation{}
-
-	for _, r := range rotations {
-		if balanced(r.b, r.c) {
-			if g := r.b.Heuristic() + r.c.Heuristic(); g < h {
-				opt = r
-				h = g
-			}
+		if ok, i := mergeDF(d, e, f, g, buf); ok && i < h {
+			h = i
+			r.source = d
+			r.target = f
+			r.rtype = rtypeDF
+		}
+		if ok, i := mergeDF(d, e, g, f, buf); ok && i < h {
+			h = i
+			r.source = d
+			r.target = g
+			r.rtype = rtypeDF
 		}
 	}
 
-	if opt != (rotation{}) {
-		unsafe.Swap(opt.source, opt.target)
+	switch r.rtype {
+	case rtypeBF:
+		unsafe.Swap(r.source, r.target)
 
-		if x.ID() != opt.source.Parent().ID() {
-			node.SetAABB(opt.source.Parent(), nil, 1)
-			node.SetHeight(opt.source.Parent())
-		}
-
-		if x.ID() != opt.target.Parent().ID() {
-			node.SetAABB(opt.target.Parent(), nil, 1)
-			node.SetHeight(opt.target.Parent())
-		}
+		node.SetAABB(r.source.Parent(), nil, 1)
+		node.SetHeight(r.source.Parent())
 
 		// The AABB of the local root has not changed, so skip
 		// re-calculating the bounding box.
+		node.SetHeight(x)
+	case rtypeDF:
+		unsafe.Swap(r.source, r.target)
+
+		node.SetAABB(r.source.Parent(), nil, 1)
+		node.SetAABB(r.target.Parent(), nil, 1)
+		node.SetHeight(r.source.Parent())
+		node.SetHeight(r.target.Parent())
+
 		node.SetHeight(x)
 	}
 
 	return x
 }
 
-func balanced(a, b pseudonode.I) bool {
-	return a.Height()-b.Height() < 2 && a.Height()-b.Height() > -2
+// mergeBF checks the cost due to merging the B node with the F node (i.e. a
+// descendent of the C node). It returns true if the configuration preserves
+// tree balance, and the calculated heuristic cost of the two child nodes (i.e.
+// F and the pseudonode consisting of B and G).
+func mergeBF(b node.N, f node.N, g node.N, buf hyperrectangle.M) (bool, float64) {
+	lheight := f.Height()
+	rheight := g.Height()
+	if rheight < b.Height() {
+		rheight = b.Height()
+	}
+	rheight += 1
+
+	if dh := lheight - rheight; !(dh > -2 && dh < 2) {
+		return false, math.Inf(1)
+	}
+
+	buf.Copy(b.AABB().R())
+	buf.Union(g.AABB().R())
+
+	h := f.Heuristic() + heuristic.H(buf.R())
+	return true, h
+}
+
+func mergeDF(d node.N, e node.N, f node.N, g node.N, buf hyperrectangle.M) (bool, float64) {
+	lheight := e.Height()
+	if lheight < f.Height() {
+		lheight = f.Height()
+	}
+	lheight += 1
+	rheight := g.Height()
+	if rheight < d.Height() {
+		rheight = d.Height()
+	}
+	rheight += 1
+
+	if dh := lheight - rheight; !(dh > -2 && dh < 2) {
+		return false, math.Inf(1)
+	}
+
+	buf.Copy(e.AABB().R())
+	buf.Union(f.AABB().R())
+
+	h := heuristic.H(buf.R())
+
+	buf.Copy(d.AABB().R())
+	buf.Union(g.AABB().R())
+
+	h += heuristic.H(buf.R())
+
+	return true, h
 }
