@@ -26,7 +26,7 @@ func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, to
 	}
 
 	// s is a leaf node. This leaf node may be full.
-	s := candidate.Bittner(c, root, data[x])
+	s := candidate.Guttman(c, root, data[x])
 	s.Leaves()[x] = struct{}{}
 
 	mutations = append(mutations, s)

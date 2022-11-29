@@ -10,6 +10,9 @@ import (
 
 // BrianNoyama returns a leaf node to be used for containing the AABB. See the
 // briannoyama implementation for more information.
+//
+// TODO(minkezhang): Experimentally, this seems to give incredibly bad SAH
+// values, all other things equal. Validate this function is behaving correctly.
 func BrianNoyama(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 	buf := hyperrectangle.New(
 		vector.V(make([]float64, c.K())),
