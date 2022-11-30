@@ -3,6 +3,8 @@ package bvh
 import (
 	"fmt"
 
+	"github.com/downflux/go-bvh/x/bvh/op/broadphase"
+	"github.com/downflux/go-bvh/x/bvh/op/insert"
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node/util"
@@ -21,6 +23,8 @@ type T struct {
 	data  map[id.ID]hyperrectangle.R
 
 	tolerance float64
+
+	insert insert.O
 }
 
 type O struct {
@@ -45,6 +49,8 @@ func New(o O) *T {
 		nodes:     make(map[id.ID]cid.ID, 1024),
 		data:      make(map[id.ID]hyperrectangle.R, 1024),
 		tolerance: o.Tolerance,
+
+		insert: insert.Default,
 	}
 }
 
@@ -100,7 +106,7 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 
 	t.data[x] = aabb
 
-	root, mutations := insert(
+	root, mutations := t.insert.Insert(
 		t.c, t.root, t.data, x, t.tolerance,
 	)
 	t.root = root.ID()
@@ -113,7 +119,9 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 	return nil
 }
 
-func (t *T) BroadPhase(q hyperrectangle.R) []id.ID { return broadphase(t.c, t.root, t.data, q) }
+func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
+	return broadphase.BroadPhase(t.c, t.root, t.data, q)
+}
 
 func (t *T) Update(x id.ID, aabb hyperrectangle.R) error { return nil }
 func (t *T) Remove(x id.ID) error                        { return nil }

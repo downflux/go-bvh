@@ -1,4 +1,4 @@
-package bvh
+package broadphase
 
 import (
 	"github.com/downflux/go-bvh/x/id"
@@ -10,9 +10,9 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
-// broadphase checks a BVH tree for the query rectangle and returns a list of
+// BroadPhase checks a BVH tree for the query rectangle and returns a list of
 // objects which touch the query AABB.
-func broadphase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hyperrectangle.R) []id.ID {
+func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hyperrectangle.R) []id.ID {
 	n, ok := c.Get(root)
 	if !ok {
 		return []id.ID{}

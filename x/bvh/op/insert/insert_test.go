@@ -1,4 +1,4 @@
-package bvh
+package insert
 
 import (
 	"testing"
@@ -225,7 +225,7 @@ func TestInsert(t *testing.T) {
 				LRInvariant: false,
 			}
 
-			got, mutations := insert(c.c, c.rid, c.data, c.x, c.tolerance)
+			got, mutations := Insert(c.c, c.rid, c.data, c.x, c.tolerance)
 
 			if !f.Equal(got, c.want) {
 				t.Errorf("insert() = %v, _, want = %v, _", got, c.want)

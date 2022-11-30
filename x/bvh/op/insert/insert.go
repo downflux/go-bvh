@@ -1,4 +1,4 @@
-package bvh
+package insert
 
 import (
 	"github.com/downflux/go-bvh/x/id"
@@ -13,11 +13,29 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
+var (
+	Default = O{
+		Candidate: candidate.Guttman,
+		Split:     split.GuttmanLinear,
+		Balance:   balance.BrianNoyama,
+	}
+)
+
+type O struct {
+	Candidate candidate.C
+	Split     split.S
+	Balance   balance.B
+}
+
+func Insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, tolerance float64) (node.N, []node.N) {
+	return Default.Insert(c, rid, data, x, tolerance)
+}
+
 // insert adds a new AABB into a tree, and returns the new root, along with any
 // object node updates.
 //
 // The input data cache is a read-only map within the insert function.
-func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, tolerance float64) (node.N, []node.N) {
+func (o O) Insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, tolerance float64) (node.N, []node.N) {
 	var mutations []node.N
 
 	root, ok := c.Get(rid)
@@ -26,14 +44,14 @@ func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, to
 	}
 
 	// s is a leaf node. This leaf node may be full.
-	s := candidate.Guttman(c, root, data[x])
+	s := o.Candidate(c, root, data[x])
 	s.Leaves()[x] = struct{}{}
 
 	mutations = append(mutations, s)
 
 	if len(s.Leaves()) > c.LeafSize() {
 		t := unsafe.Expand(c, s)
-		split.GuttmanLinear(c, data, s, t)
+		o.Split(c, data, s, t)
 
 		mutations = append(mutations, t)
 
@@ -53,7 +71,7 @@ func insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.ID, to
 			node.SetAABB(m, nil, 1)
 			node.SetHeight(m)
 
-			m = balance.BrianNoyama(m)
+			m = o.Balance(m)
 		}
 
 		if m.Parent() == nil {
