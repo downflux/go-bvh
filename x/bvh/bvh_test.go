@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/downflux/go-bvh/x/container/briannoyama"
 	"github.com/downflux/go-bvh/x/container/bruteforce"
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/perf"
@@ -104,25 +103,6 @@ func TestBroadPhaseConformance(t *testing.T) {
 	}
 
 	for _, c := range configs {
-		t.Run(fmt.Sprintf("BrianNoyama/K=%v/Tolerance=%v/N=%v", k, c.size, len(c.data)), func(t *testing.T) {
-			tbf := bruteforce.New()
-			tbn := briannoyama.New()
-
-			for x, h := range c.data {
-				tbf.Insert(x, h)
-				tbn.Insert(x, h)
-			}
-
-			want := tbf.BroadPhase(c.q)
-			got := tbn.BroadPhase(c.q)
-
-			if diff := cmp.Diff(
-				want, got,
-				cmpopts.SortSlices(func(a, b id.ID) bool { return a < b }),
-			); diff != "" {
-				t.Errorf("BroadPhase() mismatch (-want +got):\n%v", diff)
-			}
-		})
 		t.Run(fmt.Sprintf("BVH/K=%v/LeafSize=%v/Tolerance=%v/N=%v", k, c.size, c.tolerance, len(c.data)), func(t *testing.T) {
 			tbf := bruteforce.New()
 			tbvh := New(O{
