@@ -29,7 +29,7 @@ type C struct {
 	Object   float64
 }
 
-// SAH returns the surface area heuristic as defined in Macdonald and Booth
+// SAH returns the surface area heuristic as defined in MacDonald and Booth
 // 1990.
 //
 // The total heuristic is comprised of three separate components -- the cost of
