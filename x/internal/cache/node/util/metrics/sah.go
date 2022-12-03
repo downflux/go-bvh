@@ -3,6 +3,7 @@ package metrics
 import (
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/util"
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
 )
 
 var (
@@ -11,6 +12,13 @@ var (
 		Leaf:     1,
 		Object:   0,
 	}
+
+	// The internally cached node heuristic may differ from the heuristic as
+	// strictly defined by the MacDonald and Booth paper. We are making the
+	// tree heuristic here independent of the cached heuristic in order to
+	// have comparable tree costs across different node heuristic
+	// strategies.
+	SA = hyperrectangle.SA
 )
 
 func SAH(n node.N) float64 { return AilaC.SAH(n) }
@@ -36,11 +44,11 @@ func (c C) SAH(n node.N) float64 {
 	var ci, cl, co float64
 	util.PreOrder(n, func(n node.N) {
 		if !n.IsLeaf() {
-			ci += n.Heuristic()
+			ci += SA(n.AABB().R())
 		} else {
-			cl += n.Heuristic()
-			co += n.Heuristic() * float64(len(n.Leaves()))
+			cl += SA(n.AABB().R())
+			co += SA(n.AABB().R()) * float64(len(n.Leaves()))
 		}
 	})
-	return (c.Internal*ci + c.Leaf*cl + c.Object*co) / n.Heuristic()
+	return (c.Internal*ci + c.Leaf*cl + c.Object*co) / SA(n.AABB().R())
 }
