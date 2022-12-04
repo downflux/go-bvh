@@ -65,6 +65,8 @@ func (bvh *BVH) IDs() []id.ID {
 	return xs
 }
 
+func (bvh *BVH) SAH() float64 { return bvh.bvh.SAH() }
+
 func (bvh *BVH) Remove(x id.ID) error {
 	if bvh.lookup[x] == nil {
 		return fmt.Errorf("cannot remove non-existent ID %v", x)

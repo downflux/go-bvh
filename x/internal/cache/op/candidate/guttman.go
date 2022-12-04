@@ -22,23 +22,27 @@ func Guttman(c *cache.C, n node.N, aabb hyperrectangle.R) node.N {
 
 	var m node.N
 	for m = n; !m.IsLeaf(); {
-		buf.Copy(aabb)
-		buf.Union(m.Left().AABB().R())
-		lh := heuristic.H(buf.R())
-		dlh := lh - m.Left().Heuristic()
+		l, r := m.Left(), m.Right()
 
 		buf.Copy(aabb)
-		buf.Union(m.Right().AABB().R())
+		buf.Union(l.AABB().R())
+
+		lh := heuristic.H(buf.R())
+		dlh := lh - l.Heuristic()
+
+		buf.Copy(aabb)
+		buf.Union(r.AABB().R())
+
 		rh := heuristic.H(buf.R())
-		drh := rh - m.Right().Heuristic()
+		drh := rh - r.Heuristic()
 
 		// Choose an appropriate node to search. Use the node with the
 		// least change in cost; in the case of a tie, use the node with
 		// the smallest resultant area.
 		if dlh < drh || epsilon.Within(dlh, drh) && lh < rh {
-			m = m.Left()
+			m = l
 		} else {
-			m = m.Right()
+			m = r
 		}
 	}
 

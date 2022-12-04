@@ -10,6 +10,8 @@ github.com/downflux/go-geometry v0.14.5 h1:0xWoLsk+T03lDhZEMcnFSovRk5cyVBfwX+Sz4
 github.com/downflux/go-geometry v0.14.5/go.mod h1:ZJcto0QwYRdoIbi5G4mh5y6v2xUS+d++/cANaO1F9+8=
 github.com/downflux/go-geometry v0.14.6 h1:ySwE4LPXt09rgSFNw7uFNon4buyryJ8ApB/LXKoY/OI=
 github.com/downflux/go-geometry v0.14.6/go.mod h1:ZJcto0QwYRdoIbi5G4mh5y6v2xUS+d++/cANaO1F9+8=
+github.com/downflux/go-geometry v0.14.7 h1:rMqqHBabgCSslzYr+JGnUMw8Zl6Kkc11FXeG8JUEEqw=
+github.com/downflux/go-geometry v0.14.7/go.mod h1:ZJcto0QwYRdoIbi5G4mh5y6v2xUS+d++/cANaO1F9+8=
 github.com/downflux/go-pq v0.3.0 h1:oWLx7rzsD4fv1f2kp33NUq63CJVQvXZORkcpHr6bp9g=
 github.com/downflux/go-pq v0.3.0/go.mod h1:vkc6UAQ+TBoNdTwDm5akDexE1auN2kQcR8BFw3hNCiM=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=

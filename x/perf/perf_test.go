@@ -200,12 +200,15 @@ func BenchmarkInsert(b *testing.B) {
 			}
 
 			b.StopTimer()
+			defer b.StartTimer()
+
 			if u, ok := t.(*bvh.T); ok {
 				b.ReportMetric(u.SAH(), "SAH")
 				b.ReportMetric(u.LeafSize(), "LeafSize")
 				b.ReportMetric(float64(u.H()), "H")
+			} else if u, ok := t.(*briannoyama.BVH); ok {
+				b.ReportMetric(u.SAH(), "SAH")
 			}
-			defer b.StartTimer()
 		})
 	}
 }
