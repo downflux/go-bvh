@@ -118,6 +118,11 @@ func BenchmarkBroadPhase(b *testing.B) {
 			for i := vector.D(0); i < c.k; i++ {
 				vmax[i] = math.Pow(5*float64(c.n)*f, 1./float64(c.k))
 			}
+			// N.B.: q is a constant fractional area of the overall
+			// scene. This means that on average, the fraction of
+			// objects covered by this rectangle remains constant,
+			// and as such, we expect this benchmark to also scale
+			// linearly with N.
 			q := *hyperrectangle.New(vmin, vmax)
 
 			configs = append(configs, config{
