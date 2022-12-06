@@ -31,11 +31,12 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 				}
 			}
 		} else {
-			if !hyperrectangle.Disjoint(q, m.Left().AABB().R()) {
-				open.Push(m.Left())
+			l, r := m.Left(), m.Right()
+			if !hyperrectangle.Disjoint(q, l.AABB().R()) {
+				open.Push(l)
 			}
-			if !hyperrectangle.Disjoint(q, m.Right().AABB().R()) {
-				open.Push(m.Right())
+			if !hyperrectangle.Disjoint(q, r.AABB().R()) {
+				open.Push(r)
 			}
 		}
 	}
