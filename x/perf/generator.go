@@ -51,7 +51,7 @@ func GenerateRandomTiles(n int, k vector.D) map[id.ID]hyperrectangle.R {
 	runtime.MemProfileRate = 0
 	defer func() { runtime.MemProfileRate = 512 * 1024 }()
 
-	tiles := grid(0, int(math.Pow(5*float64(n), 1.0/float64(k))), k)
+	tiles := grid(0, int(math.Ceil(math.Pow(5*float64(n), 1.0/float64(k)))), k)
 	rand.Shuffle(len(tiles), func(i, j int) { tiles[i], tiles[j] = tiles[j], tiles[i] })
 
 	aabbs := make(map[id.ID]hyperrectangle.R, n)
