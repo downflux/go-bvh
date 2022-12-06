@@ -1,14 +1,16 @@
 package node
 
-func New(k vector.D, n int, tolerance float64, x id.ID) *N {
+import (
+	"fmt"
+
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
+)
+
+func New(k vector.D, n int, tolerance float64, x ID) *N {
 	if tolerance < 1 {
 		panic(fmt.Sprintf("cannot set expansion tolerance to be less than resultant AABB"))
 	}
-
-	aabb := *hyperrectangle.New(
-		vector.V(make([]float64, k)),
-		vector.V(make([]float64, k)),
-	)
 
 	return &N{
 		id: x,
@@ -17,9 +19,11 @@ func New(k vector.D, n int, tolerance float64, x id.ID) *N {
 		n:         n,
 		tolerance: tolerance,
 
-		aabbCache: aabb,
-
-		children: make([]*N, 0, n),
+		aabbCache: hyperrectangle.New(
+			vector.V(make([]float64, k)),
+			vector.V(make([]float64, k)),
+		).M(),
+		children: make(map[ID]*N, n),
 	}
 }
 

@@ -1,5 +1,14 @@
 package node
 
+import (
+	"math"
+
+	"github.com/downflux/go-bvh/y/id"
+	"github.com/downflux/go-bvh/y/internal/heuristic"
+	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
+)
+
 // Update makes the node up-to-date. This function assumes the child nodes are
 // also up-to-date.
 func Update(n *N, data map[id.ID]hyperrectangle.R) {
@@ -30,15 +39,15 @@ func Update(n *N, data map[id.ID]hyperrectangle.R) {
 	} else {
 		aabb.Copy(data[n.leaf])
 
-		tmin, tmax := aabb.Min(), aabb.Max()
-		f := math.Pow(n.tolerance, 1/float64(k))
+		f := math.Pow(n.tolerance, 1/float64(n.k))
 
-		for i := vector.D(0); i < k; i++ {
+		tmin, tmax := aabb.Min(), aabb.Max()
+		for i := vector.D(0); i < n.k; i++ {
 			delta := tmax[i] - tmin[i]
-			offset := delta * (n.tolerance - 1) / 2
+			offset := delta * (f - 1) / 2
 			tmin[i] = tmin[i] - offset
 			tmax[i] = tmax[i] + offset
 		}
 	}
-	heuristic.H(aabb.R())
+	heuristic.N(aabb.R())
 }
