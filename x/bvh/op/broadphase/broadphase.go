@@ -4,7 +4,6 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
-	"github.com/downflux/go-bvh/x/internal/stack"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
@@ -18,12 +17,14 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 		return []id.ID{}
 	}
 
-	open := stack.New(make([]node.N, 0, 128))
-	open.Push(n)
+	open := make([]node.N, 0, 128)
+	open = append(open, n)
 
 	ids := make([]id.ID, 0, 128)
 
-	for m, ok := open.Pop(); ok; m, ok = open.Pop() {
+	var m node.N
+	for len(open) > 0 {
+		m, open = open[len(open)-1], open[:len(open)-1]
 		if m.IsLeaf() {
 			for x := range m.Leaves() {
 				if !hyperrectangle.Disjoint(q, data[x]) {
@@ -33,10 +34,10 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 		} else {
 			l, r := m.Left(), m.Right()
 			if !hyperrectangle.Disjoint(q, l.AABB().R()) {
-				open.Push(l)
+				open = append(open, l)
 			}
 			if !hyperrectangle.Disjoint(q, r.AABB().R()) {
-				open.Push(r)
+				open = append(open, r)
 			}
 		}
 	}
