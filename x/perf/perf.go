@@ -40,7 +40,7 @@ func (s PerfTestSize) N() []int {
 	return map[PerfTestSize][]int{
 		SizeLarge: []int{1e3, 1e6, 1e8},
 		SizeSmall: []int{1e5, 1e6},
-		SizeUnit:  []int{1e3, 1e4, 1e5},
+		SizeUnit:  []int{1e3, 1e4},
 	}[s]
 }
 
@@ -56,7 +56,7 @@ func (s PerfTestSize) LeafSize() []uint {
 	return map[PerfTestSize][]uint{
 		SizeLarge: []uint{2, 4, 8, 16, 32, 64},
 		SizeSmall: []uint{2, 4, 8, 16},
-		SizeUnit:  []uint{2},
+		SizeUnit:  []uint{2, 4},
 	}[s]
 }
 
