@@ -20,4 +20,4 @@ jobs:
         go-version: 1.19
 
     - name: Test github.com/downflux/go-bvh
-      run: go test github.com/downflux/go-bvh/... -run ^$ -bench . -benchmem
+      run: go test github.com/downflux/go-bvh/x/... -run ^$ -bench . -benchmem
