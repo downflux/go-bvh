@@ -20,16 +20,14 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 	open := make([]node.N, 0, 128)
 	open = append(open, n)
 
-	ids := make([]id.ID, 0, 128)
+	candidates := make([]id.ID, 0, 128)
 
 	var m node.N
 	for len(open) > 0 {
 		m, open = open[len(open)-1], open[:len(open)-1]
 		if m.IsLeaf() {
 			for x := range m.Leaves() {
-				if !hyperrectangle.Disjoint(q, data[x]) {
-					ids = append(ids, x)
-				}
+				candidates = append(candidates, x)
 			}
 		} else {
 			l, r := m.Left(), m.Right()
@@ -39,6 +37,13 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 			if !hyperrectangle.Disjoint(q, r.AABB().R()) {
 				open = append(open, r)
 			}
+		}
+	}
+
+	ids := make([]id.ID, 0, len(candidates))
+	for _, x := range candidates {
+		if !hyperrectangle.Disjoint(q, data[x]) {
+			ids = append(ids, x)
 		}
 	}
 
