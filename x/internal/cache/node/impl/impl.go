@@ -307,8 +307,25 @@ func (n *N) Parent() node.N {
 	return m
 }
 
-func (n *N) Left() node.N  { return n.Child(branch.BLeft) }
-func (n *N) Right() node.N { return n.Child(branch.BRight) }
+func (n *N) Left() node.N {
+	if !n.IsAllocated() {
+		panic("accessing an unallocated node")
+	}
+	if m, ok := n.cache.Get(n.ids[idLeft]); ok {
+		return m
+	}
+	return nil
+}
+
+func (n *N) Right() node.N {
+	if !n.IsAllocated() {
+		panic("accessing an unallocated node")
+	}
+	if m, ok := n.cache.Get(n.ids[idRight]); ok {
+		return m
+	}
+	return nil
+}
 
 func (n *N) SetParent(x cid.ID) {
 	if !n.IsAllocated() {
