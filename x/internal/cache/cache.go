@@ -10,19 +10,11 @@ import (
 	cid "github.com/downflux/go-bvh/x/internal/cache/id"
 )
 
-type N interface {
-	node.N
-
-	Allocate(parent cid.ID, left cid.ID, right cid.ID)
-	Free()
-	IsAllocated() bool
-}
-
 type C struct {
 	k        vector.D
 	leafSize int
 
-	data  []N
+	data  []node.N
 	freed []cid.ID
 }
 
@@ -44,7 +36,7 @@ func New(o O) *C {
 		k:        o.K,
 		leafSize: o.LeafSize,
 
-		data:  make([]N, 0, 1024),
+		data:  make([]node.N, 0, 1024),
 		freed: make([]cid.ID, 0, 1024),
 	}
 }
