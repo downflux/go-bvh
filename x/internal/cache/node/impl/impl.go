@@ -126,8 +126,7 @@ func (n *N) Free() {
 }
 
 func (n *N) IsAllocated() bool { return n != nil && n.isAllocated }
-
-func (n *N) ID() cid.ID { return n.ids[idSelf] }
+func (n *N) ID() cid.ID        { return n.ids[idSelf] }
 
 func (n *N) IsRoot() bool {
 	_, ok := n.cache.Get(n.ids[idParent])
@@ -136,9 +135,8 @@ func (n *N) IsRoot() bool {
 
 func (n *N) Heuristic() float64     { return n.heuristicCache }
 func (n *N) SetHeuristic(a float64) { n.heuristicCache = a }
-
-func (n *N) Height() int     { return n.heightCache }
-func (n *N) SetHeight(h int) { n.heightCache = h }
+func (n *N) Height() int            { return n.heightCache }
+func (n *N) SetHeight(h int)        { n.heightCache = h }
 
 // IsLeaf returns if the current node has no valid children.
 //
