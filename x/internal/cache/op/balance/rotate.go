@@ -18,6 +18,17 @@ const (
 	rtypeDF
 )
 
+func Rotate(x node.N) node.N { return rotate(x, true) }
+
+// RotateNoDF applies a tree cost minimization op as per Rotate, but skips the
+//
+// D -> F and
+// D -> G
+//
+// checks. These checks are expensive and cause slow inserts, and at the same
+// time, does not seem to give an appreciable broadphase speedup.
+func RotateNoDF(x node.N) node.N { return rotate(x, false) }
+
 // Rotate returns a valid rotation which will not unbalance our BVH tree.
 //
 // The list of rotations to be considered is taken from Kopta et al. 2012.
@@ -53,7 +64,7 @@ const (
 //	H(A.L) + H(A.R)
 //
 // to change.
-func Rotate(x node.N) node.N {
+func rotate(x node.N, df bool) node.N {
 	if x.Height() < 2 {
 		return x
 	}
@@ -108,7 +119,8 @@ func Rotate(x node.N) node.N {
 			r.rtype = rtypeBF
 		}
 	}
-	if !b.IsLeaf() && !c.IsLeaf() {
+
+	if df && !b.IsLeaf() && !c.IsLeaf() {
 		if ok, i := mergeDF(d, e, f, g, buf); ok && i < h {
 			h = i
 			r.source = d

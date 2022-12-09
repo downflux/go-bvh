@@ -17,7 +17,7 @@ var (
 	Default = O{
 		Candidate: candidate.Guttman,
 		Split:     split.GuttmanLinear,
-		Balance:   balance.BrianNoyama,
+		Balance:   balance.BrianNoyamaNoDF,
 	}
 )
 

@@ -15,6 +15,7 @@ import (
 
 var (
 	_ B = Rotate
+	_ B = RotateNoDF
 )
 
 func TestRotate(t *testing.T) {
