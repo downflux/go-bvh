@@ -5,7 +5,6 @@ package node
 import (
 	"fmt"
 	"math"
-	"sync"
 
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache/branch"
@@ -17,9 +16,9 @@ import (
 )
 
 type N interface {
-	// RW functions. These are only called by the cache. We do not want to
-	// specify another interface type RW for cache storage, as the convI2I
-	// call is very expensive (~10% insert runtime).
+	// Custom allocator functions. These are only called by the cache. We do
+	// not want to specify another interface type RW for cache storage, as
+	// the convI2I call is very expensive (~10% insert runtime).
 	Allocate(parent cid.ID, left cid.ID, right cid.ID)
 	Free()
 	IsAllocated() bool
@@ -76,41 +75,15 @@ func Union(data map[id.ID]hyperrectangle.R, xs ...id.ID) hyperrectangle.R {
 		vector.V(make([]float64, k)),
 	).M()
 
-	if len(xs) < 8 {
-		var initialized bool
-		for _, x := range xs {
-			if !initialized {
-				initialized = true
-				buf.Copy(data[x])
-			} else {
-				buf.Union(data[x])
-			}
+	var initialized bool
+	for _, x := range xs {
+		if !initialized {
+			initialized = true
+			buf.Copy(data[x])
+		} else {
+			buf.Union(data[x])
 		}
-		return buf.R()
 	}
-	lbuf := hyperrectangle.New(
-		vector.V(make([]float64, k)),
-		vector.V(make([]float64, k)),
-	).M()
-	rbuf := hyperrectangle.New(
-		vector.V(make([]float64, k)),
-		vector.V(make([]float64, k)),
-	).M()
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		lbuf.Copy(Union(data, xs[:len(xs)/2]...))
-	}()
-	go func() {
-		defer wg.Done()
-		rbuf.Copy(Union(data, xs[len(xs)/2+1:]...))
-	}()
-	wg.Wait()
-
-	buf.Copy(lbuf.R())
-	buf.Union(rbuf.R())
 	return buf.R()
 }
 
@@ -145,10 +118,9 @@ func SetAABB(n N, data map[id.ID]hyperrectangle.R, tolerance float64) {
 	tmin, tmax := target.Min(), target.Max()
 	for i := vector.D(0); i < k; i++ {
 		d := tmax[i] - tmin[i]
-		offset := (epsilon*d - d) / 2
+		offset := d * (epsilon - 1) / 2
 		tmin[i] = tmin[i] - offset
-		tmax[i] = tmax[i] - offset
+		tmax[i] = tmax[i] + offset
 	}
-	target.Scale(epsilon)
 	n.SetHeuristic(heuristic.H(target.R()))
 }
