@@ -127,64 +127,24 @@ func (n *N) Free() {
 
 func (n *N) IsAllocated() bool { return n != nil && n.isAllocated }
 
-func (n *N) ID() cid.ID {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
-	return n.ids[idSelf]
-}
+func (n *N) ID() cid.ID { return n.ids[idSelf] }
 
 func (n *N) IsRoot() bool {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
 	_, ok := n.cache.Get(n.ids[idParent])
 	return !ok
 }
 
-func (n *N) Heuristic() float64 {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
+func (n *N) Heuristic() float64     { return n.heuristicCache }
+func (n *N) SetHeuristic(a float64) { n.heuristicCache = a }
 
-	return n.heuristicCache
-}
-
-func (n *N) SetHeuristic(a float64) {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
-	n.heuristicCache = a
-}
-
-func (n *N) Height() int {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
-	return n.heightCache
-}
-
-func (n *N) SetHeight(h int) {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
-	n.heightCache = h
-}
+func (n *N) Height() int     { return n.heightCache }
+func (n *N) SetHeight(h int) { n.heightCache = h }
 
 // IsLeaf returns if the current node has no valid children.
 //
 // N.B.: A valid BVH tree must have either both children be valid, or no valid
 // children (and contain only data). We are not checking the right child here.
 func (n *N) IsLeaf() bool {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
 	// N.B.: This check only checks if the ID is set to IDInvalid.
 	// Checking for cache existence is slow.
 	//
@@ -194,10 +154,6 @@ func (n *N) IsLeaf() bool {
 }
 
 func (n *N) IsFull() bool {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
 	if !n.IsLeaf() {
 		panic(fmt.Sprintf("internal node %v does not have a data cache size", n.ID()))
 	}
@@ -221,29 +177,13 @@ func (n *N) IsFull() bool {
 // To test for membership, use
 //
 //	if _, ok := n.Data()[x]; ok { ... }
-func (n *N) Leaves() map[id.ID]struct{} {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
-	return n.dataCache
-}
+func (n *N) Leaves() map[id.ID]struct{} { return n.dataCache }
 
 // AABB returns the bounding box of the node. This bounding box may be mutated
 // by the caller.
-func (n *N) AABB() hyperrectangle.M {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
-	return n.aabbCache
-}
+func (n *N) AABB() hyperrectangle.M { return n.aabbCache }
 
 func (n *N) Child(b branch.B) node.N {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
 	if !b.IsValid() {
 		panic(fmt.Sprintf("invalid branch %v", b))
 	}
@@ -263,10 +203,6 @@ func (n *N) Child(b branch.B) node.N {
 }
 
 func (n *N) SetChild(b branch.B, x cid.ID) {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
 	if !b.IsValid() {
 		panic(fmt.Sprintf("invalid branch %v", b))
 	}
@@ -281,10 +217,6 @@ func (n *N) SetChild(b branch.B, x cid.ID) {
 
 // Branch returns the branch of the input child in relation to the current node.
 func (n *N) Branch(x cid.ID) branch.B {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
 	switch x {
 	case n.ids[idLeft]:
 		return branch.BLeft
@@ -296,10 +228,6 @@ func (n *N) Branch(x cid.ID) branch.B {
 }
 
 func (n *N) Parent() node.N {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
 	m, ok := n.cache.Get(n.ids[idParent])
 	if !ok {
 		return nil
@@ -308,9 +236,6 @@ func (n *N) Parent() node.N {
 }
 
 func (n *N) Left() node.N {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
 	if m, ok := n.cache.Get(n.ids[idLeft]); ok {
 		return m
 	}
@@ -318,22 +243,12 @@ func (n *N) Left() node.N {
 }
 
 func (n *N) Right() node.N {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
 	if m, ok := n.cache.Get(n.ids[idRight]); ok {
 		return m
 	}
 	return nil
 }
 
-func (n *N) SetParent(x cid.ID) {
-	if !n.IsAllocated() {
-		panic("accessing an unallocated node")
-	}
-
-	n.ids[idParent] = x
-}
-
-func (n *N) SetLeft(x cid.ID)  { n.SetChild(branch.BLeft, x) }
-func (n *N) SetRight(x cid.ID) { n.SetChild(branch.BRight, x) }
+func (n *N) SetParent(x cid.ID) { n.ids[idParent] = x }
+func (n *N) SetLeft(x cid.ID)   { n.SetChild(branch.BLeft, x) }
+func (n *N) SetRight(x cid.ID)  { n.SetChild(branch.BRight, x) }
