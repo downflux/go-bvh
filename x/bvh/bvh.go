@@ -5,6 +5,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/bvh/op/broadphase"
 	"github.com/downflux/go-bvh/x/bvh/op/insert"
+	"github.com/downflux/go-bvh/x/bvh/op/remove"
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node/util"
@@ -25,6 +26,7 @@ type T struct {
 	tolerance float64
 
 	insert insert.O
+	remove remove.O
 }
 
 type O struct {
@@ -51,6 +53,7 @@ func New(o O) *T {
 		tolerance: o.Tolerance,
 
 		insert: insert.Default,
+		remove: remove.Default,
 	}
 }
 
@@ -123,5 +126,38 @@ func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
 	return broadphase.BroadPhase(t.c, t.root, t.data, q)
 }
 
-func (t *T) Update(x id.ID, aabb hyperrectangle.R) error { return nil }
-func (t *T) Remove(x id.ID) error                        { return nil }
+func (t *T) Update(x id.ID, aabb hyperrectangle.R) error {
+	if _, ok := t.data[x]; !ok {
+		return fmt.Errorf("cannot update a non-existent node %v", x)
+	}
+
+	n := t.c.GetOrDie(t.nodes[x])
+	if !hyperrectangle.Contains(n.AABB().R(), aabb) {
+		if err := t.Remove(x); err != nil {
+			return fmt.Errorf("cannot update node %v: %v", x, err)
+		}
+		if err := t.Insert(x, aabb); err != nil {
+			return fmt.Errorf("cannot update node %v: %v", x, err)
+		}
+	} else {
+		t.data[x] = aabb
+	}
+
+	return nil
+}
+
+func (t *T) Remove(x id.ID) error {
+	if _, ok := t.data[x]; !ok {
+		return fmt.Errorf("cannot remove a non-existent node %v", x)
+	}
+
+	root := t.remove.Remove(
+		t.c, t.data, t.nodes[x], x, t.tolerance,
+	)
+	t.root = root.ID()
+
+	delete(t.nodes, x)
+	delete(t.data, x)
+
+	return nil
+}

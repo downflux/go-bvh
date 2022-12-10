@@ -37,4 +37,11 @@ func main() {
 	for _, x := range t.BroadPhase(q) {
 		fmt.Printf("ID = %v intersects with the query AABB\n", x)
 	}
+
+	t.Remove(101)
+	t.Update(102, *hyperrectangle.New(vector.V{9, 9}, vector.V{9.1, 9.1}))
+
+	for _, x := range t.BroadPhase(q) {
+		fmt.Printf("ID = %v intersects with the query AABB after modifications\n", x)
+	}
 }

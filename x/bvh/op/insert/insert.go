@@ -66,7 +66,6 @@ func (o O) Insert(c *cache.C, rid cid.ID, data map[id.ID]hyperrectangle.R, x id.
 	// At this point in execution, all leaf nodes have updated caches. As we
 	// traverse up to the root, we will incrementally rebalance the trees.
 	for m := s; m != nil; m = m.Parent() {
-
 		if !m.IsLeaf() {
 			node.SetAABB(m, nil, 1)
 			node.SetHeight(m)
