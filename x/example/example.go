@@ -29,7 +29,6 @@ func main() {
 	for x, aabb := range data {
 		fmt.Printf("Adding ID = %v, AABB = %v\n", x, aabb)
 		t.Insert(x, aabb)
-		fmt.Printf("DEBUG(example.go): Tree:\n%v\n", t.S())
 	}
 
 	q := *hyperrectangle.New(vector.V{10, 10}, vector.V{50, 50})
