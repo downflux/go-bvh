@@ -14,7 +14,7 @@ type C struct {
 	k        vector.D
 	leafSize int
 
-	data  []node.N
+	data  []*impl.N
 	freed []cid.ID
 }
 
@@ -36,7 +36,7 @@ func New(o O) *C {
 		k:        o.K,
 		leafSize: o.LeafSize,
 
-		data:  make([]node.N, 0, 1024),
+		data:  make([]*impl.N, 0, 1024),
 		freed: make([]cid.ID, 0, 1024),
 	}
 }

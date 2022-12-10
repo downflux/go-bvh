@@ -16,13 +16,6 @@ import (
 )
 
 type N interface {
-	// Custom allocator functions. These are only called by the cache. We do
-	// not want to specify another interface type RW for cache storage, as
-	// the convI2I call is very expensive (~10% insert runtime).
-	Allocate(parent cid.ID, left cid.ID, right cid.ID)
-	Free()
-	IsAllocated() bool
-
 	ID() cid.ID
 
 	IsRoot() bool
