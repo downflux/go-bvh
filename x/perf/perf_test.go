@@ -52,14 +52,16 @@ func generate() []c {
 					k:    k,
 					load: load,
 				},
-				c{
+			)
+			if k == 3 {
+				cs = append(cs, c{
 					name: fmt.Sprintf("briannoyama/K=%v/N=%v", k, n),
 					t:    func() container.C { return briannoyama.New() },
 					n:    n,
 					k:    k,
 					load: load,
-				},
-			)
+				})
+			}
 
 			for _, size := range suite.LeafSize() {
 				k := k
@@ -150,6 +152,45 @@ func BenchmarkBroadPhase(b *testing.B) {
 
 			for i := 0; i < b.N; i++ {
 				t.BroadPhase(c.q)
+			}
+		})
+	}
+}
+
+func BenchmarkRemove(b *testing.B) {
+	type config struct {
+		name string
+		t    func() container.C
+		k    vector.D
+		load []id.ID
+	}
+
+	tiles := GenerateRandomTiles(n, k)
+
+	configs := []config{
+		{
+			name: 
+		},
+	}
+
+	for _, c := range configs {
+		b.Run(c.name, func(b *testing.B) {
+			t := c.t()
+			data := func() []id.ID {
+				b.StopTimer()
+				runtime.MemProfileRate = 0
+				defer func() { runtime.MemProfileRate = 512 * 1024 }()
+				defer b.StartTimer()
+
+				Insert(t, c.load)
+
+				data := make([]id.ID, 0, b.N)
+				for c.load
+				offset := id.ID(len(c.load))
+				for x, aabb := range GenerateRandomTiles(b.N, c.k) {
+					data = append(data, obj{id: x + offset, aabb: aabb})
+				}
+				return data
 			}
 		})
 	}
