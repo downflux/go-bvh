@@ -38,8 +38,12 @@ func main() {
 		fmt.Printf("ID = %v intersects with the query AABB\n", x)
 	}
 
+	fmt.Printf("Remove ID = %v, AABB = %v\n", 101, data[101])
 	t.Remove(101)
-	t.Update(102, *hyperrectangle.New(vector.V{9, 9}, vector.V{9.1, 9.1}))
+
+	target := *hyperrectangle.New(vector.V{9, 9}, vector.V{9.1, 9.1})
+	fmt.Printf("Move ID = %v from AABB = %v to %v\n", 102, data[101], target)
+	t.Update(102, target)
 
 	for _, x := range t.BroadPhase(q) {
 		fmt.Printf("ID = %v intersects with the query AABB after modifications\n", x)
