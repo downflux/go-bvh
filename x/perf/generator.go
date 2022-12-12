@@ -78,6 +78,18 @@ func GenerateRandomBoxes(n int, k vector.D, min float64, max float64) map[id.ID]
 
 type F func(c container.C) error
 
+func GenerateRemoveLoad(n int, offset int, c container.C, k vector.D) []F {
+	ops := make([]F, 0, n)
+	for x, aabb := range GenerateRandomTiles(n, k) {
+		x, aabb := x, aabb
+		c.Insert(x+id.ID(offset), aabb)
+		ops = append(ops, func(c container.C) error {
+			return c.Remove(x + id.ID(offset))
+		})
+	}
+	return ops
+}
+
 func GenerateInsertLoad(n int, offset int, k vector.D) []F {
 	ops := make([]F, 0, n)
 	for x, aabb := range GenerateRandomTiles(n, k) {

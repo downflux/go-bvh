@@ -215,3 +215,58 @@ func BenchmarkInsert(b *testing.B) {
 		})
 	}
 }
+
+func BenchmarkRemove(b *testing.B) {
+	type config struct {
+		name string
+		t    func() container.C
+		k    vector.D
+		load []F
+	}
+
+	configs := []config{}
+
+	for _, c := range generate() {
+		configs = append(configs, config{
+			name: c.name,
+			t:    c.t,
+			k:    c.k,
+			load: c.load,
+		})
+	}
+
+	for _, c := range configs {
+		b.Run(c.name, func(b *testing.B) {
+			t := c.t()
+			load := func() []F {
+				b.StopTimer()
+				runtime.MemProfileRate = 0
+				defer func() { runtime.MemProfileRate = 512 * 1024 }()
+				defer b.StartTimer()
+
+				for _, f := range c.load {
+					f(t)
+				}
+
+				return GenerateRemoveLoad(b.N, len(c.load), t, c.k)
+			}()
+
+			for i := 0; i < b.N; i++ {
+				if err := load[i](t); err != nil {
+					b.Errorf("Remove() = %v, want = nil", err)
+				}
+			}
+
+			b.StopTimer()
+			defer b.StartTimer()
+
+			if u, ok := t.(*bvh.T); ok {
+				b.ReportMetric(u.SAH(), "SAH")
+				b.ReportMetric(u.LeafSize(), "LeafSize")
+				b.ReportMetric(float64(u.H()), "H")
+			} else if u, ok := t.(*briannoyama.BVH); ok {
+				b.ReportMetric(u.SAH(), "SAH")
+			}
+		})
+	}
+}
