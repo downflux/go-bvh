@@ -88,3 +88,27 @@ func GenerateInsertLoad(n int, offset int, k vector.D) []F {
 	}
 	return ops
 }
+
+func GenerateBroadPhaseLoad(n int, f float64, k vector.D) []F {
+	vmin := make([]float64, k)
+	vmax := make([]float64, k)
+	for i := vector.D(0); i < k; i++ {
+		vmax[i] = math.Pow(5*float64(n)*f, 1./float64(k))
+	}
+
+	// N.B.: q is a constant fractional area of the overall scene. This
+	// means that on average, the fraction of objects covered by this
+	// rectangle remains constant, and as such, we expect this benchmark to
+	// also scale linearly with N.
+	q := *hyperrectangle.New(vmin, vmax)
+	q.M().Union(q)
+
+	ops := make([]F, 0, n)
+	for i := 0; i < n; i++ {
+		ops = append(ops, func(c container.C) error {
+			c.BroadPhase(q)
+			return nil
+		})
+	}
+	return ops
+}
