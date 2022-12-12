@@ -6,6 +6,7 @@ import (
 
 	"github.com/downflux/go-bvh/bvh/op/broadphase"
 	"github.com/downflux/go-bvh/bvh/op/insert"
+	"github.com/downflux/go-bvh/bvh/op/query"
 	"github.com/downflux/go-bvh/bvh/op/remove"
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/cache"
@@ -143,6 +144,13 @@ func (t *T) Remove(x id.ID) error {
 	return nil
 }
 
+// BroadPhase finds all objects which intersect with the given input AABB.
 func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
 	return broadphase.BroadPhase(t.c, t.root, t.data, q)
+}
+
+// Query finds all objects which passes the input filtering function. BroadPhase
+// is a special case of the Query function.
+func (t *T) Query(f func(r hyperrectangle.R) bool) []id.ID {
+	return query.Query(t.c, t.root, t.data, f)
 }

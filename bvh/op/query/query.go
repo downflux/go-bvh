@@ -1,8 +1,4 @@
-// Package broadphase applies the AABB intersection check on the BVH tree.
-//
-// N.B.: This function is identical in implementation to the BVH query op, but
-// is rewritten here to preserve performance.
-package broadphase
+package query
 
 import (
 	"github.com/downflux/go-bvh/id"
@@ -13,9 +9,7 @@ import (
 	cid "github.com/downflux/go-bvh/internal/cache/id"
 )
 
-// BroadPhase checks a BVH tree for the query rectangle and returns a list of
-// objects which touch the query AABB.
-func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hyperrectangle.R) []id.ID {
+func Query(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, f func(r hyperrectangle.R) bool) []id.ID {
 	n, ok := c.Get(root)
 	if !ok {
 		return []id.ID{}
@@ -35,10 +29,10 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 			}
 		} else {
 			l, r := m.Left(), m.Right()
-			if !hyperrectangle.Disjoint(q, l.AABB().R()) {
+			if !f(l.AABB().R()) {
 				open = append(open, l)
 			}
-			if !hyperrectangle.Disjoint(q, r.AABB().R()) {
+			if !f(r.AABB().R()) {
 				open = append(open, r)
 			}
 		}
@@ -46,10 +40,11 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 
 	ids := make([]id.ID, 0, len(candidates))
 	for _, x := range candidates {
-		if !hyperrectangle.Disjoint(q, data[x]) {
+		if !f(data[x]) {
 			ids = append(ids, x)
 		}
 	}
 
 	return ids
+
 }
