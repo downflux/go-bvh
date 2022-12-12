@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/downflux/go-bvh/x/bvh"
-	"github.com/downflux/go-bvh/x/perf/size"
 	"github.com/downflux/go-bvh/x/container"
 	"github.com/downflux/go-bvh/x/container/briannoyama"
 	"github.com/downflux/go-bvh/x/container/bruteforce"
 	"github.com/downflux/go-bvh/x/container/dhconnelly"
+	"github.com/downflux/go-bvh/x/perf/size"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 )

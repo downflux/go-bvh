@@ -46,8 +46,8 @@ func (s PerfTestSize) N() []int {
 
 func (s PerfTestSize) F() []float64 {
 	return map[PerfTestSize][]float64{
-		SizeLarge: []float64{0.05},
-		SizeSmall: []float64{0.05},
+		SizeLarge: []float64{0.05, 0.1, 0.25},
+		SizeSmall: []float64{0.05, 0.1},
 		SizeUnit:  []float64{0.05},
 	}[s]
 }
@@ -56,14 +56,14 @@ func (s PerfTestSize) LeafSize() []uint {
 	return map[PerfTestSize][]uint{
 		SizeLarge: []uint{2, 4, 8, 16, 32, 64},
 		SizeSmall: []uint{2, 4, 8, 16},
-		SizeUnit:  []uint{2, 4},
+		SizeUnit:  []uint{2},
 	}[s]
 }
 
 func (s PerfTestSize) K() []vector.D {
 	return map[PerfTestSize][]vector.D{
-		SizeLarge: []vector.D{3},
-		SizeSmall: []vector.D{3},
-		SizeUnit:  []vector.D{3},
+		SizeLarge: []vector.D{2, 3, 10, 25},
+		SizeSmall: []vector.D{2, 3, 10},
+		SizeUnit:  []vector.D{2, 3},
 	}[s]
 }
