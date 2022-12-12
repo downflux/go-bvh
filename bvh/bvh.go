@@ -1,3 +1,4 @@
+// Package BVH implements an AABB-backed BVH tree.
 package bvh
 
 import (
@@ -8,7 +9,6 @@ import (
 	"github.com/downflux/go-bvh/bvh/op/remove"
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/cache"
-	"github.com/downflux/go-bvh/internal/cache/node/util"
 	"github.com/downflux/go-bvh/internal/cache/node/util/metrics"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
@@ -30,8 +30,12 @@ type T struct {
 }
 
 type O struct {
-	K         vector.D
-	LeafSize  int
+	K        vector.D
+	LeafSize int
+
+	// Tolerance specifies the bounding buffer width around leaf nodes as a
+	// percentage of the volume of the AABB. This value must be greater than
+	// one (as the resultant AABB must encapsulate the leaf).
 	Tolerance float64
 }
 
@@ -57,6 +61,8 @@ func New(o O) *T {
 	}
 }
 
+// SAH returns the surface area heuristic as defined by MacDonald and Booth
+// 1990. The heuristic constants are set to the values specified in Aila et al.
 func (t *T) SAH() float64 {
 	n, ok := t.c.Get(t.root)
 	if !ok {
@@ -66,34 +72,6 @@ func (t *T) SAH() float64 {
 	return metrics.SAH(n)
 }
 
-func (t *T) S() string {
-	n, ok := t.c.Get(t.root)
-	if !ok {
-		return ""
-	}
-
-	return util.S(n)
-}
-
-func (t *T) LeafSize() float64 {
-	n, ok := t.c.Get(t.root)
-	if !ok {
-		return 0
-	}
-
-	return metrics.LeafSize(n)
-}
-
-func (t *T) H() int {
-	n, ok := t.c.Get(t.root)
-	if !ok {
-		return 0
-	}
-	return n.Height()
-}
-
-func (t *T) K() vector.D { return t.c.K() }
-
 func (t *T) IDs() []id.ID {
 	ids := make([]id.ID, 0, len(t.data))
 	for x := range t.data {
@@ -102,6 +80,10 @@ func (t *T) IDs() []id.ID {
 	return ids
 }
 
+// Insert adds a new AABB into the BVH. The specific data structure which tracks
+// this AABB is managed by the user (external to this library). After the AABB
+// is mutated (e.g. during a simulation tick), the user must call Update to
+// ensure the tree remains valid.
 func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 	if _, ok := t.data[x]; ok {
 		return fmt.Errorf("cannot insert a duplicate node %v", x)
@@ -122,10 +104,9 @@ func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 	return nil
 }
 
-func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
-	return broadphase.BroadPhase(t.c, t.root, t.data, q)
-}
-
+// Update will move a corresponding object. Depending on the BVH tolerance and
+// how fast an object is moving, we would expect this function to filter out a
+// large number of Delete and subsequent Insert calls.
 func (t *T) Update(x id.ID, aabb hyperrectangle.R) error {
 	if _, ok := t.data[x]; !ok {
 		return fmt.Errorf("cannot update a non-existent node %v", x)
@@ -160,4 +141,8 @@ func (t *T) Remove(x id.ID) error {
 	delete(t.data, x)
 
 	return nil
+}
+
+func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
+	return broadphase.BroadPhase(t.c, t.root, t.data, q)
 }
