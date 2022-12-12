@@ -10,6 +10,7 @@ import (
 	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-bvh/x/internal/cache"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
+	"github.com/downflux/go-bvh/x/perf/size"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 
@@ -47,22 +48,17 @@ func BenchmarkS(b *testing.B) {
 	for l, s := range tests {
 		// For small leaf sizes, the iteration time is too fast, and the
 		// StopTimer / StartTimer invocations take too long.
-		for i := 4; i < j; i++ {
-			n := int(math.Pow(2, float64(i)))
+		for _, size := range size.SizeUnit.LeafSize() {
 			configs = append(configs, config{
-				name: fmt.Sprintf("%v/LeafSize=%v", l, n),
+				name: fmt.Sprintf("%v/LeafSize=%v", l, size),
 				s:    s,
-				size: n,
+				size: int(size),
 			})
 		}
 	}
 
 	for _, c := range configs {
 		b.Run(c.name, func(b *testing.B) {
-			// One measure of how effectively nodes are split is the
-			// rough size of the resultant AABB boxes -- ideally,
-			// the boxes should be of equivalent sizes.
-			var diff float64
 			for i := 0; i < b.N; i++ {
 				ch, n, m := func() (*cache.C, node.N, node.N) {
 					b.StopTimer()
@@ -89,22 +85,7 @@ func BenchmarkS(b *testing.B) {
 				}()
 
 				c.s(ch, data, n, m)
-
-				func() {
-					b.StopTimer()
-					defer b.StartTimer()
-
-					// Update AABBs of the nodes.
-					node.SetAABB(n, data, 1)
-					node.SetAABB(m, data, 1)
-
-					end := math.Abs(n.Heuristic() - m.Heuristic())
-					diff += end / (n.Heuristic() + m.Heuristic())
-				}()
 			}
-			// Track the left / right AABB heuristic balance as a
-			// result of the split. Lower is better.
-			b.ReportMetric(diff/float64(b.N)*100, "%")
 		})
 	}
 }
