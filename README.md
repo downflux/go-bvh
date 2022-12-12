@@ -12,14 +12,14 @@ t := bvh.New(bvh.O{
 
 t.Insert(100, *hyperrectangle.New(vector.V{0, 0}, vector.V{10, 10}))
 
-for _, x := range t.BroadPhase(*hyperrectangle.New(vector.V{9, 0}, vector.V{11, 1}) {
+for _, x := range t.BroadPhase(*hyperrectangle.New(vector.V{9, 0}, vector.V{11, 1})) {
 	fmt.Printf("ID %v overlaps query", x)
 }
 
 t.Update(100, *hyperrectangle.New(vector.V{0, 0}, vector.V{5, 10}))
 
 // No objects remain in the query rectangle.
-for _, x := range t.BroadPhase(*hyperrectangle.New(vector.V{9, 0}, vector.V{11, 1}) {
+for _, x := range t.BroadPhase(*hyperrectangle.New(vector.V{9, 0}, vector.V{11, 1})) {
 	fmt.Printf("ID %v overlaps query", x)
 }
 ```
