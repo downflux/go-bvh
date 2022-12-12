@@ -2,11 +2,11 @@ package candidate
 
 import (
 	"fmt"
-	"math"
 	"runtime"
 	"testing"
 
 	"github.com/downflux/go-bvh/x/internal/cache"
+	"github.com/downflux/go-bvh/x/perf/size"
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/op/candidate/perf"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
@@ -51,8 +51,7 @@ func BenchmarkC(b *testing.B) {
 			aabb:      *hyperrectangle.New(vector.V{0, 0}, vector.V{1, 1}),
 		},
 	}
-	for i := 4; i < 8; i++ {
-		n := int(math.Pow(10, float64(i)))
+	for _, n := range size.SizeUnit.N() {
 		scenarios = append(scenarios, scenario{
 			name:      fmt.Sprintf("Balanced/N=%v", n),
 			generator: func() (*cache.C, node.N) { return perf.Balanced(n) },
