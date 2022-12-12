@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/downflux/go-bvh/x/bvh"
+	"github.com/downflux/go-bvh/x/perf/size"
 	"github.com/downflux/go-bvh/x/container"
 	"github.com/downflux/go-bvh/x/container/briannoyama"
 	"github.com/downflux/go-bvh/x/container/bruteforce"
@@ -18,7 +19,7 @@ import (
 )
 
 var (
-	suite = SizeUnit
+	suite = size.SizeUnit
 )
 
 func TestMain(m *testing.M) {
@@ -201,17 +202,6 @@ func BenchmarkInsert(b *testing.B) {
 					b.Errorf("Insert() = %v, want = nil", err)
 				}
 			}
-
-			b.StopTimer()
-			defer b.StartTimer()
-
-			if u, ok := t.(*bvh.T); ok {
-				b.ReportMetric(u.SAH(), "SAH")
-				b.ReportMetric(u.LeafSize(), "LeafSize")
-				b.ReportMetric(float64(u.H()), "H")
-			} else if u, ok := t.(*briannoyama.BVH); ok {
-				b.ReportMetric(u.SAH(), "SAH")
-			}
 		})
 	}
 }
@@ -255,17 +245,6 @@ func BenchmarkRemove(b *testing.B) {
 				if err := load[i](t); err != nil {
 					b.Errorf("Remove() = %v, want = nil", err)
 				}
-			}
-
-			b.StopTimer()
-			defer b.StartTimer()
-
-			if u, ok := t.(*bvh.T); ok {
-				b.ReportMetric(u.SAH(), "SAH")
-				b.ReportMetric(u.LeafSize(), "LeafSize")
-				b.ReportMetric(float64(u.H()), "H")
-			} else if u, ok := t.(*briannoyama.BVH); ok {
-				b.ReportMetric(u.SAH(), "SAH")
 			}
 		})
 	}
