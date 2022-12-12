@@ -6,5 +6,5 @@ import (
 )
 
 var (
-	_ container.C = &bvh.BVH{}
+	_ container.C = &bvh.T{}
 )

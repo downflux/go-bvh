@@ -19,5 +19,6 @@ go tool cover -html=coverage.out
 1. Hedges, Lester. "AABB.cc." https://github.com/lohedges/aabbcc. 2021.
 1. MacDonald, J.D., and Kellogg Booth. "Heuristics for Tay Tracing Using Space Subdivision." https://graphicsinterface.org/wp-content/uploads/gi1989-22.pdf. 1990.
 1. Aila, et al. "On Quality Metrics of Bounding Volume Hierarchies." https://users.aalto.fi/~ailat1/publications/aila2013hpg_paper.pdf. 2013.
-1. Bittner, et al. "Fast Insertion-Based Optimization of Bounding Volume Hierarchies." https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.714.7132. 2013.
+1. Bittner, et al. "Fast Insertion-Based Optimization of Bounding Volume Hierarchies."  https://doi.org/10.1111/cgf.12000. 2013.
 1. Kopta, et al. "Fast, Effective BVH Updates for Animated Scenes." https://hwrt.cs.utah.edu/papers/hwrt_rotations.pdf. 2012.
+1. Guttman, Antonin. "R-trees: A Dynamic Index Structure for Spacial Searching." http://www-db.deis.unibo.it/courses/SI-LS/papers/Gut84.pdf. 1984.

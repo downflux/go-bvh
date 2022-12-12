@@ -2,188 +2,162 @@ package bvh
 
 import (
 	"fmt"
-	"log"
-	"sync"
 
+	"github.com/downflux/go-bvh/bvh/op/broadphase"
+	"github.com/downflux/go-bvh/bvh/op/insert"
+	"github.com/downflux/go-bvh/bvh/op/remove"
 	"github.com/downflux/go-bvh/id"
-	"github.com/downflux/go-bvh/internal/node"
-	"github.com/downflux/go-bvh/internal/node/op/insert"
-	"github.com/downflux/go-bvh/internal/node/op/remove"
-	"github.com/downflux/go-bvh/internal/node/util"
+	"github.com/downflux/go-bvh/internal/cache"
+	"github.com/downflux/go-bvh/internal/cache/node/util"
+	"github.com/downflux/go-bvh/internal/cache/node/util/metrics"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/vector"
 
-	bhr "github.com/downflux/go-bvh/hyperrectangle"
+	cid "github.com/downflux/go-bvh/internal/cache/id"
 )
 
+type T struct {
+	c    *cache.C
+	root cid.ID
+
+	nodes map[id.ID]cid.ID
+	data  map[id.ID]hyperrectangle.R
+
+	tolerance float64
+
+	insert insert.O
+	remove remove.O
+}
+
 type O struct {
-	Size   uint
-	Logger *log.Logger
+	K         vector.D
+	LeafSize  int
+	Tolerance float64
 }
 
-type M struct {
-	Height         uint
-	MaxImbalance   uint
-	SAH            float64
-	BalancePenalty float64
-	OverlapPenalty float64
-	LeafSize       float64
-}
+func New(o O) *T {
+	if o.Tolerance < 1 {
+		panic(fmt.Sprintf("cannot set tolerance factor %v < 1", o.Tolerance))
+	}
 
-// BVH is an AABB-backed bounded volume hierarchy. This struct does not store
-// any data associated with the AABBs aside from the object ID. The caller is
-// responsible for storing any data associated with the AABB (e.g. in a separate
-// map).
-type BVH struct {
-	lookup map[id.ID]*node.N
-	root   *node.N
-	size   uint
-	logger *log.Logger
+	return &T{
+		c: cache.New(cache.O{
+			K:        o.K,
+			LeafSize: o.LeafSize,
+		}),
 
-	l sync.RWMutex
-}
+		root: cid.IDInvalid,
 
-func New(o O) *BVH {
-	return &BVH{
-		lookup: map[id.ID]*node.N{},
-		size:   o.Size,
-		logger: o.Logger,
+		nodes:     make(map[id.ID]cid.ID, 1024),
+		data:      make(map[id.ID]hyperrectangle.R, 1024),
+		tolerance: o.Tolerance,
+
+		insert: insert.Default,
+		remove: remove.Default,
 	}
 }
 
-// updateNodeCache ensures that the underling nodes have an updated cache of
-// dynamically calculated properties. These cached properties may have been
-// invalidated upon a tree mutation. Explicitly generating the cache ensures we
-// can call read operations in parallel.
-//
-// We assume the write mutex is already held in this function.
-func (bvh *BVH) updateNodeCache() {
-	if bvh.root != nil {
-		bvh.root.AABB()
-		bvh.root.Height()
+func (t *T) SAH() float64 {
+	n, ok := t.c.Get(t.root)
+	if !ok {
+		return 0
 	}
+
+	return metrics.SAH(n)
 }
 
-func (bvh *BVH) IDs() []id.ID {
-	bvh.l.RLock()
-	defer bvh.l.RUnlock()
+func (t *T) S() string {
+	n, ok := t.c.Get(t.root)
+	if !ok {
+		return ""
+	}
 
-	ids := make([]id.ID, 0, len(bvh.lookup))
-	for x := range bvh.lookup {
+	return util.S(n)
+}
+
+func (t *T) LeafSize() float64 {
+	n, ok := t.c.Get(t.root)
+	if !ok {
+		return 0
+	}
+
+	return metrics.LeafSize(n)
+}
+
+func (t *T) H() int {
+	n, ok := t.c.Get(t.root)
+	if !ok {
+		return 0
+	}
+	return n.Height()
+}
+
+func (t *T) K() vector.D { return t.c.K() }
+
+func (t *T) IDs() []id.ID {
+	ids := make([]id.ID, 0, len(t.data))
+	for x := range t.data {
 		ids = append(ids, x)
 	}
 	return ids
 }
 
-func (bvh *BVH) Report() M {
-	bvh.l.RLock()
-	defer bvh.l.RUnlock()
-
-	return M{
-		Height:         bvh.root.Height(),
-		MaxImbalance:   util.MaxImbalance(bvh.root),
-		SAH:            util.SAH(bvh.root),
-		BalancePenalty: util.BalancePenalty(bvh.root),
-		OverlapPenalty: util.OverlapPenalty(bvh.root),
-		LeafSize:       util.AverageSize(bvh.root),
-	}
-}
-
-// Insert adds a new AABB bounding box into the BVH tree. The input AABB may be
-// larger than the actual object if e.g. the object is not a rectangle, or to
-// account for movement updates.
-func (bvh *BVH) Insert(x id.ID, aabb hyperrectangle.R) error {
-	bvh.l.Lock()
-	defer bvh.l.Unlock()
-
-	return bvh.insert(x, aabb)
-}
-
-func (bvh *BVH) insert(x id.ID, aabb hyperrectangle.R) error {
-	if bvh.lookup[x] != nil {
-		return fmt.Errorf("cannot insert a node with duplicate ID %v", x)
+func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
+	if _, ok := t.data[x]; ok {
+		return fmt.Errorf("cannot insert a duplicate node %v", x)
 	}
 
-	n := insert.Execute(bvh.root, bvh.size, x, aabb)
+	t.data[x] = aabb
 
-	// We may have split the leaf node, in which case some data may have
-	// shifted.
-	for k := range n.Data() {
-		bvh.lookup[k] = n
-	}
-	bvh.root = n.Root()
-	bvh.updateNodeCache()
-
-	return nil
-}
-
-// Remove will delete the BVH node which encapsulates the given object.
-func (bvh *BVH) Remove(x id.ID) error {
-	bvh.l.Lock()
-	defer bvh.l.Unlock()
-
-	return bvh.remove(x)
-}
-
-func (bvh *BVH) remove(x id.ID) error {
-	if bvh.lookup[x] == nil {
-		return fmt.Errorf("cannot remove a non-existent object with ID %v", x)
-	}
-
-	bvh.root = remove.Execute(bvh.lookup[x], x)
-	bvh.updateNodeCache()
-	delete(bvh.lookup, x)
-
-	return nil
-}
-
-// Update will conditionally update the BVH tree if the new position of the
-// bounding box is no longer completely contained by the associated BVH node.
-//
-// The input aabb is the new bounding box which will be used to encapsulate the
-// object.
-//
-// N.B.: The BVH is not responsible for updating the object itself -- the caller
-// will need to do that separately. This function is called only to update the
-// state of the BVH.
-func (bvh *BVH) Update(x id.ID, q hyperrectangle.R, aabb hyperrectangle.R) error {
-	bvh.l.Lock()
-	defer bvh.l.Unlock()
-
-	if bvh.lookup[x] == nil {
-		return fmt.Errorf("cannot update a non-existent object with ID %v", x)
-	}
-
-	r, ok := bvh.lookup[x].Get(x)
-	// If the tracked leaf node cannot find the given object, then something
-	// has gone wrong and the tree cannot recover, as the lookup table is no
-	// longer trustworthy.
-	if !ok {
-		panic(fmt.Sprintf("object %v has vanished", x))
-	}
-
-	// Update the BVH tree.
-	if !bhr.Contains(r, q) {
-		if err := bvh.remove(x); err != nil {
-			return fmt.Errorf("cannot update object: %v", err)
-		}
-		if err := bvh.insert(x, aabb); err != nil {
-			return fmt.Errorf("cannot update object: %v", err)
+	root, mutations := t.insert.Insert(
+		t.c, t.root, t.data, x, t.tolerance,
+	)
+	t.root = root.ID()
+	for _, n := range mutations {
+		for x := range n.Leaves() {
+			t.nodes[x] = n.ID()
 		}
 	}
 
 	return nil
 }
 
-// BroadPhase returns all objects which may collide with the input query.  The
-// list of objects returned may not actually collide, e.g. if the actual hitbox
-// in user-space is smaller than the query AABB. The user is responsible for
-// further collision refinement.
-func (bvh *BVH) BroadPhase(q hyperrectangle.R) []id.ID {
-	bvh.l.RLock()
-	defer bvh.l.RUnlock()
+func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
+	return broadphase.BroadPhase(t.c, t.root, t.data, q)
+}
 
-	if bvh.root == nil {
-		return nil
+func (t *T) Update(x id.ID, aabb hyperrectangle.R) error {
+	if _, ok := t.data[x]; !ok {
+		return fmt.Errorf("cannot update a non-existent node %v", x)
 	}
-	return bvh.root.BroadPhase(q)
+
+	n := t.c.GetOrDie(t.nodes[x])
+	if !hyperrectangle.Contains(n.AABB().R(), aabb) {
+		if err := t.Remove(x); err != nil {
+			return fmt.Errorf("cannot update node %v: %v", x, err)
+		}
+		if err := t.Insert(x, aabb); err != nil {
+			return fmt.Errorf("cannot update node %v: %v", x, err)
+		}
+	} else {
+		t.data[x] = aabb
+	}
+
+	return nil
+}
+
+func (t *T) Remove(x id.ID) error {
+	if _, ok := t.data[x]; !ok {
+		return fmt.Errorf("cannot remove a non-existent node %v", x)
+	}
+
+	root := t.remove.Remove(
+		t.c, t.data, t.nodes[x], x, t.tolerance,
+	)
+	t.root = root.ID()
+
+	delete(t.nodes, x)
+	delete(t.data, x)
+
+	return nil
 }
