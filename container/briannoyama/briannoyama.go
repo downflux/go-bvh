@@ -65,6 +65,8 @@ func (bvh *BVH) IDs() []id.ID {
 	return xs
 }
 
+func (bvh *BVH) SAH() float64 { return bvh.bvh.SAH() }
+
 func (bvh *BVH) Remove(x id.ID) error {
 	if bvh.lookup[x] == nil {
 		return fmt.Errorf("cannot remove non-existent ID %v", x)
@@ -76,7 +78,7 @@ func (bvh *BVH) Remove(x id.ID) error {
 	return nil
 }
 
-func (bvh *BVH) Update(x id.ID, q hyperrectangle.R, aabb hyperrectangle.R) error {
+func (bvh *BVH) Update(x id.ID, aabb hyperrectangle.R) error {
 	if err := bvh.Remove(x); err != nil {
 		return fmt.Errorf("cannot update ID %v: %v", x, err)
 	}
