@@ -76,11 +76,15 @@ func GenerateRandomBoxes(n int, k vector.D, min float64, max float64) map[id.ID]
 	return data
 }
 
-func Insert(c container.C, data map[id.ID]hyperrectangle.R) {
-	runtime.MemProfileRate = 0
-	defer func() { runtime.MemProfileRate = 512 * 1024 }()
+type F func(c container.C) error
 
-	for x, aabb := range data {
-		c.Insert(x, aabb)
+func GenerateInsertLoad(n int, offset int, k vector.D) []F {
+	ops := make([]F, 0, n)
+	for x, aabb := range GenerateRandomTiles(n, k) {
+		x, aabb := x, aabb
+		ops = append(ops, func(c container.C) error {
+			return c.Insert(x+id.ID(offset), aabb)
+		})
 	}
+	return ops
 }

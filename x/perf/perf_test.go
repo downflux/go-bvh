@@ -13,7 +13,6 @@ import (
 	"github.com/downflux/go-bvh/x/container/briannoyama"
 	"github.com/downflux/go-bvh/x/container/bruteforce"
 	"github.com/downflux/go-bvh/x/container/dhconnelly"
-	"github.com/downflux/go-bvh/x/id"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/downflux/go-geometry/nd/vector"
 )
@@ -34,7 +33,7 @@ type c struct {
 	t    func() container.C
 	n    int
 	k    vector.D
-	load map[id.ID]hyperrectangle.R
+	load []F
 }
 
 func generate() []c {
@@ -43,7 +42,7 @@ func generate() []c {
 	for _, n := range suite.N() {
 		for _, k := range suite.K() {
 
-			load := GenerateRandomTiles(n, k)
+			load := GenerateInsertLoad(n, 0, k)
 			cs = append(cs,
 				c{
 					name: fmt.Sprintf("bruteforce/K=%v/N=%v", k, n),
@@ -107,7 +106,7 @@ func BenchmarkBroadPhase(b *testing.B) {
 		name string
 		t    func() container.C
 		k    vector.D
-		load map[id.ID]hyperrectangle.R
+		load []F
 		q    hyperrectangle.R
 	}
 
@@ -147,50 +146,13 @@ func BenchmarkBroadPhase(b *testing.B) {
 				defer func() { runtime.MemProfileRate = 512 * 1024 }()
 				defer b.StartTimer()
 
-				Insert(t, c.load)
+				for _, f := range c.load {
+					f(t)
+				}
 			}()
 
 			for i := 0; i < b.N; i++ {
 				t.BroadPhase(c.q)
-			}
-		})
-	}
-}
-
-func BenchmarkRemove(b *testing.B) {
-	type config struct {
-		name string
-		t    func() container.C
-		k    vector.D
-		load []id.ID
-	}
-
-	tiles := GenerateRandomTiles(n, k)
-
-	configs := []config{
-		{
-			name: 
-		},
-	}
-
-	for _, c := range configs {
-		b.Run(c.name, func(b *testing.B) {
-			t := c.t()
-			data := func() []id.ID {
-				b.StopTimer()
-				runtime.MemProfileRate = 0
-				defer func() { runtime.MemProfileRate = 512 * 1024 }()
-				defer b.StartTimer()
-
-				Insert(t, c.load)
-
-				data := make([]id.ID, 0, b.N)
-				for c.load
-				offset := id.ID(len(c.load))
-				for x, aabb := range GenerateRandomTiles(b.N, c.k) {
-					data = append(data, obj{id: x + offset, aabb: aabb})
-				}
-				return data
 			}
 		})
 	}
@@ -201,7 +163,7 @@ func BenchmarkInsert(b *testing.B) {
 		name string
 		t    func() container.C
 		k    vector.D
-		load map[id.ID]hyperrectangle.R
+		load []F
 	}
 
 	configs := []config{}
@@ -217,30 +179,22 @@ func BenchmarkInsert(b *testing.B) {
 
 	for _, c := range configs {
 		b.Run(c.name, func(b *testing.B) {
-			type obj struct {
-				id   id.ID
-				aabb hyperrectangle.R
-			}
-
 			t := c.t()
-			data := func() []obj {
+			load := func() []F {
 				b.StopTimer()
 				runtime.MemProfileRate = 0
 				defer func() { runtime.MemProfileRate = 512 * 1024 }()
 				defer b.StartTimer()
 
-				Insert(t, c.load)
-
-				data := make([]obj, 0, b.N)
-				offset := id.ID(len(c.load))
-				for x, aabb := range GenerateRandomTiles(b.N, c.k) {
-					data = append(data, obj{id: x + offset, aabb: aabb})
+				for _, f := range c.load {
+					f(t)
 				}
-				return data
+
+				return GenerateInsertLoad(b.N, len(c.load), c.k)
 			}()
 
 			for i := 0; i < b.N; i++ {
-				if err := t.Insert(data[i].id, data[i].aabb); err != nil {
+				if err := load[i](t); err != nil {
 					b.Errorf("Insert() = %v, want = nil", err)
 				}
 			}
