@@ -6,6 +6,7 @@ import (
 
 	"github.com/downflux/go-bvh/x/internal/cache/node"
 	"github.com/downflux/go-bvh/x/internal/cache/node/impl"
+	"github.com/downflux/go-bvh/x/perf/size"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
 	"github.com/google/go-cmp/cmp"
 
@@ -98,41 +99,40 @@ func TestInsert(t *testing.T) {
 }
 
 func BenchmarkInsert(b *testing.B) {
-	const batch = 1e4
-
-	b.Run(fmt.Sprintf("Sequential/Batch=%v", batch), func(b *testing.B) {
-		b.StopTimer()
-		cache := New(O{
-			K:        1,
-			LeafSize: 1,
-		})
-		b.StartTimer()
-
-		for i := 0; i < b.N; i++ {
-			for j := 0; j < batch; j++ {
-				cache.Insert(-1, -1, -1, false)
-			}
-		}
-	})
-	b.Run(fmt.Sprintf("Freed/Batch=%v", batch), func(b *testing.B) {
-		b.StopTimer()
-		cache := New(O{
-			K:        1,
-			LeafSize: 1,
-		})
-		b.StartTimer()
-
-		for i := 0; i < b.N; i++ {
-			for j := 0; j < batch; j++ {
-				cache.Insert(-1, -1, -1, false)
-			}
-
+	for _, n := range size.SizeUnit.N() {
+		b.Run(fmt.Sprintf("Sequential/Batch=%v", n), func(b *testing.B) {
 			b.StopTimer()
-			for j := 0; j < batch; j++ {
-				cache.Delete(cid.ID(j))
-			}
+			cache := New(O{
+				K:        1,
+				LeafSize: 1,
+			})
 			b.StartTimer()
-		}
-	})
 
+			for i := 0; i < b.N; i++ {
+				for j := 0; j < n; j++ {
+					cache.Insert(-1, -1, -1, false)
+				}
+			}
+		})
+		b.Run(fmt.Sprintf("Freed/Batch=%v", n), func(b *testing.B) {
+			b.StopTimer()
+			cache := New(O{
+				K:        1,
+				LeafSize: 1,
+			})
+			b.StartTimer()
+
+			for i := 0; i < b.N; i++ {
+				for j := 0; j < n; j++ {
+					cache.Insert(-1, -1, -1, false)
+				}
+
+				b.StopTimer()
+				for j := 0; j < n; j++ {
+					cache.Delete(cid.ID(j))
+				}
+				b.StartTimer()
+			}
+		})
+	}
 }
