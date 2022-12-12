@@ -10,4 +10,5 @@ type C interface {
 	Insert(x id.ID, aabb hyperrectangle.R) error
 	BroadPhase(q hyperrectangle.R) []id.ID
 	Remove(x id.ID) error
+	Update(x id.ID, aabb hyperrectangle.R) error
 }

@@ -40,7 +40,7 @@ func (l L) Remove(x id.ID) error {
 	return nil
 }
 
-func (l L) Update(x id.ID, q hyperrectangle.R, aabb hyperrectangle.R) error {
+func (l L) Update(x id.ID, aabb hyperrectangle.R) error {
 	if err := l.Remove(x); err != nil {
 		return fmt.Errorf("cannot update object: %v", err)
 	}

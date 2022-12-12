@@ -78,7 +78,7 @@ func (bvh *BVH) Remove(x id.ID) error {
 	return nil
 }
 
-func (bvh *BVH) Update(x id.ID, q hyperrectangle.R, aabb hyperrectangle.R) error {
+func (bvh *BVH) Update(x id.ID, aabb hyperrectangle.R) error {
 	if err := bvh.Remove(x); err != nil {
 		return fmt.Errorf("cannot update ID %v: %v", x, err)
 	}
