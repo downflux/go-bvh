@@ -29,10 +29,10 @@ func Query(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, f func(r hy
 			}
 		} else {
 			l, r := m.Left(), m.Right()
-			if !f(l.AABB().R()) {
+			if f(l.AABB().R()) {
 				open = append(open, l)
 			}
-			if !f(r.AABB().R()) {
+			if f(r.AABB().R()) {
 				open = append(open, r)
 			}
 		}
@@ -40,7 +40,7 @@ func Query(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, f func(r hy
 
 	ids := make([]id.ID, 0, len(candidates))
 	for _, x := range candidates {
-		if !f(data[x]) {
+		if f(data[x]) {
 			ids = append(ids, x)
 		}
 	}

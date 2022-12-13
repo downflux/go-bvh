@@ -1,8 +1,4 @@
-// Package broadphase applies the AABB intersection check on the BVH tree.
-//
-// N.B.: This function is identical in implementation to the BVH query op, but
-// is rewritten here to preserve performance.
-package broadphase
+package query
 
 import (
 	"github.com/downflux/go-bvh/id"
@@ -15,6 +11,9 @@ import (
 
 // BroadPhase checks a BVH tree for the query rectangle and returns a list of
 // objects which touch the query AABB.
+//
+// N.B.: This function is identical in implementation to the BVH query op, but
+// is rewritten here to preserve performance.
 func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hyperrectangle.R) []id.ID {
 	n, ok := c.Get(root)
 	if !ok {

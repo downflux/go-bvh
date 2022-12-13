@@ -4,7 +4,6 @@ package bvh
 import (
 	"fmt"
 
-	"github.com/downflux/go-bvh/bvh/op/broadphase"
 	"github.com/downflux/go-bvh/bvh/op/insert"
 	"github.com/downflux/go-bvh/bvh/op/query"
 	"github.com/downflux/go-bvh/bvh/op/remove"
@@ -146,7 +145,7 @@ func (t *T) Remove(x id.ID) error {
 
 // BroadPhase finds all objects which intersect with the given input AABB.
 func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
-	return broadphase.BroadPhase(t.c, t.root, t.data, q)
+	return query.BroadPhase(t.c, t.root, t.data, q)
 }
 
 // Query finds all objects which passes the input filtering function. BroadPhase
