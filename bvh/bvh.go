@@ -149,13 +149,15 @@ func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
 	return query.BroadPhase(t.c, t.root, t.data, q)
 }
 
-// Query finds all objects which passes the input filtering function. BroadPhase
-// and Raycast are special cases of the Query function.
-func (t *T) Query(f func(r hyperrectangle.R) bool) []id.ID {
-	return query.Query(t.c, t.root, t.data, f)
-}
-
 // Raycast finds all objcets which intersects the given ray.
 func (t *T) Raycast(q ray.R) []id.ID {
 	return query.Raycast(t.c, t.root, t.data, q)
+}
+
+// Query finds all objects which passes the input filtering function. BroadPhase
+// and Raycast are special cases of the Query function. The input filter will be
+// recursively applied; that is, the child of an internal BVH node will be
+// searched only if the parent AABB also passes the filter.
+func (t *T) Query(f func(r hyperrectangle.R) bool) []id.ID {
+	return query.Query(t.c, t.root, t.data, f)
 }
