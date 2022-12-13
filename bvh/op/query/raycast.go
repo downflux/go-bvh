@@ -1,21 +1,16 @@
-// Package broadphase applies the AABB intersection check on the BVH tree.
-//
-// N.B.: This function is identical in implementation to the BVH query op, but
-// is rewritten here to preserve performance.
-package broadphase
+package query
 
 import (
 	"github.com/downflux/go-bvh/id"
 	"github.com/downflux/go-bvh/internal/cache"
 	"github.com/downflux/go-bvh/internal/cache/node"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/ray"
 
 	cid "github.com/downflux/go-bvh/internal/cache/id"
 )
 
-// BroadPhase checks a BVH tree for the query rectangle and returns a list of
-// objects which touch the query AABB.
-func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hyperrectangle.R) []id.ID {
+func Raycast(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q ray.R) []id.ID {
 	n, ok := c.Get(root)
 	if !ok {
 		return []id.ID{}
@@ -35,10 +30,10 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 			}
 		} else {
 			l, r := m.Left(), m.Right()
-			if !hyperrectangle.Disjoint(q, l.AABB().R()) {
+			if ray.IntersectHyperrectangle(q, l.AABB().R()) {
 				open = append(open, l)
 			}
-			if !hyperrectangle.Disjoint(q, r.AABB().R()) {
+			if ray.IntersectHyperrectangle(q, r.AABB().R()) {
 				open = append(open, r)
 			}
 		}
@@ -46,10 +41,11 @@ func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hype
 
 	ids := make([]id.ID, 0, len(candidates))
 	for _, x := range candidates {
-		if !hyperrectangle.Disjoint(q, data[x]) {
+		if ray.IntersectHyperrectangle(q, data[x]) {
 			ids = append(ids, x)
 		}
 	}
 
 	return ids
+
 }

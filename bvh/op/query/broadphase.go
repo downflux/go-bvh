@@ -9,7 +9,12 @@ import (
 	cid "github.com/downflux/go-bvh/internal/cache/id"
 )
 
-func Query(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, f func(r hyperrectangle.R) bool) []id.ID {
+// BroadPhase checks a BVH tree for the query rectangle and returns a list of
+// objects which touch the query AABB.
+//
+// N.B.: This function is identical in implementation to the BVH query op, but
+// is rewritten here to preserve performance.
+func BroadPhase(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, q hyperrectangle.R) []id.ID {
 	n, ok := c.Get(root)
 	if !ok {
 		return []id.ID{}
@@ -29,10 +34,10 @@ func Query(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, f func(r hy
 			}
 		} else {
 			l, r := m.Left(), m.Right()
-			if f(l.AABB().R()) {
+			if !hyperrectangle.Disjoint(q, l.AABB().R()) {
 				open = append(open, l)
 			}
-			if f(r.AABB().R()) {
+			if !hyperrectangle.Disjoint(q, r.AABB().R()) {
 				open = append(open, r)
 			}
 		}
@@ -40,11 +45,10 @@ func Query(c *cache.C, root cid.ID, data map[id.ID]hyperrectangle.R, f func(r hy
 
 	ids := make([]id.ID, 0, len(candidates))
 	for _, x := range candidates {
-		if f(data[x]) {
+		if !hyperrectangle.Disjoint(q, data[x]) {
 			ids = append(ids, x)
 		}
 	}
 
 	return ids
-
 }
