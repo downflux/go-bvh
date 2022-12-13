@@ -149,7 +149,12 @@ func (t *T) BroadPhase(q hyperrectangle.R) []id.ID {
 }
 
 // Query finds all objects which passes the input filtering function. BroadPhase
-// is a special case of the Query function.
+// and Raycast are special cases of the Query function.
 func (t *T) Query(f func(r hyperrectangle.R) bool) []id.ID {
 	return query.Query(t.c, t.root, t.data, f)
+}
+
+// Raycast finds all objcets which intersects the given ray.
+func (t *T) Raycast(q ray.R) []id.ID {
+	return query.Raycast(t.c, t.root, t.data, q)
 }
