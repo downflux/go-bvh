@@ -11,6 +11,7 @@ import (
 	"github.com/downflux/go-bvh/internal/cache"
 	"github.com/downflux/go-bvh/internal/cache/node/util/metrics"
 	"github.com/downflux/go-geometry/nd/hyperrectangle"
+	"github.com/downflux/go-geometry/nd/ray"
 	"github.com/downflux/go-geometry/nd/vector"
 
 	cid "github.com/downflux/go-bvh/internal/cache/id"
