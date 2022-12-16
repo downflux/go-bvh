@@ -1,0 +1,18 @@
+goos: linux
+goarch: amd64
+pkg: github.com/downflux/go-bvh/perf
+cpu: Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz
+BenchmarkBroadPhase/bruteforce/K=3/N=10000/F=0.05-8         	    3099	    344485 ns/op
+BenchmarkBroadPhase/briannoyama/K=3/N=10000/F=0.05-8        	   19526	     60977 ns/op
+BenchmarkBroadPhase/downflux/K=3/N=10000/LeafSize=2/F=0.05-8         	   12536	     94944 ns/op
+BenchmarkBroadPhase/dhconnelly/K=3/N=10000/LeafSize=2/F=0.05-8       	   12974	     93120 ns/op
+BenchmarkInsert/bruteforce/K=3/N=10000-8                             	 4055464	       365.2 ns/op
+BenchmarkInsert/briannoyama/K=3/N=10000-8                            	  298472	      6699 ns/op
+BenchmarkInsert/downflux/K=3/N=10000/LeafSize=2-8                    	   99818	     14526 ns/op
+BenchmarkInsert/dhconnelly/K=3/N=10000/LeafSize=2-8                  	   84330	     20275 ns/op
+BenchmarkRemove/bruteforce/K=3/N=10000-8                             	 8357643	       144.3 ns/op
+BenchmarkRemove/briannoyama/K=3/N=10000-8                            	  309388	    113873 ns/op
+BenchmarkRemove/downflux/K=3/N=10000/LeafSize=2-8                    	  141693	     10754 ns/op
+BenchmarkRemove/dhconnelly/K=3/N=10000/LeafSize=2-8                  	  187146	     12496 ns/op
+PASS
+ok  	github.com/downflux/go-bvh/perf	92.531s
