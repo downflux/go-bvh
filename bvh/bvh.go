@@ -136,7 +136,11 @@ func (t *T) Remove(x id.ID) error {
 	root := t.remove.Remove(
 		t.c, t.data, t.nodes[x], x, t.tolerance,
 	)
-	t.root = root.ID()
+	if root != nil {
+		t.root = root.ID()
+	} else {
+		t.root = cid.IDInvalid
+	}
 
 	delete(t.nodes, x)
 	delete(t.data, x)

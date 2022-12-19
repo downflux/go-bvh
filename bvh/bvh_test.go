@@ -11,7 +11,26 @@ import (
 	"github.com/downflux/go-geometry/nd/vector"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	cid "github.com/downflux/go-bvh/internal/cache/id"
 )
+
+func TestDelete(t *testing.T) {
+	bvh := New(O{
+		K: 3,
+		LeafSize: 1,
+		Tolerance: 1,
+	})
+
+	// Check that removing the last element the tree will result in a nil
+	// root.
+	bvh.Insert(100, *hyperrectangle.New(vector.V{0, 0, 0}, vector.V{1, 1, 1}))
+	bvh.Remove(100)
+
+	if bvh.root != cid.IDInvalid {
+		t.Errorf("bvh.root = %v, want = %v", bvh.root, cid.IDInvalid)
+	}
+}
 
 func TestBroadPhaseConformance(t *testing.T) {
 	const k = 3
