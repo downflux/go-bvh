@@ -47,3 +47,4 @@ go tool cover -html=coverage.out
 1. Bittner, et al. "Fast Insertion-Based Optimization of Bounding Volume Hierarchies."  https://doi.org/10.1111/cgf.12000. 2013.
 1. Kopta, et al. "Fast, Effective BVH Updates for Animated Scenes." https://hwrt.cs.utah.edu/papers/hwrt_rotations.pdf. 2012.
 1. Guttman, Antonin. "R-trees: A Dynamic Index Structure for Spacial Searching." http://www-db.deis.unibo.it/courses/SI-LS/papers/Gut84.pdf. 1984.
+1. @dhconnelly. "rtreego." https://github.com/dhconnelly/rtreego. 2019.

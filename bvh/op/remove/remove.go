@@ -45,7 +45,7 @@ func (o O) Remove(c *cache.C, data map[id.ID]hyperrectangle.R, x cid.ID, y id.ID
 		node.SetAABB(m, data, tolerance)
 		node.SetHeight(m)
 
-		if !n.IsRoot() {
+		if !m.IsLeaf() {
 			m = o.Balance(m)
 		}
 
