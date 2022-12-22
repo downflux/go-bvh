@@ -19,5 +19,14 @@ jobs:
       with:
         go-version: 1.19
 
+    - name: Build github.com/downflux/go-bvh
+      run: go build github.com/downflux/go-bvh/...
+
+    - name: Vet github.com/downflux/go-bvh
+      run: go vet github.com/downflux/go-bvh/...
+
     - name: Test github.com/downflux/go-bvh
+      run: go test -race github.com/downflux/go-bvh/...
+
+    - name: Benchmark github.com/downflux/go-bvh
       run: go test github.com/downflux/go-bvh/... -bench . -benchmem
