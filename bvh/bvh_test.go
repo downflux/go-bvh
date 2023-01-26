@@ -17,8 +17,8 @@ import (
 
 func TestDelete(t *testing.T) {
 	bvh := New(O{
-		K: 3,
-		LeafSize: 1,
+		K:         3,
+		LeafSize:  1,
 		Tolerance: 1,
 	})
 

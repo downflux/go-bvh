@@ -85,12 +85,21 @@ func (t *T) IDs() []id.ID {
 // this AABB is managed by the user (external to this library). After the AABB
 // is mutated (e.g. during a simulation tick), the user must call Update to
 // ensure the tree remains valid.
+//
+// Because the AABB must remain static inside the BVH, we will create a new copy
+// of the input.
 func (t *T) Insert(x id.ID, aabb hyperrectangle.R) error {
 	if _, ok := t.data[x]; ok {
 		return fmt.Errorf("cannot insert a duplicate node %v", x)
 	}
 
-	t.data[x] = aabb
+	buf := hyperrectangle.New(
+		vector.V(make([]float64, aabb.Min().Dimension())),
+		vector.V(make([]float64, aabb.Min().Dimension())),
+	).M()
+	buf.Copy(aabb)
+
+	t.data[x] = buf.R()
 
 	root, mutations := t.insert.Insert(
 		t.c, t.root, t.data, x, t.tolerance,
