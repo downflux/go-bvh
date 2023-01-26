@@ -131,7 +131,10 @@ func (t *T) Update(x id.ID, aabb hyperrectangle.R) error {
 			return fmt.Errorf("cannot update node %v: %v", x, err)
 		}
 	} else {
-		t.data[x] = aabb
+		// As with the Insert call, we do not have any guarantees the
+		// AABB will not be mutated after the update call, so we must
+		// ensure this is true by making a copy of the input.
+		t.data[x].M().Copy(aabb)
 	}
 
 	return nil
